@@ -59,9 +59,11 @@
     function checkPassword() {
       const password = document.getElementById("passwordInput").value;
       
-      // Replace "password123" with your desired password
       if (password === "123@qweasd") {
         showMainPage(); // Show the main page content
+
+        // Save the current timestamp to localStorage
+        localStorage.setItem("lastLogin", Date.now());
       } else {
         alert("Incorrect password. Please try again.");
       }
@@ -74,6 +76,16 @@
       passwordContent.style.display = "none"; // Hide the password page content
       mainContent.style.display = "block"; // Show the iframe
     }
-  </script>
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+      // Get the last login timestamp from localStorage
+      const lastLogin = localStorage.getItem("lastLogin");
+
+      // If the last login was within the last 6 hours, show the main page
+      if (lastLogin && Date.now() - lastLogin <= 6 * 60 * 60 * 1000) {
+        showMainPage();
+      }
+    });
+  </script> 
 </body>
 </html>
