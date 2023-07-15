@@ -30,12 +30,30 @@
       cursor: pointer;
       margin-top: 20px;
     }
+    
+    #passwordContent {
+      display: block;
+    }
+    
+    #mainContent {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Welcome to the Password Page</h1>
-  <input type="password" id="passwordInput" placeholder="Enter password">
-  <button onclick="checkPassword()">Submit</button>
+  <div id="passwordContent">
+    <h1>Welcome to the Password Page</h1>
+    <input type="password" id="passwordInput" placeholder="Enter password">
+    <button onclick="checkPassword()">Submit</button>
+  </div>
+
+  <iframe id="mainContent" src="main.html"></iframe>
 
   <script>
     function checkPassword() {
@@ -43,10 +61,18 @@
       
       // Replace "password123" with your desired password
       if (password === "123@qweasd") {
-        window.location.href = "main.html"; // Redirect to the main page
+        showMainPage(); // Show the main page content
       } else {
         alert("Incorrect password. Please try again.");
       }
+    }
+
+    function showMainPage() {
+      const passwordContent = document.getElementById("passwordContent");
+      const mainContent = document.getElementById("mainContent");
+
+      passwordContent.style.display = "none"; // Hide the password page content
+      mainContent.style.display = "block"; // Show the iframe
     }
   </script>
 </body>
