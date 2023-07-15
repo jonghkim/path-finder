@@ -1,209 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Everyday Scheduling</title>
+  <title>Password Page</title>
   <style>
-    /* Your CSS styles here */
-    textarea {
-      width: 100%;
-      height: 200px; /* Adjust the height as needed */
-      resize: vertical; /* Allow vertical resizing */
-      font-size: 16px; /* Adjust the font size as needed */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    
+    h1 {
+      margin-top: 100px;
+    }
+    
+    input[type="password"] {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>Everyday Scheduling</h1>
-
-  <!-- Tabs -->
-  <div id="tabs">
-    <button class="tablink" onclick="openTab(event, 'yearlyGoal')">Yearly Goal</button>
-    <button class="tablink" onclick="openTab(event, 'monthlyGoal')">Monthly Goal</button>
-    <button class="tablink" onclick="openTab(event, 'weeklyGoal')">Weekly Goal</button>
-    <button class="tablink" onclick="openTab(event, 'dailyGoal')">Daily Goal</button>
-    <button class="tablink" onclick="openTab(event, 'question')">Question</button>
-  </div>
-
-  <!-- Content -->
-  <div class="tabcontent" id="yearlyGoal">
-    <h2>Yearly Goal</h2>
-    <textarea id="yearlyGoalInput" oninput="saveGoal('yearlyGoalInput'); updateMonthlyGoal()"></textarea>
-  </div>
-
-  <div class="tabcontent" id="monthlyGoal">
-    <div class="left-pane">
-      <h2>Yearly Goal</h2>
-      <textarea id="monthlyYearlyGoalInput" disabled></textarea>
-    </div>
-    <div class="right-pane">
-      <h2>Monthly Goal</h2>
-      <textarea id="monthlyGoalInput" oninput="saveGoal('monthlyGoalInput'); updateWeeklyGoal()"></textarea>
-    </div>
-  </div>
-
-  <div class="tabcontent" id="weeklyGoal">
-    <div class="left-pane">
-      <h2>Monthly Goal</h2>
-      <textarea id="weeklyMonthlyGoalInput" disabled></textarea>
-    </div>
-    <div class="right-pane">
-      <h2>Weekly Goal</h2>
-      <textarea id="weeklyGoalInput" oninput="saveGoal('weeklyGoalInput'); updateDailyGoal()"></textarea>
-    </div>
-  </div>
-
-  <div class="tabcontent" id="dailyGoal">
-    <div class="left-pane">
-      <h2>Weekly Goal</h2>
-      <textarea id="dailyWeeklyGoalInput" disabled></textarea>
-    </div>
-    <div class="right-pane">
-      <h2>Daily Goal</h2>
-      <textarea id="dailyGoalInput" oninput="saveGoal('dailyGoalInput')"></textarea>
-    </div>
-  </div>
-
-  <div class="tabcontent" id="question">
-    <h2>Question</h2>
-    <button onclick="generateRandomQuestion()">Generate Question</button>
-    <p id="questionDisplay"></p>
-  </div>
+  <h1>Welcome to the Password Page</h1>
+  <input type="password" id="passwordInput" placeholder="Enter password">
+  <button onclick="checkPassword()">Submit</button>
 
   <script>
-    // Hide other tabs
-    const tabContents = document.querySelectorAll('.tabcontent');
-    tabContents.forEach(content => {
-      if (content.id !== 'yearlyGoal') {
-        content.style.display = 'none';
+    function checkPassword() {
+      const password = document.getElementById("passwordInput").value;
+      
+      // Replace "password123" with your desired password
+      if (password === "123@qweasd") {
+        window.location.href = "main.html"; // Redirect to the main page
+      } else {
+        alert("Incorrect password. Please try again.");
       }
-    });
-
-    // Load and save goals for all tabs
-    window.addEventListener('DOMContentLoaded', () => {
-      loadGoal('yearlyGoalInput');
-      loadGoal('monthlyYearlyGoalInput');
-      loadGoal('monthlyGoalInput');
-      loadGoal('weeklyMonthlyGoalInput');
-      loadGoal('weeklyGoalInput');
-      loadGoal('dailyWeeklyGoalInput');
-      loadGoal('dailyGoalInput');
-      updateMonthlyGoal();
-      updateWeeklyGoal();
-      updateDailyGoal();
-    });
-
-    function saveGoal(inputId) {
-      const input = document.getElementById(inputId);
-      localStorage.setItem(inputId, input.value);
-    }
-
-    function loadGoal(inputId) {
-      const input = document.getElementById(inputId);
-      const savedGoal = localStorage.getItem(inputId);
-      if (savedGoal) {
-        input.value = savedGoal;
-      }
-    }
-
-    // Update the display of yearly goal in the monthly section
-    const yearlyGoalInput = document.getElementById('yearlyGoalInput');
-    const monthlyYearlyGoalInput = document.getElementById('monthlyYearlyGoalInput');
-    yearlyGoalInput.addEventListener('input', () => {
-      monthlyYearlyGoalInput.value = yearlyGoalInput.value;
-      saveGoal('monthlyYearlyGoalInput');
-    });
-
-    // Update the display of monthly goal in the weekly section
-    const monthlyGoalInput = document.getElementById('monthlyGoalInput');
-    const weeklyMonthlyGoalInput = document.getElementById('weeklyMonthlyGoalInput');
-    monthlyGoalInput.addEventListener('input', () => {
-      weeklyMonthlyGoalInput.value = monthlyGoalInput.value;
-      saveGoal('weeklyMonthlyGoalInput');
-    });
-
-    // Update the display of weekly goal in the daily section
-    const weeklyGoalInput = document.getElementById('weeklyGoalInput');
-    const dailyWeeklyGoalInput = document.getElementById('dailyWeeklyGoalInput');
-    weeklyGoalInput.addEventListener('input', () => {
-      dailyWeeklyGoalInput.value = weeklyGoalInput.value;
-      saveGoal('dailyWeeklyGoalInput');
-    });
-
-    // Function to open tabs
-    function openTab(event, tabName) {
-      const tabContents = document.querySelectorAll('.tabcontent');
-      const tabLinks = document.getElementsByClassName('tablink');
-      for (let i = 0; i < tabContents.length; i++) {
-        tabContents[i].style.display = 'none';
-        tabLinks[i].classList.remove('active');
-      }
-      document.getElementById(tabName).style.display = 'block';
-      event.currentTarget.classList.add('active');
-      loadGoalInputs(tabName);
-    }
-
-    // Load goals for the selected tab
-    function loadGoalInputs(tabName) {
-      switch (tabName) {
-        case 'monthlyGoal':
-          loadGoal('monthlyYearlyGoalInput');
-          loadGoal('monthlyGoalInput');
-          break;
-        case 'weeklyGoal':
-          loadGoal('weeklyMonthlyGoalInput');
-          loadGoal('weeklyGoalInput');
-          break;
-        case 'dailyGoal':
-          loadGoal('dailyWeeklyGoalInput');
-          loadGoal('dailyGoalInput');
-          break;
-      }
-    }
-
-    // Update the Monthly Goal input with the Yearly Goal value
-    function updateMonthlyGoal() {
-      const yearlyGoalInput = document.getElementById('yearlyGoalInput');
-      const monthlyYearlyGoalInput = document.getElementById('monthlyYearlyGoalInput');
-      monthlyYearlyGoalInput.value = yearlyGoalInput.value;
-      saveGoal('monthlyYearlyGoalInput');
-    }
-
-    // Update the Weekly Goal input with the Monthly Goal value
-    function updateWeeklyGoal() {
-      const monthlyGoalInput = document.getElementById('monthlyGoalInput');
-      const weeklyMonthlyGoalInput = document.getElementById('weeklyMonthlyGoalInput');
-      weeklyMonthlyGoalInput.value = monthlyGoalInput.value;
-      saveGoal('weeklyMonthlyGoalInput');
-    }
-
-    // Update the Daily Goal input with the Weekly Goal value
-    function updateDailyGoal() {
-      const weeklyGoalInput = document.getElementById('weeklyGoalInput');
-      const dailyWeeklyGoalInput = document.getElementById('dailyWeeklyGoalInput');
-      dailyWeeklyGoalInput.value = weeklyGoalInput.value;
-      saveGoal('dailyWeeklyGoalInput');
-    }
-
-    // Array of questions
-    const questions = [
-      "What are some strategies to improve productivity?",
-      "How can you better manage your time?",
-      "What habits can lead to a more fulfilling life?",
-      "What are some ways to overcome procrastination?",
-      "How can you set and achieve meaningful goals?",
-      "What are some effective methods for stress management?",
-      "What inspires you and keeps you motivated?",
-      "How can you cultivate a positive mindset?",
-      "What are some ways to balance work and personal life?",
-      "What is your philosophy on personal growth and development?",
-    ];
-
-    // Function to generate a random question
-    function generateRandomQuestion() {
-      const questionDisplay = document.getElementById('questionDisplay');
-      const randomIndex = Math.floor(Math.random() * questions.length);
-      const randomQuestion = questions[randomIndex];
-      questionDisplay.textContent = randomQuestion;
     }
   </script>
 </body>
