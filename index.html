@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Password Page</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,6 +11,7 @@
       margin-top: 100px;
     }
     
+    input[type="text"],
     input[type="password"] {
       padding: 10px;
       font-size: 16px;
@@ -45,28 +45,80 @@
       border: none;
     }
   </style>
+
 </head>
+
 <body>
+
   <div id="passwordContent">
     <h1>Welcome to the Password Page</h1>
-    <input type="password" id="passwordInput" placeholder="Enter password">
-    <button onclick="checkPassword()">Submit</button>
+    <input id="username" type="text" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <!-- <button onclick="signUp">Sign Up</button>
+    <button onclick="signIn">Sign In</button> -->
+    <button id="signUpButton">Sign Up (PW > 6 Characters)</button>
+    <button id="signInButton">Sign In</button>  
   </div>
 
   <iframe id="mainContent" src="main.html"></iframe>
 
-  <script>
-    function checkPassword() {
-      const password = document.getElementById("passwordInput").value;
-      
-      if (password === "123@qweasd") {
-        showMainPage(); // Show the main page content
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
+  
+  <script type="module">
 
-        // Save the current timestamp to localStorage
-        localStorage.setItem("lastLogin", Date.now());
-      } else {
-        alert("Incorrect password. Please try again.");
-      }
+    const firebaseConfig = {
+      apiKey: "AIzaSyDe9DNLwKUHCotndzQEotpxM-GCVRBGsp8",
+      authDomain: "pathfinder-79832.firebaseapp.com",
+      projectId: "pathfinder-79832",
+      storageBucket: "pathfinder-79832.appspot.com",
+      messagingSenderId: "961999611719",
+      appId: "1:961999611719:web:82201d87e8de0f5ab1ce62",
+      measurementId: "G-T0SRFTSP4L"
+    };    
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function signUp() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      // Customizing the sign-up method for username-based authentication
+      auth.createUserWithEmailAndPassword(`${username}@yourdomain.com`, password)
+        .then((userCredential) => {
+          // Signup successful
+          const user = userCredential.user;
+          console.log("Signup successful:", user);
+          // Additional actions or redirects can be performed here
+        })
+        .catch((error) => {
+          // Signup failed
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.error("Signup error:", errorCode, errorMessage);
+          // Handle the error or display an error message to the user
+        });
+    }
+
+    function signIn() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      auth.signInWithEmailAndPassword(`${username}@yourdomain.com`, password)
+        .then((userCredential) => {
+          // Handle successful sign-in
+          const user = userCredential.user;
+          console.log("Sign-in successful:", user);
+          showMainPage(); // Show the main page content
+        })
+        .catch((error) => {
+          // Handle sign-in errors
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.error("Sign-in error:", errorCode, errorMessage);
+        });
     }
 
     function showMainPage() {
@@ -77,15 +129,18 @@
       mainContent.style.display = "block"; // Show the iframe
     }
 
-    window.addEventListener('DOMContentLoaded', (event) => {
-      // Get the last login timestamp from localStorage
-      const lastLogin = localStorage.getItem("lastLogin");
+    document.getElementById("signUpButton").addEventListener("click", signUp);
+    document.getElementById("signInButton").addEventListener("click", signIn);
 
-      // If the last login was within the last 6 hours, show the main page
-      if (lastLogin && Date.now() - lastLogin <= 6 * 60 * 60 * 1000) {
-        showMainPage();
-      }
+    window.addEventListener('DOMContentLoaded', (event) => {
+      // Check if the user is already signed in
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          showMainPage(); // Show the main page content
+        }
+      });
     });
-  </script> 
+  </script>  
+
 </body>
 </html>
