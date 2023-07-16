@@ -9,7 +9,7 @@
     
     textarea {
       width: 100%;
-      height: 500px;
+      height: 700px;
       resize: vertical;
       font-size: 16px;
     }
@@ -32,7 +32,7 @@
 </head>
 
 <body>
-  <h1>Pursue Your Goals</h1>
+  <h1>Find Your Path</h1>
 
   <!-- Tabs -->
   <div id="tabs">
@@ -124,7 +124,7 @@
     // Hide other tabs and load saved goals
     const tabContents = document.querySelectorAll('.tabcontent');
     tabContents.forEach(content => {
-      if (content.id !== 'yearlyGoal') {
+      if (content.id !== 'dailyGoal') {
         content.style.display = 'none';
       }
     });
