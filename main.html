@@ -122,11 +122,6 @@
 
     // Hide other tabs and load saved goals
     const tabContents = document.querySelectorAll('.tabcontent');
-    tabContents.forEach(content => {
-      if (content.id !== 'weeklyGoal') {
-        content.style.display = 'none';
-      }
-    });
 
     tabContents.forEach(content => {
       if (content.id !== 'dailyGoal') {
