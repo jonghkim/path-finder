@@ -151,7 +151,7 @@
       let today = new Date();
       let year = today.getFullYear(); // Get the year
       let month = String(today.getMonth() + 1).padStart(2, '0'); // Get the month and pad it with 0 if necessary
-      let day = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
+      let date = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
 
       let documentName;
 
@@ -159,13 +159,13 @@
       if (inputId === 'yearlyGoalInput') {
         documentName = 'year-' + year;
       } else if (inputId === 'monthlyGoalInput') {
-        documentName = 'month-' + month;
+        documentName = 'month-' + year + '-' + month;
       } else if (inputId === 'dailyGoalInput') {
-        documentName = 'day-' + day;
+        documentName = 'day-' + year + '-' + month + '-' + date;
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
-      
+
       // Save the goal to Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).set({
         value: input.value
@@ -184,7 +184,7 @@
       let today = new Date();
       let year = today.getFullYear(); // Get the year
       let month = String(today.getMonth() + 1).padStart(2, '0'); // Get the month and pad it with 0 if necessary
-      let day = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
+      let date = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
 
       let documentName;
 
@@ -192,13 +192,13 @@
       if (inputId === 'yearlyGoalInput') {
         documentName = 'year-' + year;
       } else if (inputId === 'monthlyGoalInput') {
-        documentName = 'month-' + month;
+        documentName = 'month-' + year + '-' + month;
       } else if (inputId === 'dailyGoalInput') {
-        documentName = 'day-' + day;
+        documentName = 'day-' + year + '-' + month + '-' + date;
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
-
+      
       // Load the goal from Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).get()
       .then((doc) => {
