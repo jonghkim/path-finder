@@ -145,6 +145,7 @@
       updateAchievement();
     });
 
+
     function saveGoal(inputId) {
       const input = document.getElementById(inputId);
 
@@ -152,6 +153,7 @@
       let year = today.getFullYear(); // Get the year
       let month = String(today.getMonth() + 1).padStart(2, '0'); // Get the month and pad it with 0 if necessary
       let date = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
+      let week = getWeekNumber(today); // Get the week number
 
       let documentName;
 
@@ -160,6 +162,8 @@
         documentName = 'year-' + year;
       } else if (inputId === 'monthlyGoalInput') {
         documentName = 'month-' + year + '-' + month;
+      } else if (inputId === 'weeklyGoalInput') {
+        documentName = 'week-' + year + '-W' + week;
       } else if (inputId === 'dailyGoalInput') {
         documentName = 'day-' + year + '-' + month + '-' + date;
       } else {
@@ -185,6 +189,7 @@
       let year = today.getFullYear(); // Get the year
       let month = String(today.getMonth() + 1).padStart(2, '0'); // Get the month and pad it with 0 if necessary
       let date = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
+      let week = getWeekNumber(today); // Get the week number
 
       let documentName;
 
@@ -193,12 +198,14 @@
         documentName = 'year-' + year;
       } else if (inputId === 'monthlyGoalInput') {
         documentName = 'month-' + year + '-' + month;
+      } else if (inputId === 'weeklyGoalInput') {
+        documentName = 'week-' + year + '-W' + week;
       } else if (inputId === 'dailyGoalInput') {
         documentName = 'day-' + year + '-' + month + '-' + date;
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
-      
+
       // Load the goal from Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).get()
       .then((doc) => {
@@ -210,6 +217,15 @@
       .catch((error) => {
         console.error("Error loading goal from Firestore: ", error);
       });
+    }
+
+    // Get the week number
+    function getWeekNumber(d) {
+      d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+      let yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      let weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return weekNo;
     }
 
     function openTab(evt, tabName) {
