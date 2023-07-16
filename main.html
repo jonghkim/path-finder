@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -85,8 +84,25 @@
     <p id="questionDisplay"></p>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
   <script>
-    // Hide other tabs
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDe9DNLwKUHCotndzQEotpxM-GCVRBGsp8",
+      authDomain: "pathfinder-79832.firebaseapp.com",
+      projectId: "pathfinder-79832",
+      storageBucket: "pathfinder-79832.appspot.com",
+      messagingSenderId: "961999611719",
+      appId: "1:961999611719:web:82201d87e8de0f5ab1ce62",
+      measurementId: "G-T0SRFTSP4L"
+    };    
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Hide other tabs and load saved goals
     const tabContents = document.querySelectorAll('.tabcontent');
     tabContents.forEach(content => {
       if (content.id !== 'yearlyGoal') {
@@ -94,7 +110,6 @@
       }
     });
 
-    // Load and save goals for all tabs
     window.addEventListener('DOMContentLoaded', () => {
       loadGoal('yearlyGoalInput');
       loadGoal('monthlyYearlyGoalInput');
@@ -111,6 +126,16 @@
     function saveGoal(inputId) {
       const input = document.getElementById(inputId);
       localStorage.setItem(inputId, input.value);
+      // Save the goal to Firebase Firestore
+      db.collection("goals").doc(inputId).set({
+        value: input.value
+      })
+      .then(() => {
+        console.log("Goal saved to Firestore");
+      })
+      .catch((error) => {
+        console.error("Error saving goal to Firestore: ", error);
+      });
     }
 
     function loadGoal(inputId) {
@@ -119,6 +144,17 @@
       if (savedGoal) {
         input.value = savedGoal;
       }
+      // Load the goal from Firebase Firestore
+      db.collection("goals").doc(inputId).get()
+      .then((doc) => {
+        if (doc.exists) {
+          const goalData = doc.data();
+          input.value = goalData.value;
+        }
+      })
+      .catch((error) => {
+        console.error("Error loading goal from Firestore: ", error);
+      });
     }
 
     // Update the display of yearly goal in the monthly section
