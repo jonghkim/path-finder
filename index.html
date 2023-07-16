@@ -131,8 +131,8 @@
       mainContent.style.display = "block"; // Show the iframe
 
       // Set the source URL of the iframe with the username query parameter
-      const mainPageURL = `main.html?username=${username}`;
-      mainContent.src = mainPageURL;
+      const timestamp = new Date().getTime(); // Get current timestamp
+      const mainPageURL = `main.html?username=${username}&timestamp=${timestamp}`;      
 
     }
 
