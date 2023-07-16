@@ -84,8 +84,14 @@
   </div>
 
   <div class="tabcontent" id="achievement">
-    <h2>Achievements & Reflection</h2>
-    <textarea id="achievementInput" oninput="saveGoal('achievementInput');"></textarea>
+    <div class="left-pane">
+      <h2>Yearly Goal</h2>
+      <textarea id="monthlyYearlyGoalInput" disabled></textarea>
+    </div>
+    <div class="right-pane">
+      <h2>Achievements & Reflection</h2>
+      <textarea id="achievementInput" oninput="saveGoal('achievementInput');"></textarea>
+    </div>    
   </div>
 
   <div class="tabcontent" id="question">
