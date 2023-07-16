@@ -237,28 +237,28 @@
         content.style.display = 'none';
       });
 
-      // // Show the selected tab content
-      // const selectedTabContent = document.getElementById(tabName);
-      // if (selectedTabContent) {
-      //   selectedTabContent.style.display = 'block';
+      // Show the selected tab content
+      const selectedTabContent = document.getElementById(tabName);
+      if (selectedTabContent) {
+        selectedTabContent.style.display = 'block';
         
-      //   // Update the left pane with the previous goal value
-      //   const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
-      //                           tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
-      //                           tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : 
-      //                           tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
-      //   if (leftPaneInputId) {
-      //     const leftPaneInput = document.getElementById(leftPaneInputId);
-      //     const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
-      //                                 tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
-      //                                 tabName === 'dailyGoal' ? 'weeklyGoalInput' : 
-      //                                 tabName === 'achievement' ? 'yearlyGoalInput' : '';
-      //     if (previousGoalInputId) {
-      //       const previousGoalInput = document.getElementById(previousGoalInputId);
-      //       leftPaneInput.value = previousGoalInput.value;
-      //     }
-      //   }
-      // }
+        // Update the left pane with the previous goal value
+        const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
+                                tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
+                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : 
+                                tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
+        if (leftPaneInputId) {
+          const leftPaneInput = document.getElementById(leftPaneInputId);
+          const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
+                                      tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
+                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' : 
+                                      tabName === 'achievement' ? 'yearlyGoalInput' : '';
+          if (previousGoalInputId) {
+            const previousGoalInput = document.getElementById(previousGoalInputId);
+            leftPaneInput.value = previousGoalInput.value;
+          }
+        }
+      }
     }
 
     function updateMonthlyGoal() {
