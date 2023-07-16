@@ -53,7 +53,7 @@
   <div class="tabcontent" id="monthlyGoal">
     <div class="left-pane">
       <h2>Yearly Goal</h2>
-      <textarea id="monthlyYearlyGoalInput" disabled></textarea>
+      <textarea id="monthlyYearlyGoalInput" oninput="loadGoal('yearlyGoalInput');" disabled></textarea>
     </div>
     <div class="right-pane">
       <h2>Monthly Goal</h2>
@@ -64,7 +64,7 @@
   <div class="tabcontent" id="weeklyGoal">
     <div class="left-pane">
       <h2>Monthly Goal</h2>
-      <textarea id="weeklyMonthlyGoalInput" disabled></textarea>
+      <textarea id="weeklyMonthlyGoalInput" oninput="loadGoal('monthlyGoalInput');" disabled></textarea>
     </div>
     <div class="right-pane">
       <h2>Weekly Goal</h2>
@@ -75,7 +75,7 @@
   <div class="tabcontent" id="dailyGoal">
     <div class="left-pane">
       <h2>Weekly Goal</h2>
-      <textarea id="dailyWeeklyGoalInput" disabled></textarea>
+      <textarea id="dailyWeeklyGoalInput" oninput="loadGoal('weeklyGoalInput');" disabled></textarea>
     </div>
     <div class="right-pane">
       <h2>Daily Goal</h2>
@@ -86,7 +86,7 @@
   <div class="tabcontent" id="achievement">
     <div class="left-pane">
       <h2>Yearly Goal</h2>
-      <textarea id="achievementYearlyGoalInput" disabled></textarea> <!-- Fix here: change the id to "achievementYearlyGoalInput" -->
+      <textarea id="achievementYearlyGoalInput" oninput="loadGoal('yearlyGoalInput');" disabled></textarea> <!-- Fix here: change the id to "achievementYearlyGoalInput" -->
     </div>
     <div class="right-pane">
       <h2>Achievements & Reflection</h2>
@@ -237,28 +237,28 @@
         content.style.display = 'none';
       });
 
-      // Show the selected tab content
-      const selectedTabContent = document.getElementById(tabName);
-      if (selectedTabContent) {
-        selectedTabContent.style.display = 'block';
+      // // Show the selected tab content
+      // const selectedTabContent = document.getElementById(tabName);
+      // if (selectedTabContent) {
+      //   selectedTabContent.style.display = 'block';
         
-        // Update the left pane with the previous goal value
-        const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
-                                tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
-                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : 
-                                tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
-        if (leftPaneInputId) {
-          const leftPaneInput = document.getElementById(leftPaneInputId);
-          const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
-                                      tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
-                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' : 
-                                      tabName === 'achievement' ? 'yearlyGoalInput' : '';
-          if (previousGoalInputId) {
-            const previousGoalInput = document.getElementById(previousGoalInputId);
-            leftPaneInput.value = previousGoalInput.value;
-          }
-        }
-      }
+      //   // Update the left pane with the previous goal value
+      //   const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
+      //                           tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
+      //                           tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : 
+      //                           tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
+      //   if (leftPaneInputId) {
+      //     const leftPaneInput = document.getElementById(leftPaneInputId);
+      //     const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
+      //                                 tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
+      //                                 tabName === 'dailyGoal' ? 'weeklyGoalInput' : 
+      //                                 tabName === 'achievement' ? 'yearlyGoalInput' : '';
+      //     if (previousGoalInputId) {
+      //       const previousGoalInput = document.getElementById(previousGoalInputId);
+      //       leftPaneInput.value = previousGoalInput.value;
+      //     }
+      //   }
+      // }
     }
 
     function updateMonthlyGoal() {
