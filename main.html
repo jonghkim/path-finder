@@ -7,11 +7,25 @@
     /* Your CSS styles here */
     textarea {
       width: 100%;
-      height: 200px; /* Adjust the height as needed */
+      height: 500px; /* Adjust the height as needed */
       resize: vertical; /* Allow vertical resizing */
       font-size: 16px; /* Adjust the font size as needed */
     }
+
+    .left-pane {
+      float: left; 
+      width: 50%; /* This will make sure that each child element takes half the space */
+      box-sizing: border-box; /* This will include padding and border in the element's total width and height */
+    }
+
+    .right-pane {
+      float: right; 
+      width: 50%; /* This will make sure that each child element takes half the space */
+      box-sizing: border-box; /* This will include padding and border in the element's total width and height */
+    }       
+
   </style>
+
 </head>
 <body>
   <h1>Everyday Scheduling</h1>
