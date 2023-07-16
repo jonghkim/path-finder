@@ -120,13 +120,6 @@
     const urlParams = new URLSearchParams(queryString);
     const username = urlParams.get('username');
 
-    // Hide other tabs and load saved goals
-    const tabContents = document.querySelectorAll('.tabcontent');
-    tabContents.forEach(content => {
-      if (content.id !== 'dailyGoal' && content.id !== 'weeklyGoal') {
-        content.style.display = 'none';
-      }
-    });
 
     window.addEventListener('DOMContentLoaded', () => {
       loadGoal('yearlyGoalInput');
@@ -144,6 +137,13 @@
       updateAchievement();
     });
 
+    // Hide other tabs and load saved goals
+    const tabContents = document.querySelectorAll('.tabcontent');
+    tabContents.forEach(content => {
+      if (content.id !== 'dailyGoal') {
+        content.style.display = 'none';
+      }
+    });
 
     function saveGoal(inputId) {
       const input = document.getElementById(inputId);
