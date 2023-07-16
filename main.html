@@ -40,6 +40,7 @@
     <button class="tablink" onclick="openTab(event, 'monthlyGoal')">Monthly Goal</button>
     <button class="tablink" onclick="openTab(event, 'weeklyGoal')">Weekly Goal</button>
     <button class="tablink" onclick="openTab(event, 'dailyGoal')">Daily Goal</button>
+    <button class="tablink" onclick="openTab(event, 'achievement')">Achievements</button>
     <button class="tablink" onclick="openTab(event, 'question')">Question</button>
   </div>
 
@@ -80,6 +81,11 @@
       <h2>Daily Goal</h2>
       <textarea id="dailyGoalInput" oninput="saveGoal('dailyGoalInput')"></textarea>
     </div>
+  </div>
+
+  <div class="tabcontent" id="achievement">
+    <h2>Achievements</h2>
+    <textarea id="achievementInput" oninput="saveGoal('achievementInput');"></textarea>
   </div>
 
   <div class="tabcontent" id="question">
@@ -125,6 +131,7 @@
       loadGoal('weeklyGoalInput');
       loadGoal('dailyWeeklyGoalInput');
       loadGoal('dailyGoalInput');
+      loadGoal('achievementInput');
       updateMonthlyGoal();
       updateWeeklyGoal();
       updateDailyGoal();
