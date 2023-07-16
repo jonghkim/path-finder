@@ -51,7 +51,7 @@
 <body>
 
   <div id="passwordContent">
-    <h1>Welcome to the Pathfinder</h1>
+    <h1>Welcome to Pathfinder</h1>
     <input id="username" type="text" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
     <!-- <button onclick="signUp">Sign Up</button>
@@ -99,6 +99,8 @@
           const errorCode = error.code;
           const errorMessage = error.message;
           console.error("Signup error:", errorCode, errorMessage);
+
+          signIn(username, password);
           // Handle the error or display an error message to the user
         });
     }
@@ -133,6 +135,8 @@
       // Set the source URL of the iframe with the username query parameter
       const timestamp = new Date().getTime(); // Get current timestamp
       const mainPageURL = `main.html?username=${username}&timestamp=${timestamp}`;      
+
+      console.log(mainPageURL);
 
     }
 
