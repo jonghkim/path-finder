@@ -86,13 +86,13 @@
   <div class="tabcontent" id="achievement">
     <div class="left-pane">
       <h2>Yearly Goal</h2>
-      <textarea id="monthlyYearlyGoalInput" disabled></textarea>
+      <textarea id="achievementYearlyGoalInput" disabled></textarea> <!-- Fix here: change the id to "achievementYearlyGoalInput" -->
     </div>
     <div class="right-pane">
       <h2>Achievements & Reflection</h2>
       <textarea id="achievementInput" oninput="saveGoal('achievementInput');"></textarea>
     </div>    
-  </div>
+  </div>  
 
   <div class="tabcontent" id="question">
     <h2>Question</h2>
@@ -138,9 +138,11 @@
       loadGoal('dailyWeeklyGoalInput');
       loadGoal('dailyGoalInput');
       loadGoal('achievementInput');
+      loadGoal('achievementYearlyGoalInput');
       updateMonthlyGoal();
       updateWeeklyGoal();
       updateDailyGoal();
+      updateAchievement();
     });
 
     function saveGoal(inputId) {
@@ -191,12 +193,14 @@
         // Update the left pane with the previous goal value
         const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
                                 tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
-                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : '';
+                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : 
+                                tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
         if (leftPaneInputId) {
           const leftPaneInput = document.getElementById(leftPaneInputId);
           const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
                                       tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
-                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' : '';
+                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' : 
+                                      tabName === 'achievement' ? 'yearlyGoalInput' : '';
           if (previousGoalInputId) {
             const previousGoalInput = document.getElementById(previousGoalInputId);
             leftPaneInput.value = previousGoalInput.value;
@@ -221,6 +225,12 @@
       const weeklyGoalInput = document.getElementById('weeklyGoalInput');
       const dailyWeeklyGoalInput = document.getElementById('dailyWeeklyGoalInput');
       dailyWeeklyGoalInput.value = weeklyGoalInput.value;
+    }
+
+    function updateAchievement() {
+      const yearlyGoalInput = document.getElementById('yearlyGoalInput');
+      const achievementYearlyGoalInput = document.getElementById('achievementYearlyGoalInput');
+      achievementYearlyGoalInput.value = yearlyGoalInput.value;
     }
 
     // Function to generate a random question
