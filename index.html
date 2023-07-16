@@ -91,6 +91,8 @@
           const user = userCredential.user;
           console.log("Signup successful:", user);
           // Additional actions or redirects can be performed here
+
+          signIn(username, password);
         })
         .catch((error) => {
           // Signup failed
