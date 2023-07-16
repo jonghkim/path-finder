@@ -160,6 +160,8 @@
       // Determine the document name based on the inputId
       if (inputId === 'yearlyGoalInput') {
         documentName = 'year-' + year;
+      } else if (inputId === 'achievementInput') {
+        documentName = year+'-achievement';
       } else if (inputId === 'monthlyGoalInput') {
         documentName = 'month-' + year + '-' + month;
       } else if (inputId === 'weeklyGoalInput') {
@@ -196,6 +198,8 @@
       // Determine the document name based on the inputId
       if (inputId === 'yearlyGoalInput') {
         documentName = 'year-' + year;
+      } else if (inputId === 'achievementInput') {
+        documentName = year+'-achievement';
       } else if (inputId === 'monthlyGoalInput') {
         documentName = 'month-' + year + '-' + month;
       } else if (inputId === 'weeklyGoalInput') {
