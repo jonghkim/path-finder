@@ -243,16 +243,18 @@
         selectedTabContent.style.display = 'block';
         
         // Update the left pane with the previous goal value
-        const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
-                                tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
-                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : 
-                                tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
+        const leftPaneInputId =
+          tabName === 'dailyGoal' ? 'weeklyGoalInput' :
+          tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
+          tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
+          tabName === 'achievement' ? 'yearlyGoalInput' : '';
         if (leftPaneInputId) {
           const leftPaneInput = document.getElementById(leftPaneInputId);
-          const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
-                                      tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
-                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' : 
-                                      tabName === 'achievement' ? 'yearlyGoalInput' : '';
+          const previousGoalInputId =
+            tabName === 'dailyGoal' ? 'weeklyMonthlyGoalInput' :
+            tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
+            tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
+            tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
           if (previousGoalInputId) {
             const previousGoalInput = document.getElementById(previousGoalInputId);
             leftPaneInput.value = previousGoalInput.value;
