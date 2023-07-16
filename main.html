@@ -147,9 +147,27 @@
 
     function saveGoal(inputId) {
       const input = document.getElementById(inputId);
-      // localStorage.setItem(inputId, input.value);
+
+      let today = new Date();
+      let year = today.getFullYear(); // Get the year
+      let month = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit' }); // Get the year and month
+      let day = today.toLocaleDateString('en-US'); // Get the year, month, and day
+
+      let documentName;
+
+      // Determine the document name based on the inputId
+      if (inputId === 'yearlyGoalInput') {
+        documentName = 'year-' + year;
+      } else if (inputId === 'monthlyGoalInput') {
+        documentName = 'month-' + month;
+      } else if (inputId === 'dailyGoalInput') {
+        documentName = 'day-' + day;
+      } else {
+        documentName = inputId; // Default to the inputId for other inputs
+      }
+
       // Save the goal to Firebase Firestore
-      db.collection("users").doc(username).collection("goals").doc(inputId).set({
+      db.collection("users").doc(username).collection("goals").doc(documentName).set({
         value: input.value
       })
       .then(() => {
@@ -162,12 +180,27 @@
 
     function loadGoal(inputId) {
       const input = document.getElementById(inputId);
-      // const savedGoal = localStorage.getItem(inputId);
-      // if (savedGoal) {
-      //   input.value = savedGoal;
-      // }
+
+      let today = new Date();
+      let year = today.getFullYear(); // Get the year
+      let month = today.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit' }); // Get the year and month
+      let day = today.toLocaleDateString('en-US'); // Get the year, month, and day
+
+      let documentName;
+
+      // Determine the document name based on the inputId
+      if (inputId === 'yearlyGoalInput') {
+        documentName = 'year-' + year;
+      } else if (inputId === 'monthlyGoalInput') {
+        documentName = 'month-' + month;
+      } else if (inputId === 'dailyGoalInput') {
+        documentName = 'day-' + day;
+      } else {
+        documentName = inputId; // Default to the inputId for other inputs
+      }
+
       // Load the goal from Firebase Firestore
-      db.collection("users").doc(username).collection("goals").doc(inputId).get()
+      db.collection("users").doc(username).collection("goals").doc(documentName).get()
       .then((doc) => {
         if (doc.exists) {
           const goal = doc.data().value;
