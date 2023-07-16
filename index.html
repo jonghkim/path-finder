@@ -60,7 +60,7 @@
     <button id="signInButton">Sign In</button>  
   </div>
 
-  <iframe id="mainContent" src="main.html"></iframe>
+  <iframe id="mainContent" src=""></iframe>
 
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
@@ -68,19 +68,18 @@
   <script type="module">
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDe9DNLwKUHCotndzQEotpxM-GCVRBGsp8",
-      authDomain: "pathfinder-79832.firebaseapp.com",
-      projectId: "pathfinder-79832",
-      storageBucket: "pathfinder-79832.appspot.com",
-      messagingSenderId: "961999611719",
-      appId: "1:961999611719:web:82201d87e8de0f5ab1ce62",
-      measurementId: "G-T0SRFTSP4L"
-    };    
-
+      apiKey: "AIzaSyDGGHtfrqX6fEDFPZnvhWO1NQFNjL0P0Y8",
+      authDomain: "pathfinder-fd96a.firebaseapp.com",
+      projectId: "pathfinder-fd96a",
+      storageBucket: "pathfinder-fd96a.appspot.com",
+      messagingSenderId: "801645100816",
+      appId: "1:801645100816:web:e9118c18d09a3fc79b2f95",
+      measurementId: "G-DPJQ376Q6J"
+    };
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-
+    
     function signUp() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
@@ -111,7 +110,7 @@
           // Handle successful sign-in
           const user = userCredential.user;
           console.log("Sign-in successful:", user);
-          showMainPage(); // Show the main page content
+          showMainPage(username); // Show the main page content and pass the username
         })
         .catch((error) => {
           // Handle sign-in errors
@@ -121,25 +120,22 @@
         });
     }
 
-    function showMainPage() {
+    function showMainPage(username) {
+
       const passwordContent = document.getElementById("passwordContent");
       const mainContent = document.getElementById("mainContent");
 
       passwordContent.style.display = "none"; // Hide the password page content
       mainContent.style.display = "block"; // Show the iframe
+
+      // Set the source URL of the iframe with the username query parameter
+      const mainPageURL = `main.html?username=${username}`;
+      mainContent.src = mainPageURL;
     }
 
     document.getElementById("signUpButton").addEventListener("click", signUp);
     document.getElementById("signInButton").addEventListener("click", signIn);
 
-    window.addEventListener('DOMContentLoaded', (event) => {
-      // Check if the user is already signed in
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          showMainPage(); // Show the main page content
-        }
-      });
-    });
   </script>  
 
 </body>
