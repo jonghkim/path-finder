@@ -133,6 +133,8 @@
       // Set the source URL of the iframe with the username query parameter
       const mainPageURL = `main.html?username=${username}`;
       mainContent.src = mainPageURL;
+
+      window.location.reload();
     }
 
     document.getElementById("signUpButton").addEventListener("click", signUp);
