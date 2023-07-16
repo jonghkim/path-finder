@@ -53,7 +53,7 @@
   <div class="tabcontent" id="monthlyGoal">
     <div class="left-pane">
       <h2>Yearly Goal</h2>
-      <textarea id="monthlyYearlyGoalInput" oninput="loadGoal('yearlyGoalInput');" disabled></textarea>
+      <textarea id="monthlyYearlyGoalInput" disabled></textarea>
     </div>
     <div class="right-pane">
       <h2>Monthly Goal</h2>
@@ -64,7 +64,7 @@
   <div class="tabcontent" id="weeklyGoal">
     <div class="left-pane">
       <h2>Monthly Goal</h2>
-      <textarea id="weeklyMonthlyGoalInput" oninput="loadGoal('monthlyGoalInput');" disabled></textarea>
+      <textarea id="weeklyMonthlyGoalInput" disabled></textarea>
     </div>
     <div class="right-pane">
       <h2>Weekly Goal</h2>
@@ -75,7 +75,7 @@
   <div class="tabcontent" id="dailyGoal">
     <div class="left-pane">
       <h2>Weekly Goal</h2>
-      <textarea id="dailyWeeklyGoalInput" oninput="loadGoal('weeklyGoalInput');" disabled></textarea>
+      <textarea id="dailyWeeklyGoalInput" disabled></textarea>
     </div>
     <div class="right-pane">
       <h2>Daily Goal</h2>
@@ -86,7 +86,7 @@
   <div class="tabcontent" id="achievement">
     <div class="left-pane">
       <h2>Yearly Goal</h2>
-      <textarea id="achievementYearlyGoalInput" oninput="loadGoal('yearlyGoalInput');" disabled></textarea> <!-- Fix here: change the id to "achievementYearlyGoalInput" -->
+      <textarea id="achievementYearlyGoalInput" disabled></textarea> <!-- Fix here: change the id to "achievementYearlyGoalInput" -->
     </div>
     <div class="right-pane">
       <h2>Achievements & Reflection</h2>
@@ -124,7 +124,7 @@
     const tabContents = document.querySelectorAll('.tabcontent');
 
     tabContents.forEach(content => {
-      if (content.id !== 'dailyGoal') {
+      if (content.id !== 'yearlyGoal') {
         content.style.display = 'none';
       }
     });
