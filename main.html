@@ -120,11 +120,10 @@
     const urlParams = new URLSearchParams(queryString);
     const username = urlParams.get('username');
 
-    console.log(username);
     // Hide other tabs and load saved goals
     const tabContents = document.querySelectorAll('.tabcontent');
     tabContents.forEach(content => {
-      if (content.id !== 'dailyGoal') {
+      if (content.id !== 'dailyGoal' && content.id !== 'weeklyGoal') {
         content.style.display = 'none';
       }
     });
