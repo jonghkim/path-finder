@@ -166,11 +166,6 @@
         documentName = inputId; // Default to the inputId for other inputs
       }
       
-      console.log(year);
-      console.log(month);
-      console.log(day);
-      console.log(documentName);
-
       // Save the goal to Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).set({
         value: input.value
