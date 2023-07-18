@@ -508,7 +508,7 @@
           if (inputId === 'monthlyActionPlansInput'){
             let fill_week_text = '';
             for (let i = 1; i <= 4; i++) {
-              let week_text = `[Week ${i}] \n`;
+              let week_text = `[Week ${i}] \n\n`;
               fill_week_text += week_text;
             }
             input.value = fill_week_text;
@@ -516,7 +516,7 @@
             let fill_day_text = '';
             const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             for (let j = 1; j <= 7; j++) {
-              let day_text = `[${days[j-1]}] \n`;
+              let day_text = `[${days[j-1]}] \n\n`;
               fill_day_text += day_text;
             }
             input.value = fill_day_text;
