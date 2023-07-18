@@ -280,12 +280,9 @@
 
     function updateSelectedDate() {
       const datePicker = document.getElementById("datePicker");
-      const selectedDateString = datePicker.value;
-      selectedDate = new Date(selectedDateString);
-
+      selectedDate = new Date(datePicker.value + "T12:00:00");
       loadSelectedDateData();
     }
-
 
     function loadSelectedDateData() {
       const year = selectedDate.getFullYear();
@@ -422,6 +419,8 @@
 
     // Load the goal from Firebase Firestore using the updated document name
     function loadGoal(inputId, selectedDateStr) {
+      
+      console.log(selectedDateStr)
 
       const input = document.getElementById(inputId);
 
