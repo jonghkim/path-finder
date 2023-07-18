@@ -91,11 +91,7 @@
     .pane-container .left-pane, .pane-container .right-pane {
       width: 49.5%;
     }    
-
-    .pane-container .left-pane textarea{
-      margin-top: 44px;
-    }
-
+    
     .vertical-pane-container {
       display: flex;
       flex-direction: column;
@@ -128,8 +124,12 @@
 
     .action-plans-container .progress {
       flex: 1;
-    }   
+    }  
 
+    .spacer {
+      display: block;
+      height: 39px;  /* Adjust this value to create the space you need */
+    }
   </style>
 
   <script src="questions_20230716.js"></script>
@@ -169,11 +169,11 @@
     <label for="perfectYear">What would it look like if this year went perfectly?</label>
     <textarea id="perfectYear" class="small-textarea" oninput="saveGoal('perfectYear', selectedDate);" placeholder="Your perfect year"></textarea>
   
-    <label for="startDoing">What do you want to start doing this year?</label>
-    <textarea id="startDoing" class="small-textarea" oninput="saveGoal('startDoing', selectedDate);" placeholder="Start doing..."></textarea>
+    <label for="startDoing">What do you want to start doing?</label>
+    <textarea id="startDoing" class="small-textarea" oninput="saveGoal('startDoing', selectedDate);" placeholder="Start doing"></textarea>
   
-    <label for="stopDoing">What do you want to stop doing this year?</label>
-    <textarea id="stopDoing" class="small-textarea" oninput="saveGoal('stopDoing', selectedDate);" placeholder="Stop doing..."></textarea>
+    <label for="stopDoing">What do you want to stop doing?</label>
+    <textarea id="stopDoing" class="small-textarea" oninput="saveGoal('stopDoing', selectedDate);" placeholder="Stop doing"></textarea>
       
     <label for="actions">What are your key actions and milestones for achieving your vision?</label>
     <textarea id="actions" class="small-textarea" oninput="saveGoal('actions', selectedDate);" placeholder="Key actions and milestones"></textarea>
@@ -191,6 +191,7 @@
       <div class="pane-container">
         <div class="left-pane">
           <h2>Yearly Milestones</h2>
+          <label for="yearlyMilestonesInput" class="spacer"></label>
           <textarea id="yearlyMilestonesInput" class="large-textarea" oninput="saveGoal('yearlyMilestonesInput', selectedDate);"></textarea>
         </div>
         <div class="right-pane">
@@ -215,6 +216,7 @@
         <div class="pane-container">
             <div class="left-pane">
                 <h2>Monthly Milestones</h2>
+                <label for="monthlyMilestonesInput" class="spacer"></label>
                 <textarea id="monthlyMilestonesInput" class="large-textarea" oninput="saveGoal('monthlyMilestonesInput', selectedDate);"></textarea>
             </div>
             <div class="right-pane">
@@ -239,6 +241,7 @@
           <div class="pane-container">
               <div class="left-pane">
                   <h2>Weekly Milestones</h2>
+                  <label for="weeklyMilestonesInput" class="spacer"></label>
                   <textarea id="weeklyMilestonesInput" class="large-textarea" oninput="saveGoal('weeklyMilestonesInput', selectedDate);"></textarea>
               </div>
               <div class="right-pane">
