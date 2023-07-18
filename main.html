@@ -389,6 +389,7 @@
         }
       })
       .catch((error) => {
+        input.value = "";
         console.error("Error loading goal from Firestore: ", error);
       });
     }
