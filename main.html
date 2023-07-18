@@ -91,6 +91,14 @@
     .pane-container .left-pane, .pane-container .right-pane {
       width: 49.5%;
     }    
+
+    .date-selection {
+      margin-top: 10px;
+    }
+
+    .date-selection label {
+      margin-right: 10px;
+    }    
   </style>
 
   <script src="questions_20230716.js"></script>
@@ -112,33 +120,38 @@
     <button class="tablink" onclick="openTab(event, 'about')">About</button>
   </div>
 
+  <!-- Date selection -->
+  <div class="date-selection">
+    <label for="selectedDate">Select a date:</label>
+    <input type="date" id="datePicker" onchange="updateSelectedDate()">
+  </div>
   <!-- Content -->
 
   <div class="tabcontent" id="vision">
     <h2>Vision</h2>
-    <textarea id="visionInput" class="small-textarea" oninput="saveGoal('visionInput');" placeholder="Write your vision here"></textarea>
-      
+    <textarea id="visionInput" class="small-textarea" oninput="saveGoal('visionInput', selectedDate);" placeholder="Write your vision here"></textarea>
+  
     <h3>Bringing Your Year Into Focus</h3>
     <label for="yearImprovement">How will you improve yourself this year?</label>
-    <textarea id="yearImprovement" class="small-textarea" oninput="saveGoal('yearImprovement');" placeholder="Your improvement goal"></textarea>
+    <textarea id="yearImprovement" class="small-textarea" oninput="saveGoal('yearImprovement', selectedDate);" placeholder="Your improvement goal"></textarea>
   
     <label for="perfectYear">What would it look like if this year went perfectly?</label>
-    <textarea id="perfectYear" class="small-textarea" oninput="saveGoal('perfectYear');" placeholder="Your perfect year"></textarea>
+    <textarea id="perfectYear" class="small-textarea" oninput="saveGoal('perfectYear', selectedDate);" placeholder="Your perfect year"></textarea>
   
     <label for="startDoing">What do you want to start doing this year?</label>
-    <textarea id="startDoing" class="small-textarea" oninput="saveGoal('startDoing');" placeholder="Start doing..."></textarea>
+    <textarea id="startDoing" class="small-textarea" oninput="saveGoal('startDoing', selectedDate);" placeholder="Start doing..."></textarea>
   
     <label for="actions">What are your key actions and milestones for achieving your vision?</label>
-    <textarea id="actions" class="small-textarea" oninput="saveGoal('actions');" placeholder="Key actions and milestones"></textarea>
+    <textarea id="actions" class="small-textarea" oninput="saveGoal('actions', selectedDate);" placeholder="Key actions and milestones"></textarea>
   </div>
   
   <div class="tabcontent" id="yearlyGoal">
     <h2>Yearly Goal</h2>
     <div class="yearlygoal">
-      <textarea id="yearlyGoalInput" class="large-textarea" oninput="saveGoal('yearlyGoalInput'); updateMonthlyGoal()"></textarea>
+      <textarea id="yearlyGoalInput" class="large-textarea" oninput="saveGoal('yearlyGoalInput', selectedDate); updateMonthlyGoal(selectedDate);"></textarea>
     </div>
   </div>
-
+  
   <div class="tabcontent large-tabcontent" id="monthlyGoal">
     <div class="pane-container">
       <div class="left-pane">
@@ -147,11 +160,11 @@
       </div>
       <div class="right-pane">
         <h2>Monthly Goal</h2>
-        <textarea id="monthlyGoalInput" class="large-textarea" oninput="saveGoal('monthlyGoalInput'); updateWeeklyGoal()"></textarea>
+        <textarea id="monthlyGoalInput" class="large-textarea" oninput="saveGoal('monthlyGoalInput', selectedDate); updateWeeklyGoal(selectedDate);"></textarea>
       </div>
     </div>
   </div>
-
+  
   <div class="tabcontent large-tabcontent" id="weeklyGoal">
     <div class="pane-container">
       <div class="left-pane">
@@ -160,36 +173,36 @@
       </div>
       <div class="right-pane">
         <h2>Weekly Goal</h2>
-        <textarea id="weeklyGoalInput" class="large-textarea" oninput="saveGoal('weeklyGoalInput'); updateDailyGoal()"></textarea>
+        <textarea id="weeklyGoalInput" class="large-textarea" oninput="saveGoal('weeklyGoalInput', selectedDate); updateDailyGoal(selectedDate);"></textarea>
       </div>
     </div>
-</div>
-
-<div class="tabcontent large-tabcontent" id="dailyGoal">
-  <div class="pane-container">
-  <div class="left-pane">
-    <h2>Weekly Goal</h2>
-    <textarea id="dailyWeeklyGoalInput" class="large-textarea" disabled></textarea>
   </div>
-  <div class="right-pane">
-    <h2>Daily Goal</h2>
-    <textarea id="dailyGoalInput" class="large-textarea" oninput="saveGoal('dailyGoalInput')"></textarea>
+  
+  <div class="tabcontent large-tabcontent" id="dailyGoal">
+    <div class="pane-container">
+      <div class="left-pane">
+        <h2>Weekly Goal</h2>
+        <textarea id="dailyWeeklyGoalInput" class="large-textarea" disabled></textarea>
+      </div>
+      <div class="right-pane">
+        <h2>Daily Goal</h2>
+        <textarea id="dailyGoalInput" class="large-textarea" oninput="saveGoal('dailyGoalInput', selectedDate);"></textarea>
+      </div>
+    </div>
   </div>
+  
+  <div class="tabcontent large-tabcontent" id="achievement">
+    <div class="pane-container">
+      <div class="left-pane">
+        <h2>Yearly Goal</h2>
+        <textarea id="achievementYearlyGoalInput" class="large-textarea" disabled></textarea>
+      </div>
+      <div class="right-pane">
+        <h2>Achievements & Reflection</h2>
+        <textarea id="achievementInput" class="large-textarea" oninput="saveGoal('achievementInput', selectedDate);"></textarea>
+      </div>
+    </div>
   </div>
-</div>
-
-<div class="tabcontent large-tabcontent" id="achievement">
-  <div class="pane-container">
-  <div class="left-pane">
-    <h2>Yearly Goal</h2>
-    <textarea id="achievementYearlyGoalInput" class="large-textarea" disabled></textarea> <!-- Fix here: change the id to "achievementYearlyGoalInput" -->
-  </div>
-  <div class="right-pane">
-    <h2>Achievements & Reflection</h2>
-    <textarea id="achievementInput" class="large-textarea" oninput="saveGoal('achievementInput');"></textarea>
-  </div>    
-  </div>
-</div>  
 
   <div class="tabcontent" id="question">
     <h2>Question</h2>
@@ -210,6 +223,40 @@
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
 
   <script>
+    
+    let selectedDate = new Date(); // Default to today's date
+
+    function updateSelectedDate() {
+      const datePicker = document.getElementById("datePicker");
+      const selectedDateString = datePicker.value;
+      selectedDate = new Date(selectedDateString);
+
+      loadSelectedDateData();
+    }
+
+
+    function loadSelectedDateData() {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+
+      // Load all goals and data based on the selected date
+      loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearImprovement', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('perfectYear', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('startDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('actions', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('weeklyMonthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('weeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyWeeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyDGGHtfrqX6fEDFPZnvhWO1NQFNjL0P0Y8",
       authDomain: "pathfinder-fd96a.firebaseapp.com",
@@ -234,50 +281,59 @@
         content.style.display = 'none';
       }
     });
-
+  
     window.addEventListener('DOMContentLoaded', () => {
-      loadGoal('visionInput');
-      loadGoal('yearImprovement');
-      loadGoal('perfectYear');
-      loadGoal('startDoing');
-      loadGoal('actions');
-      loadGoal('yearlyGoalInput');
-      loadGoal('monthlyYearlyGoalInput');
-      loadGoal('monthlyGoalInput');
-      loadGoal('weeklyMonthlyGoalInput');
-      loadGoal('weeklyGoalInput');
-      loadGoal('dailyWeeklyGoalInput');
-      loadGoal('dailyGoalInput');
-      loadGoal('achievementInput');
-      loadGoal('achievementYearlyGoalInput');
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+
+      // Load the default data based on today's date
+      loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearImprovement', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('perfectYear', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('startDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('actions', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('weeklyMonthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('weeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyWeeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+
       updateMonthlyGoal();
       updateWeeklyGoal();
       updateDailyGoal();
       updateAchievement();
     });
 
-    function saveGoal(inputId) {
+    function saveGoal(inputId, selectedDateStr) {
       const input = document.getElementById(inputId);
+      
+      const selectedDate = new Date(selectedDateStr);
 
-      let today = new Date();
-      let year = today.getFullYear(); // Get the year
-      let month = String(today.getMonth() + 1).padStart(2, '0'); // Get the month and pad it with 0 if necessary
-      let date = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
-      let week = getWeekNumber(today); // Get the week number
-
+      // Get the year, month, and day from the selected date
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const week = getWeekNumber(selectedDate);
+      
       let documentName;
 
-      // Determine the document name based on the inputId
+      // Determine the document name based on the inputId and selected date
       if (inputId === 'yearlyGoalInput') {
         documentName = 'year-' + year;
       } else if (inputId === 'achievementInput') {
-        documentName = year+'-achievement';
+        documentName = year + '-achievement';
       } else if (inputId === 'monthlyGoalInput') {
         documentName = 'month-' + year + '-' + month;
       } else if (inputId === 'weeklyGoalInput') {
         documentName = 'week-' + year + '-W' + week;
       } else if (inputId === 'dailyGoalInput') {
-        documentName = 'day-' + year + '-' + month + '-' + date;
+        documentName = 'day-' + year + '-' + month + '-' + day;
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -294,28 +350,32 @@
       });
     }
 
-    function loadGoal(inputId) {
+    // Load the goal from Firebase Firestore using the updated document name
+    function loadGoal(inputId, selectedDateStr) {
+
       const input = document.getElementById(inputId);
 
-      let today = new Date();
-      let year = today.getFullYear(); // Get the year
-      let month = String(today.getMonth() + 1).padStart(2, '0'); // Get the month and pad it with 0 if necessary
-      let date = String(today.getDate()).padStart(2, '0'); // Get the day and pad it with 0 if necessary
-      let week = getWeekNumber(today); // Get the week number
+      const selectedDate = new Date(selectedDateStr);
+
+      // Get the year, month, and day from the selected date
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const week = getWeekNumber(selectedDate);
 
       let documentName;
 
-      // Determine the document name based on the inputId
+      // Determine the document name based on the inputId and selected date
       if (inputId === 'yearlyGoalInput') {
         documentName = 'year-' + year;
       } else if (inputId === 'achievementInput') {
-        documentName = year+'-achievement';
+        documentName = year + '-achievement';
       } else if (inputId === 'monthlyGoalInput') {
         documentName = 'month-' + year + '-' + month;
       } else if (inputId === 'weeklyGoalInput') {
         documentName = 'week-' + year + '-W' + week;
       } else if (inputId === 'dailyGoalInput') {
-        documentName = 'day-' + year + '-' + month + '-' + date;
+        documentName = 'day-' + year + '-' + month + '-' + day;
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -342,7 +402,7 @@
       return weekNo;
     }
 
-    function openTab(evt, tabName) {
+    function openTab(evt, tabName, selectedDate) {
       // Hide all tab contents
       tabContents.forEach(content => {
         content.style.display = 'none';
@@ -352,17 +412,17 @@
       const selectedTabContent = document.getElementById(tabName);
       if (selectedTabContent) {
         selectedTabContent.style.display = 'block';
-        
+
         // Update the left pane with the previous goal value
         const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
                                 tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
-                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' : 
+                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' :
                                 tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
         if (leftPaneInputId) {
           const leftPaneInput = document.getElementById(leftPaneInputId);
           const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
                                       tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
-                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' : 
+                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' :
                                       tabName === 'achievement' ? 'yearlyGoalInput' : '';
           if (previousGoalInputId) {
             const previousGoalInput = document.getElementById(previousGoalInputId);
