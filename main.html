@@ -251,8 +251,8 @@
               <textarea id="dailyActionPlansInput" class="small-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
             </div>
             <div class="bottom-pane">
-              <label for="dailyProgress">Done</label>
-              <textarea id="dailyProgress" class="small-small-textarea" oninput="saveGoal('dailyProgressInput', selectedDate);"></textarea>
+              <label for="dailyProgressInput">Done</label>
+              <textarea id="dailyProgressInput" class="small-small-textarea" oninput="saveGoal('dailyProgressInput', selectedDate);"></textarea>
             </div>            
           </div>    
       </div>      
@@ -402,8 +402,6 @@
     function saveGoal(inputId, selectedDateStr) {
       const input = document.getElementById(inputId);
       
-      console.log(input)
-
       const selectedDate = new Date(selectedDateStr);
 
       // Get the year, month, and day from the selected date
