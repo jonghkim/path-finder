@@ -511,6 +511,8 @@
         if (doc.exists) {
           const goal = doc.data().value;
           input.value = goal;
+        }else{
+          input.value = "";
         }
       })
       .catch((error) => {
