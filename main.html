@@ -230,18 +230,18 @@
       </div>
   </div>
   
-  <div class="tabcontent large-tabcontent" id="dailyGoal">
+  <div class="tabcontent tabcontent" id="dailyGoal">
       <div class="dailyGoal">
-          <div class="pane-container">
-              <div class="left-pane">
-                  <h2>Daily Milestones</h2>
-                  <textarea id="dailyMilestonesInput" class="large-textarea" oninput="saveGoal('dailyMilestonesInput', selectedDate);"></textarea>
-              </div>
-              <div class="right-pane">
-                  <h2>Action Plans and Key Performance</h2>
-                  <textarea id="dailyActionPlansInput" class="large-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
+          <div class="vertical-pane-container">
+            <div class="top-pane">
+              <h2>Daily Goal</h2>
+              <textarea id="dailyMilestonesInput" class="small-textarea" oninput="saveGoal('dailyMilestonesInput', selectedDate);"></textarea>
             </div>
-          </div>
+            <div class="bottom-pane">
+              <h2>Tasks</h2>
+              <textarea id="dailyActionPlansInput" class="large-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
+            </div>
+          </div>    
       </div>      
   </div>
   
@@ -550,7 +550,7 @@
       const randomQuestion = questions[randomIndex];
       questionDisplay.innerHTML = randomQuestion;
     }    
-    
+
   </script>
 </body>
 </html>
