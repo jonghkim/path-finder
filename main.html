@@ -230,9 +230,19 @@
       </div>
   </div>
   
-  <div class="tabcontent tabcontent" id="dailyGoal">
-      <h2>Daily To Do</h2>
-      <textarea id="dailyGoalInput" class="large-textarea" oninput="saveGoal('dailyGoalInput', selectedDate);"></textarea>
+  <div class="tabcontent large-tabcontent" id="dailyGoal">
+      <div class="dailyGoal">
+          <div class="pane-container">
+              <div class="left-pane">
+                  <h2>Daily Milestones</h2>
+                  <textarea id="dailyMilestonesInput" class="large-textarea" oninput="saveGoal('dailyMilestonesInput', selectedDate);"></textarea>
+              </div>
+              <div class="right-pane">
+                  <h2>Action Plans and Key Performance</h2>
+                  <textarea id="dailyActionPlansInput" class="large-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
+            </div>
+          </div>
+      </div>      
   </div>
   
   <div class="tabcontent large-tabcontent" id="achievement">
@@ -307,7 +317,9 @@
       loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
 
-      loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
@@ -363,7 +375,9 @@
       loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
 
-      loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
@@ -399,8 +413,10 @@
         documentName = 'week-' + year + '-W' + week + '-milestones';
       } else if (inputId === 'weeklyActionPlansInput') {
         documentName = 'week-' + year + '-W' + week + '-actionplans';
-      } else if (inputId === 'dailyGoalInput') {
-        documentName = 'day-' + year + '-' + month + '-' + day;
+      } else if (inputId === 'dailyMilestonesInput') {
+        documentName = 'day-' + year + '-' + month + '-' + day + '-milestones';
+      } else if (inputId === 'dailyActionPlansInput') {
+        documentName = 'day-' + year + '-' + month + '-' + day + '-actionplans';
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -450,8 +466,10 @@
         documentName = 'week-' + year + '-W' + week + '-milestones';
       } else if (inputId === 'weeklyActionPlansInput') {
         documentName = 'week-' + year + '-W' + week + '-actionplans';
-      } else if (inputId === 'dailyGoalInput') {
-        documentName = 'day-' + year + '-' + month + '-' + day;
+      } else if (inputId === 'dailyMilestonesInput') {
+        documentName = 'day-' + year + '-' + month + '-' + day + '-milestones';
+      } else if (inputId === 'dailyActionPlansInput') {
+        documentName = 'day-' + year + '-' + month + '-' + day + '-actionplans';
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -526,19 +544,13 @@
       achievementYearlyActionPlansInput.value = yearlyActionPlansInput.value;
     }
 
-    // Function to generate a random question
-    // function generateRandomQuestion() {
-    //   const questionDisplay = document.getElementById('questionDisplay');
-    //   const randomIndex = Math.floor(Math.random() * questions.length);
-    //   const randomQuestion = questions[randomIndex];
-    //   questionDisplay.textContent = randomQuestion;
-    // }
     function generateRandomQuestion() {
       const questionDisplay = document.getElementById('questionDisplay');
       const randomIndex = Math.floor(Math.random() * questions.length);
       const randomQuestion = questions[randomIndex];
       questionDisplay.innerHTML = randomQuestion;
     }    
+    
   </script>
 </body>
 </html>
