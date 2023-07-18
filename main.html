@@ -24,7 +24,25 @@
       float: right; 
       width: 50%;
       box-sizing: border-box;
-    }       
+    }     
+    
+    .tabcontent {
+      padding: 20px;
+      background-color: #f2f2f2;
+      border-radius: 5px;
+      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+
+    .tabcontent h2 {
+      margin-bottom: 20px;
+    }
+
+    .tabcontent p {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
   </style>
 
   <script src="questions_20230716.js"></script>
@@ -42,6 +60,8 @@
     <button class="tablink" onclick="openTab(event, 'dailyGoal')">Daily Goal</button>
     <button class="tablink" onclick="openTab(event, 'achievement')">Achievements & Reflection</button>
     <button class="tablink" onclick="openTab(event, 'question')">Question</button>
+    <button class="tablink" onclick="openTab(event, 'about')">About</button>
+
   </div>
 
   <!-- Content -->
@@ -98,6 +118,15 @@
     <h2>Question</h2>
     <button onclick="generateRandomQuestion()">Generate Question</button>
     <p id="questionDisplay"></p>
+  </div>
+
+  <div class="tabcontent" id="about">
+    <h2>About</h2>
+    <p>Welcome to our text-based scheduler, a tool designed to provide flexibility in planning your goals.</p>
+    <p>Personally, I use it to update my daily goals every morning. These aren't just simple to-do lists, they're steps towards achieving higher, more substantial goals.</p>
+    <p>This structure mirrors the relationships between weeks and months, or months and years.</p>
+    <p>Please note, each page is designed to reset at the start of its corresponding time period. For example, the daily goal page resets every day at 12am, while the weekly goal page resets every Monday.</p>
+    <p>Feel free to use this tool however you like, and please let me know if you have any suggestions for improvement!</p>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
