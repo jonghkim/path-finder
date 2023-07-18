@@ -30,7 +30,7 @@
       color: #2c3e50;
     }
 
-    .tabcontent h3 {
+    #vision h3 {
       border-top: 1px dotted #333;
       padding-top: 20px;
     }
@@ -92,6 +92,18 @@
       width: 49.5%;
     }    
 
+    .vertical-pane-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .vertical-pane-container .top-pane,
+    .vertical-pane-container .bottom-pane {
+      width: 99%;
+      flex: 1;
+    }
+
     .date-selection {
       margin-top: 10px;
     }
@@ -99,6 +111,21 @@
     .date-selection label {
       margin-right: 10px;
     }    
+
+    /* Horizontal split for Action Plans section */
+    .vertical-pane-container .action-plans-container {
+      display: flex;
+      gap: 20px;
+    }
+
+    .vertical-pane-container .action-plans-container .action-plans {
+      flex: 1;
+    }
+
+    .vertical-pane-container .action-plans-container .progress {
+      flex: 1;
+    }    
+
   </style>
 
   <script src="questions_20230716.js"></script>
@@ -141,30 +168,69 @@
     <label for="startDoing">What do you want to start doing this year?</label>
     <textarea id="startDoing" class="small-textarea" oninput="saveGoal('startDoing', selectedDate);" placeholder="Start doing..."></textarea>
   
+    <label for="stopDoing">What do you want to stop doing this year?</label>
+    <textarea id="stopDoing" class="small-textarea" oninput="saveGoal('stopDoing', selectedDate);" placeholder="Stop doing..."></textarea>
+      
     <label for="actions">What are your key actions and milestones for achieving your vision?</label>
     <textarea id="actions" class="small-textarea" oninput="saveGoal('actions', selectedDate);" placeholder="Key actions and milestones"></textarea>
   </div>
   
-  <div class="tabcontent" id="yearlyGoal">
+  <!-- <div class="tabcontent" id="yearlyGoal">
     <h2>Yearly Goal</h2>
     <div class="yearlygoal">
       <textarea id="yearlyGoalInput" class="large-textarea" oninput="saveGoal('yearlyGoalInput', selectedDate); updateMonthlyGoal(selectedDate);"></textarea>
+    </div>
+  </div> -->
+
+  <div class="tabcontent" id="yearlyGoal">
+    <h2>Yearly Goal</h2>
+    <div class="yearlygoal">
+      <div class="vertical-pane-container">
+        <div class="top-pane">
+          <h3>Yearly Milestones</h3>
+          <textarea id="yearlyMilestonesInput" class="small-textarea" oninput="saveGoal('yearlyMilestonesInput', selectedDate);"></textarea>
+        </div>
+        <div class="bottom-pane">
+          <h3>Action Plans</h3>
+          <div class="action-plans-container">
+            <div class="action-plans">
+              <label for="yearlyActionPlansInput">Tasks</label>
+              <textarea id="yearlyActionPlansInput" class="large-textarea" oninput="saveGoal('yearlyActionPlansInput', selectedDate);"></textarea>
+            </div>
+            <div class="progress">
+              <label for="yearlyProgressInput">Key Performance Indicator</label>
+              <textarea id="yearlyProgressInput" class="large-textarea" oninput="saveGoal('yearlyProgressInput', selectedDate);"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   
   <div class="tabcontent large-tabcontent" id="monthlyGoal">
     <div class="pane-container">
+
       <div class="left-pane">
-        <h2>Yearly Goal</h2>
-        <textarea id="monthlyYearlyGoalInput" class="large-textarea" disabled></textarea>
+        <div class="vertical-pane-container">
+          <div class="top-pane">
+            <h2>Yearly Milestones</h2>
+            <textarea id="monthlyYearlyMilestonesInput" class="small-textarea" disabled></textarea>
+          </div>
+          <div class="bottom-pane">
+            <h2>Action Plans</h2>
+            <textarea id="monthlyYearlyActionPlansInput" class="small-textarea" disabled></textarea>
+          </div>
+        </div>      
       </div>
+
       <div class="right-pane">
         <h2>Monthly Goal</h2>
         <textarea id="monthlyGoalInput" class="large-textarea" oninput="saveGoal('monthlyGoalInput', selectedDate); updateWeeklyGoal(selectedDate);"></textarea>
       </div>
+
     </div>
   </div>
-  
+
   <div class="tabcontent large-tabcontent" id="weeklyGoal">
     <div class="pane-container">
       <div class="left-pane">
@@ -177,6 +243,7 @@
       </div>
     </div>
   </div>
+
   
   <div class="tabcontent large-tabcontent" id="dailyGoal">
     <div class="pane-container">
@@ -194,8 +261,16 @@
   <div class="tabcontent large-tabcontent" id="achievement">
     <div class="pane-container">
       <div class="left-pane">
-        <h2>Yearly Goal</h2>
-        <textarea id="achievementYearlyGoalInput" class="large-textarea" disabled></textarea>
+        <div class="vertical-pane-container">
+          <div class="top-pane">
+            <h2>Yearly Milestones</h2>
+            <textarea id="achievementYearlyMilestonesInput" class="small-textarea" disabled></textarea>
+          </div>
+          <div class="bottom-pane">
+            <h2>Action Plans</h2>
+            <textarea id="achievementYearlyActionPlansInput" class="small-textarea" disabled></textarea>
+          </div>
+        </div>      
       </div>
       <div class="right-pane">
         <h2>Achievements & Reflection</h2>
@@ -245,16 +320,22 @@
       loadGoal('yearImprovement', 'day-' + year + '-' + month + '-' + day);
       loadGoal('perfectYear', 'day-' + year + '-' + month + '-' + day);
       loadGoal('startDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('stopDoing', 'day-' + year + '-' + month + '-' + day);
       loadGoal('actions', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+      // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('monthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyMonthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('dailyWeeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('achievementYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+      // loadGoal('achievementYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
     }
 
     const firebaseConfig = {
@@ -293,16 +374,21 @@
       loadGoal('yearImprovement', 'day-' + year + '-' + month + '-' + day);
       loadGoal('perfectYear', 'day-' + year + '-' + month + '-' + day);
       loadGoal('startDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('stopDoing', 'day-' + year + '-' + month + '-' + day);
       loadGoal('actions', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+      // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('monthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyMonthlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('dailyWeeklyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('achievementYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
 
       updateMonthlyGoal();
       updateWeeklyGoal();
@@ -324,8 +410,8 @@
       let documentName;
 
       // Determine the document name based on the inputId and selected date
-      if (inputId === 'yearlyGoalInput') {
-        documentName = 'year-' + year;
+      if (inputId === 'yearlyMilestonesInput' || inputId === 'yearlyActionPlansInput' || inputId === 'yearlyProgressInput') {
+        documentName = 'year-' + year;  
       } else if (inputId === 'achievementInput') {
         documentName = year + '-achievement';
       } else if (inputId === 'monthlyGoalInput') {
@@ -366,8 +452,8 @@
       let documentName;
 
       // Determine the document name based on the inputId and selected date
-      if (inputId === 'yearlyGoalInput') {
-        documentName = 'year-' + year;
+      if (inputId === 'yearlyMilestonesInput' || inputId === 'yearlyActionPlansInput' || inputId === 'yearlyProgressInput') {
+        documentName = 'year-' + year;          
       } else if (inputId === 'achievementInput') {
         documentName = year + '-achievement';
       } else if (inputId === 'monthlyGoalInput') {
@@ -379,6 +465,8 @@
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
+      
+      console.log(documentName)
 
       // Load the goal from Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).get()
@@ -403,39 +491,55 @@
     }
 
     function openTab(evt, tabName, selectedDate) {
-      // Hide all tab contents
-      tabContents.forEach(content => {
-        content.style.display = 'none';
-      });
+        // Hide all tab contents
+        tabContents.forEach(content => {
+          content.style.display = 'none';
+        });
 
-      // Show the selected tab content
-      const selectedTabContent = document.getElementById(tabName);
-      if (selectedTabContent) {
-        selectedTabContent.style.display = 'block';
+        // Show the selected tab content
+        const selectedTabContent = document.getElementById(tabName);
+        if (selectedTabContent) {
+          selectedTabContent.style.display = 'block';
 
-        // Update the left pane with the previous goal value
-        const leftPaneInputId = tabName === 'monthlyGoal' ? 'monthlyYearlyGoalInput' :
-                                tabName === 'weeklyGoal' ? 'weeklyMonthlyGoalInput' :
-                                tabName === 'dailyGoal' ? 'dailyWeeklyGoalInput' :
-                                tabName === 'achievement' ? 'achievementYearlyGoalInput' : '';
-        if (leftPaneInputId) {
-          const leftPaneInput = document.getElementById(leftPaneInputId);
-          const previousGoalInputId = tabName === 'monthlyGoal' ? 'yearlyGoalInput' :
-                                      tabName === 'weeklyGoal' ? 'monthlyGoalInput' :
-                                      tabName === 'dailyGoal' ? 'weeklyGoalInput' :
-                                      tabName === 'achievement' ? 'yearlyGoalInput' : '';
-          if (previousGoalInputId) {
-            const previousGoalInput = document.getElementById(previousGoalInputId);
-            leftPaneInput.value = previousGoalInput.value;
+          const paneInputIds = {
+            monthlyGoal: ['monthlyYearlyMilestonesInput', 'monthlyYearlyActionPlansInput'],
+            weeklyGoal: ['weeklyMonthlyGoalInput'],
+            dailyGoal: ['dailyWeeklyGoalInput'],
+            achievement: ['achievementYearlyMilestonesInput', 'achievementYearlyActionPlansInput']
+          };
+
+          const previousGoalInputIds = {
+            monthlyGoal: ['yearlyMilestonesInput', 'yearlyActionPlansInput'],
+            weeklyGoal: ['monthlyGoalInput'],
+            dailyGoal: ['weeklyGoalInput'],
+            achievement: ['yearlyMilestonesInput', 'yearlyActionPlansInput']
+          };
+
+          const leftPaneInputIds = paneInputIds[tabName];
+          const prevGoalInputIds = previousGoalInputIds[tabName];
+
+          if (leftPaneInputIds && prevGoalInputIds) {
+            for (let i = 0; i < leftPaneInputIds.length; i++) {
+              const leftPaneInput = document.getElementById(leftPaneInputIds[i]);
+              const previousGoalInput = document.getElementById(prevGoalInputIds[i]);
+              if (leftPaneInput && previousGoalInput) {
+                leftPaneInput.value = previousGoalInput.value;
+              }
+            }
           }
         }
-      }
-    }
+      }    
+
 
     function updateMonthlyGoal() {
-      const yearlyGoalInput = document.getElementById('yearlyGoalInput');
-      const monthlyYearlyGoalInput = document.getElementById('monthlyYearlyGoalInput');
-      monthlyYearlyGoalInput.value = yearlyGoalInput.value;
+      const yearlyMilestonesInput = document.getElementById('yearlyMilestonesInput');
+      const yearlyActionPlansInput = document.getElementById('yearlyActionPlansInput');
+
+      const monthlyYearlyMilestonesInput = document.getElementById('monthlyYearlyMilestonesInput');
+      const monthlyYearlyActionPlansInput = document.getElementById('monthlyYearlyActionPlansInput');
+
+      monthlyYearlyMilestonesInput.value = yearlyMilestonesInput.value;
+      monthlyYearlyActionPlansInput.value = yearlyActionPlansInput.value;
     }
 
     function updateWeeklyGoal() {
@@ -451,9 +555,14 @@
     }
 
     function updateAchievement() {
-      const yearlyGoalInput = document.getElementById('yearlyGoalInput');
-      const achievementYearlyGoalInput = document.getElementById('achievementYearlyGoalInput');
-      achievementYearlyGoalInput.value = yearlyGoalInput.value;
+      const yearlyMilestonesInput = document.getElementById('yearlyMilestonesInput');
+      const yearlyActionPlansInput = document.getElementById('yearlyActionPlansInput');
+
+      const achievementYearlyMilestonesInput = document.getElementById('achievementYearlyMilestonesInput');
+      const achievementYearlyActionPlansInput = document.getElementById('achievementYearlyActionPlansInput');
+
+      achievementYearlyMilestonesInput.value = yearlyMilestonesInput.value;
+      achievementYearlyActionPlansInput.value = yearlyActionPlansInput.value;
     }
 
     // Function to generate a random question
