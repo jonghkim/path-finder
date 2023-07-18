@@ -386,6 +386,8 @@
         if (doc.exists) {
           const goal = doc.data().value;
           input.value = goal;
+        } else {
+          input.value = ""; // Set input value to empty if the document doesn't exist
         }
       })
       .catch((error) => {
