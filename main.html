@@ -190,21 +190,11 @@
       <div class="pane-container">
         <div class="left-pane">
           <h2>Yearly Milestones</h2>
-          <label for="yearlyMilestonesInput" class="spacer"></label>
           <textarea id="yearlyMilestonesInput" class="large-textarea" oninput="saveGoal('yearlyMilestonesInput', selectedDate);"></textarea>
         </div>
         <div class="right-pane">
-          <h2>Action Plans</h2>
-          <div class="action-plans-container">
-            <div class="action-plans">
-              <label for="yearlyActionPlansInput">Tasks</label>
-              <textarea id="yearlyActionPlansInput" class="large-textarea" oninput="saveGoal('yearlyActionPlansInput', selectedDate);"></textarea>
-            </div>
-            <div class="progress">
-              <label for="yearlyProgressInput">Key Performance Indicator</label>
-              <textarea id="yearlyProgressInput" class="large-textarea" oninput="saveGoal('yearlyProgressInput', selectedDate);"></textarea>
-            </div>
-          </div>
+          <h2>Action Plans and Key Performance</h2>
+          <textarea id="yearlyActionPlansInput" class="large-textarea" oninput="saveGoal('yearlyActionPlansInput', selectedDate);"></textarea>
         </div>
       </div>
     </div>
@@ -219,17 +209,9 @@
                 <textarea id="monthlyMilestonesInput" class="large-textarea" oninput="saveGoal('monthlyMilestonesInput', selectedDate);"></textarea>
             </div>
             <div class="right-pane">
-                <h2>Action Plans</h2>
-                <div class="action-plans-container">
-                    <div class="action-plans">
-                        <label for="monthlyActionPlansInput">Tasks</label>
-                        <textarea id="monthlyActionPlansInput" class="large-textarea" oninput="saveGoal('monthlyActionPlansInput', selectedDate);"></textarea>
-                    </div>
-                    <div class="progress">
-                        <label for="monthlyProgressInput">Key Performance Indicator</label>
-                        <textarea id="monthlyProgressInput" class="large-textarea" oninput="saveGoal('monthlyProgressInput', selectedDate);"></textarea>
-                    </div>
-                </div>
+                <h2>Action Plans and Key Performance</h2>
+                <label for="monthlyActionPlansInput">Tasks</label>
+                <textarea id="monthlyActionPlansInput" class="large-textarea" oninput="saveGoal('monthlyActionPlansInput', selectedDate);"></textarea>
             </div>
         </div>
     </div>
@@ -244,18 +226,10 @@
                   <textarea id="weeklyMilestonesInput" class="large-textarea" oninput="saveGoal('weeklyMilestonesInput', selectedDate);"></textarea>
               </div>
               <div class="right-pane">
-                  <h2>Action Plans</h2>
-                  <div class="action-plans-container">
-                      <div class="action-plans">
-                          <label for="weeklyActionPlansInput">Tasks</label>
-                          <textarea id="weeklyActionPlansInput" class="large-textarea" oninput="saveGoal('weeklyActionPlansInput', selectedDate);"></textarea>
-                      </div>
-                      <div class="progress">
-                          <label for="weeklyProgressInput">Key Performance Indicator</label>
-                          <textarea id="weeklyProgressInput" class="large-textarea" oninput="saveGoal('weeklyProgressInput', selectedDate);"></textarea>
-                      </div>
-                  </div>
-              </div>
+                  <h2>Action Plans and Key Performance</h2>
+                  <label for="weeklyActionPlansInput">Tasks</label>
+                  <textarea id="weeklyActionPlansInput" class="large-textarea" oninput="saveGoal('weeklyActionPlansInput', selectedDate);"></textarea>
+            </div>
           </div>
       </div>
   </div>
@@ -274,7 +248,7 @@
             <textarea id="achievementYearlyMilestonesInput" class="small-textarea" disabled></textarea>
           </div>
           <div class="bottom-pane">
-            <h2>Action Plans</h2>
+            <h2>Action Plans and Key Performance</h2>
             <textarea id="achievementYearlyActionPlansInput" class="small-textarea" disabled></textarea>
           </div>
         </div>      
@@ -332,16 +306,13 @@
       // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyProgressInput', 'day-' + year + '-' + month + '-' + day);
       // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
 
       loadGoal('monthlyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('monthlyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('monthlyProgressInput',  'day-' + year + '-' + month + '-' + day);
 
       loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('weeklyProgressInput',  'day-' + year + '-' + month + '-' + day); 
 
       loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
@@ -391,16 +362,13 @@
       // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyProgressInput', 'day-' + year + '-' + month + '-' + day);
       // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
 
       loadGoal('monthlyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('monthlyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('monthlyProgressInput',  'day-' + year + '-' + month + '-' + day);
 
       loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('weeklyProgressInput',  'day-' + year + '-' + month + '-' + day); 
 
       loadGoal('dailyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
@@ -428,22 +396,16 @@
         documentName = 'year-' + year + '-milestones';  
       } else if (inputId === 'yearlyActionPlansInput') {
         documentName = 'year-' + year + '-actionplans';  
-      } else if (inputId === 'yearlyProgressInput') {
-        documentName = 'year-' + year + '-progress';  
       } else if (inputId === 'achievementInput') {
         documentName = 'year-' + year + '-achievement';
       } else if (inputId === 'monthlyMilestonesInput') {
         documentName = 'month-' + year + '-' + month + '-milestones';
       } else if (inputId === 'monthlyActionPlansInput') {
         documentName = 'month-' + year + '-' + month + '-actionplans';
-      } else if (inputId === 'monthlyProgressInput') {
-        documentName = 'month-' + year + '-' + month + '-progress';
       } else if (inputId === 'weeklyMilestonesInput') {
         documentName = 'week-' + year + '-W' + week + '-milestones';
       } else if (inputId === 'weeklyActionPlansInput') {
         documentName = 'week-' + year + '-W' + week + '-actionplans';
-      } else if (inputId === 'weeklyProgressInput') {
-        documentName = 'week-' + year + '-W' + week + '-progress';
       } else if (inputId === 'dailyGoalInput') {
         documentName = 'day-' + year + '-' + month + '-' + day;
       } else {
@@ -483,22 +445,16 @@
         documentName = 'year-' + year + '-milestones';  
       } else if (inputId === 'yearlyActionPlansInput') {
         documentName = 'year-' + year + '-actionplans';  
-      } else if (inputId === 'yearlyProgressInput') {
-        documentName = 'year-' + year + '-progress';  
       } else if (inputId === 'achievementInput') {
         documentName = 'year-' + year + '-achievement';
       } else if (inputId === 'monthlyMilestonesInput') {
         documentName = 'month-' + year + '-' + month + '-milestones';
       } else if (inputId === 'monthlyActionPlansInput') {
         documentName = 'month-' + year + '-' + month + '-actionplans';
-      } else if (inputId === 'monthlyProgressInput') {
-        documentName = 'month-' + year + '-' + month + '-progress';
       } else if (inputId === 'weeklyMilestonesInput') {
         documentName = 'week-' + year + '-W' + week + '-milestones';
       } else if (inputId === 'weeklyActionPlansInput') {
         documentName = 'week-' + year + '-W' + week + '-actionplans';
-      } else if (inputId === 'weeklyProgressInput') {
-        documentName = 'week-' + year + '-W' + week + '-progress';
       } else if (inputId === 'dailyGoalInput') {
         documentName = 'day-' + year + '-' + month + '-' + day;
       } else {
