@@ -503,8 +503,6 @@
         documentName = inputId; // Default to the inputId for other inputs
       }
       
-      console.log(documentName)
-
       // Load the goal from Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).get()
       .then((doc) => {
