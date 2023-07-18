@@ -250,6 +250,10 @@
               <label for="dailyActionPlansInput">What are the important tasks?</label>
               <textarea id="dailyActionPlansInput" class="small-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
             </div>
+            <div class="bottom-pane">
+              <h2>Done</h2>
+              <textarea id="dailyProgress" class="small-small-textarea" oninput="saveGoal('dailyProgressInput', selectedDate);"></textarea>
+            </div>            
           </div>    
       </div>      
   </div>
@@ -327,6 +331,7 @@
 
       loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyProgressInput',  'day-' + year + '-' + month + '-' + day);
 
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
@@ -385,6 +390,7 @@
 
       loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyProgressInput',  'day-' + year + '-' + month + '-' + day);
 
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
@@ -433,6 +439,8 @@
         documentName = 'day-' + year + '-' + month + '-' + day + '-milestones';
       } else if (inputId === 'dailyActionPlansInput') {
         documentName = 'day-' + year + '-' + month + '-' + day + '-actionplans';
+      } else if (inputId === 'dailyProgressInput') {
+        documentName = 'day-' + year + '-' + month + '-' + day + '-progress';
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -493,6 +501,8 @@
         documentName = 'day-' + year + '-' + month + '-' + day + '-milestones';
       } else if (inputId === 'dailyActionPlansInput') {
         documentName = 'day-' + year + '-' + month + '-' + day + '-actionplans';
+      } else if (inputId === 'dailyProgressInput') {
+        documentName = 'day-' + year + '-' + month + '-' + day + '-progress';
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
