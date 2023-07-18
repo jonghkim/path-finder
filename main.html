@@ -65,6 +65,17 @@
       box-sizing: border-box;
     }
 
+    .tabcontent textarea.small-small-textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      resize: vertical;
+      font-size: 16px;
+      box-sizing: border-box;      
+    }
+
     .tabcontent textarea.large-textarea {
       width: 100%;
       height: 560px;
@@ -232,12 +243,12 @@
             <div class="top-pane">
               <h2>Daily Goal</h2>
               <label for="dailyMilestonesInput">What is your focus today?</label>
-              <textarea id="dailyMilestonesInput" class="small-textarea" oninput="saveGoal('dailyMilestonesInput', selectedDate);"></textarea>
+              <textarea id="dailyMilestonesInput" class="small-small-textarea" oninput="saveGoal('dailyMilestonesInput', selectedDate);"></textarea>
             </div>
             <div class="bottom-pane">
               <h2>Tasks</h2>
               <label for="dailyActionPlansInput">What are the important tasks?</label>
-              <textarea id="dailyActionPlansInput" class="large-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
+              <textarea id="dailyActionPlansInput" class="small-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
             </div>
           </div>    
       </div>      
