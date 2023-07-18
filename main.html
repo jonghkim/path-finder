@@ -159,23 +159,8 @@
 
   <div class="tabcontent" id="vision">
     <h2>Vision</h2>
-    <textarea id="visionInput" class="small-textarea" oninput="saveGoal('visionInput', selectedDate);" placeholder="Write your vision here"></textarea>
+    <textarea id="visionInput" class="large-textarea" oninput="saveGoal('visionInput', selectedDate);" placeholder="Write your vision here"></textarea>
   
-    <h3>Bringing Your Year Into Focus</h3>
-    <label for="yearImprovement">How will you improve yourself this year?</label>
-    <textarea id="yearImprovement" class="small-textarea" oninput="saveGoal('yearImprovement', selectedDate);" placeholder="Your improvement goal"></textarea>
-  
-    <label for="perfectYear">What would it look like if this year went perfectly?</label>
-    <textarea id="perfectYear" class="small-textarea" oninput="saveGoal('perfectYear', selectedDate);" placeholder="Your perfect year"></textarea>
-  
-    <label for="startDoing">What do you want to start doing?</label>
-    <textarea id="startDoing" class="small-textarea" oninput="saveGoal('startDoing', selectedDate);" placeholder="Start doing"></textarea>
-  
-    <label for="stopDoing">What do you want to stop doing?</label>
-    <textarea id="stopDoing" class="small-textarea" oninput="saveGoal('stopDoing', selectedDate);" placeholder="Stop doing"></textarea>
-      
-    <label for="actions">What are your key actions and milestones for achieving your vision?</label>
-    <textarea id="actions" class="small-textarea" oninput="saveGoal('actions', selectedDate);" placeholder="Key actions and milestones"></textarea>
   </div>
   
   <!-- <div class="tabcontent" id="yearlyGoal">
@@ -185,19 +170,26 @@
     </div>
   </div> -->
 
-  <div class="tabcontent large-tabcontent" id="yearlyGoal">
-    <div class="yearlygoal">
-      <div class="pane-container">
-        <div class="left-pane">
-          <h2>Yearly Milestones</h2>
-          <textarea id="yearlyMilestonesInput" class="large-textarea" oninput="saveGoal('yearlyMilestonesInput', selectedDate);"></textarea>
-        </div>
-        <div class="right-pane">
-          <h2>Action Plans and Key Performance</h2>
-          <textarea id="yearlyActionPlansInput" class="large-textarea" oninput="saveGoal('yearlyActionPlansInput', selectedDate);"></textarea>
-        </div>
-      </div>
-    </div>
+  <div class="tabcontent tabcontent" id="yearlyGoal">
+    <h2>My Goals</h2>
+    <textarea id="yearlyMilestonesInput" class="small-textarea" oninput="saveGoal('yearlyMilestonesInput', selectedDate);"></textarea>
+
+    <h2>What are the key actions?</h2>
+    <textarea id="yearlyActionPlansInput" class="large-textarea" oninput="saveGoal('yearlyActionPlansInput', selectedDate);" placeholder="Key actions"></textarea>
+
+    <h2>Bringing Your Year Into Focus</h2>
+    <label for="yearlyImprovement">How will you improve yourself this year?</label>
+    <textarea id="yearlyImprovement" class="small-textarea" oninput="saveGoal('yearlyImprovement', selectedDate);" placeholder="Your improvement goal"></textarea>
+  
+    <label for="yearlyPerfectYear">What would it look like if this year went perfectly?</label>
+    <textarea id="yearlyPerfectYear" class="small-textarea" oninput="saveGoal('yearlyPerfectYear', selectedDate);" placeholder="Your perfect year"></textarea>
+  
+    <label for="yearlyStartDoing">What do you want to start doing?</label>
+    <textarea id="yearlyStartDoing" class="small-textarea" oninput="saveGoal('yearlyStartDoing', selectedDate);" placeholder="Start doing"></textarea>
+  
+    <label for="yearlyStopDoing">What do you want to stop doing?</label>
+    <textarea id="yearlyStopDoing" class="small-textarea" oninput="saveGoal('yearlyStopDoing', selectedDate);" placeholder="Stop doing"></textarea>
+      
   </div>
 
   <div class="tabcontent large-tabcontent" id="monthlyGoal">
@@ -205,10 +197,12 @@
         <div class="pane-container">
             <div class="left-pane">
                 <h2>Monthly Milestones</h2>
+                <label for="monthlyMilestonesInput">What do you want to achieve this month and how does it contributes to your higher goal?</label>
                 <textarea id="monthlyMilestonesInput" class="large-textarea" oninput="saveGoal('monthlyMilestonesInput', selectedDate);"></textarea>
             </div>
             <div class="right-pane">
-                <h2>Action Plans and Key Performance</h2>
+                <h2>Monthly Action Plans</h2>
+                <label for="monthlyMilestonesInput">What are the key actions to achieve those goals?</label>
                 <textarea id="monthlyActionPlansInput" class="large-textarea" oninput="saveGoal('monthlyActionPlansInput', selectedDate);"></textarea>
             </div>
         </div>
@@ -219,11 +213,13 @@
       <div class="weeklyGoal">
           <div class="pane-container">
               <div class="left-pane">
-                  <h2>Weekly Milestones</h2>
+                  <h2>Weekly Goals</h2>
+                  <label for="weeklyMilestonesInput">What is your focus this week?</label>
                   <textarea id="weeklyMilestonesInput" class="large-textarea" oninput="saveGoal('weeklyMilestonesInput', selectedDate);"></textarea>
               </div>
               <div class="right-pane">
-                  <h2>Action Plans and Key Performance</h2>
+                  <h2>Action Plans</h2>
+                  <label for="weeklyActionPlansInput">What are the key actions?</label>
                   <textarea id="weeklyActionPlansInput" class="large-textarea" oninput="saveGoal('weeklyActionPlansInput', selectedDate);"></textarea>
             </div>
           </div>
@@ -235,10 +231,12 @@
           <div class="vertical-pane-container">
             <div class="top-pane">
               <h2>Daily Goal</h2>
+              <label for="dailyMilestonesInput">What is your focus today?</label>
               <textarea id="dailyMilestonesInput" class="small-textarea" oninput="saveGoal('dailyMilestonesInput', selectedDate);"></textarea>
             </div>
             <div class="bottom-pane">
               <h2>Tasks</h2>
+              <label for="dailyActionPlansInput">What are the important tasks?</label>
               <textarea id="dailyActionPlansInput" class="large-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
             </div>
           </div>    
@@ -254,7 +252,7 @@
             <textarea id="achievementYearlyMilestonesInput" class="small-textarea" disabled></textarea>
           </div>
           <div class="bottom-pane">
-            <h2>Action Plans and Key Performance</h2>
+            <h2>Yearly Action Plans</h2>
             <textarea id="achievementYearlyActionPlansInput" class="small-textarea" disabled></textarea>
           </div>
         </div>      
@@ -301,11 +299,10 @@
 
       // Load all goals and data based on the selected date
       loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearImprovement', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('perfectYear', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('startDoing', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('stopDoing', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('actions', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
       // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
@@ -359,13 +356,13 @@
 
       // Load the default data based on today's date
       loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearImprovement', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('perfectYear', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('startDoing', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('stopDoing', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('actions', 'day-' + year + '-' + month + '-' + day);
       // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+
       loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
       loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
       // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
 
@@ -402,7 +399,15 @@
       if (inputId === 'yearlyMilestonesInput') {
         documentName = 'year-' + year + '-milestones';  
       } else if (inputId === 'yearlyActionPlansInput') {
-        documentName = 'year-' + year + '-actionplans';  
+        documentName = 'year-' + year + '-actionplans'; 
+      } else if (inputId === 'yearlyImprovement') {
+        documentName = 'year-' + year + '-improvement';
+      } else if (inputId === 'yearlyPerfectYear') {
+        documentName = 'year-' + year + '-perfectyear';
+      } else if (inputId === 'yearlyStartDoing') {
+        documentName = 'year-' + year + '-startdoing';
+      } else if (inputId === 'yearlyStopDoing') {
+        documentName = 'year-' + year + '-stopdoing';
       } else if (inputId === 'achievementInput') {
         documentName = 'year-' + year + '-achievement';
       } else if (inputId === 'monthlyMilestonesInput') {
@@ -450,12 +455,19 @@
 
       let documentName;
 
-
       // Determine the document name based on the inputId and selected date
       if (inputId === 'yearlyMilestonesInput') {
         documentName = 'year-' + year + '-milestones';  
       } else if (inputId === 'yearlyActionPlansInput') {
-        documentName = 'year-' + year + '-actionplans';  
+        documentName = 'year-' + year + '-actionplans'; 
+      } else if (inputId === 'yearlyImprovement') {
+        documentName = 'year-' + year + '-improvement';
+      } else if (inputId === 'yearlyPerfectYear') {
+        documentName = 'year-' + year + '-perfectyear';
+      } else if (inputId === 'yearlyStartDoing') {
+        documentName = 'year-' + year + '-startdoing';
+      } else if (inputId === 'yearlyStopDoing') {
+        documentName = 'year-' + year + '-stopdoing';
       } else if (inputId === 'achievementInput') {
         documentName = 'year-' + year + '-achievement';
       } else if (inputId === 'monthlyMilestonesInput') {
@@ -473,7 +485,7 @@
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
-      
+
       // Load the goal from Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).get()
       .then((doc) => {
