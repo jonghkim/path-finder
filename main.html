@@ -504,7 +504,26 @@
           const goal = doc.data().value;
           input.value = goal;
         } else{
-          input.value = "";
+
+          if (inputId === 'monthlyActionPlansInput'){
+            let fill_week_text = '';
+            for (let i = 1; i <= 4; i++) {
+              let week_text = `[Week ${i}] \n`;
+              fill_week_text += week_text;
+            }
+            input.value = fill_week_text;
+          } else if (inputId === 'weeklyActionPlansInput'){
+            let fill_day_text = '';
+            const days = ['[Monday]', '[Tuesday]', '[Wednesday]', '[Thursday]', '[Friday]', '[Saturday]', '[Sunday]'];
+            for (let j = 1; j <= 7; j++) {
+              let day_text = `[${days[j-1]}] \n`;
+              fill_day_text += day_text;
+            }
+            input.value = fill_day_text;
+          } else {
+            input.value = "";
+          }
+
         }
       })
       .catch((error) => {
