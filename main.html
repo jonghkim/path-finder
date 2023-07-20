@@ -319,17 +319,6 @@
   </div>
   
   <script>    
-    const toolbarOptions = {
-      container: [
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'check' }],    // List buttons { 'list': 'ordered' }, { 'list': 'bullet' }, 
-        [{ 'indent': '-1' }, { 'indent': '+1' }],         // Indentation buttons
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],         // Header dropdown
-        ['link', 'image'],                                 // Additional buttons
-        [{ 'color': [] }],                                // Color button
-        ['clean']                                         // Remove formatting button        
-      ]
-    }
 
     var quillInstances = {};
 
@@ -366,34 +355,16 @@
         } else{
           var quill = new Quill('#' + id, {
           modules: {                        
-            toolbar: toolbarOptions,
-            clipboard: {
-                      matchVisual: false
-                  } 
+            toolbar: [
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'list': 'check' }],    // List buttons  { 'list': 'ordered' }, { 'list': 'bullet' }, 
+                      [{ 'indent': '-1' }, { 'indent': '+1' }],         // Indentation buttons
+                      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],         // Header dropdown
+                      ['link', 'image'],                                 // Additional buttons
+                      [{ 'color': [] }],                                // Color button
+                      ['clean']                                         // Remove formatting button        
+                    ],
           },
-          formats : [
-            "background",
-            "bold", 
-            "color", 
-            "font", 
-            "code", 
-            "italic", 
-            "link", 
-            "size", 
-            "strike", 
-            "script",
-            "underline", 
-            "blockquote", 
-            // "header",
-            "indent", 
-            // "list", <-- commented-out to suppress auto bullets
-            "align", 
-            "direction", 
-            "code-block", 
-            "formula", 
-            "image",
-            "video"
-          ],
           theme: 'snow'
         });
         }
