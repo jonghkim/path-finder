@@ -146,8 +146,16 @@
   <script src="questions_20230716.js"></script>
     
   <!-- Include stylesheet -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
+
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-colorpicker@3.4.0/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-colorpicker@3.4.0/dist/js/bootstrap-colorpicker.min.js"></script>
 </head>
 
 <body>
@@ -290,13 +298,18 @@
     <p>Feel free to use this tool however you like, and please let me know if you have any suggestions for improvement!</p>
   </div>
 
-  
-  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
-  <!-- Include the Quill library -->
-  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>  
-
-  <script>
+  <script>    
+    const toolbarOptions = {
+      container: [
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],    // List buttons
+        [{ 'indent': '-1' }, { 'indent': '+1' }],         // Indentation buttons
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],         // Header dropdown
+        ['link', 'image'],                                 // Additional buttons
+        [{ 'color': [] }],                                // Color button
+        ['clean']                                         // Remove formatting button        
+      ]
+    }
 
     var quillInstances = {};
 
@@ -332,19 +345,11 @@
           });
         } else{
           var quill = new Quill('#' + id, {
-            modules: {
-              toolbar: [
-                ['bold', 'italic', 'underline', 'strike'],        // Basic formatting buttons
-                [{ 'list': 'ordered' }, { 'list': 'bullet' }],    // List buttons
-                [{ 'script': 'sub' }, { 'script': 'super' }],     // Subscript/superscript buttons
-                [{ 'indent': '-1' }, { 'indent': '+1' }],         // Indentation buttons
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],         // Header dropdown
-                ['link', 'image', 'color'],                       // Additional buttons (including color picker)
-                ['clean']                                         // Remove formatting button
-              ],
-            },
-            theme: 'snow'
-          });       
+          modules: {                        
+            toolbar: toolbarOptions,
+          },
+          theme: 'snow'
+        });
         }
 
         if (id !== 'questionInput') {
