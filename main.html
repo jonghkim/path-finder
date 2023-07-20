@@ -359,7 +359,7 @@
           var quill = new Quill('#' + id, {
               theme: 'bubble',
               modules: {
-                  toolbar: false  // Hide the toolbar
+                  toolbar: false,  // Hide the toolbar
                 },
               readOnly: true 
           });
@@ -367,6 +367,9 @@
           var quill = new Quill('#' + id, {
           modules: {                        
             toolbar: toolbarOptions,
+            clipboard: {
+                      matchVisual: false
+                  } 
           },
           theme: 'snow'
         });
