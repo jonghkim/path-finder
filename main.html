@@ -603,6 +603,13 @@
           var quill = quillInstances[inputId];
           quill.clipboard.dangerouslyPasteHTML(goal);
 
+          // Run cleanup after a delay
+          setTimeout(function() {
+              let html = quill.root.innerHTML;
+              html = html.replaceAll("<p><br></p>", "");
+              quill.root.innerHTML = html;
+          }, 100);          
+
         } else {
           if (inputId === 'monthlyActionPlansInput'){
             let fill_week_text = '';
