@@ -597,7 +597,7 @@
       .then((doc) => {
         if (doc.exists) {
           let goal = doc.data().value;
-          goal = goal.replace("<p><br></p>", "");
+          goal = goal.replace("<p><br></p>", "WHAT");
 
           // Get the Quill instance for this inputId
           var quill = quillInstances[inputId];
