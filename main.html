@@ -596,7 +596,7 @@
       db.collection("users").doc(username).collection("goals").doc(documentName).get()
       .then((doc) => {
         if (doc.exists) {
-          const goal = doc.data().value;
+          let goal = doc.data().value;
           goal = goal.replace(/<br>/g, '\n');
 
           // Get the Quill instance for this inputId
