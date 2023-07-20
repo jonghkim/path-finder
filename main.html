@@ -597,7 +597,8 @@
       .then((doc) => {
         if (doc.exists) {
           let goal = doc.data().value;
-          goal = goal.replaceAll("<p><br></p>", "");
+          // goal = goal.replaceAll("<p><br></p>", "");
+          goal = goal.replace(/(^([ ]*<p><br><\/p>)*)|((<p><br><\/p>)*[ ]*$)/gi, "").trim(" ");
 
           // Get the Quill instance for this inputId
           var quill = quillInstances[inputId];
