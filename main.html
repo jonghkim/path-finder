@@ -598,6 +598,7 @@
         if (doc.exists) {
           let goal = doc.data().value;
           goal = goal.replace(/<br>/g, '\n');
+          goal = goal.replace(/<p><br><\/p>/g, ''); // remove <p><br></p>
 
           // Get the Quill instance for this inputId
           var quill = quillInstances[inputId];
@@ -610,7 +611,6 @@
               let week_text = `<p>[Week ${i}]<\p><br>`;
               fill_week_text += week_text;
             }
-            
             // Set the content in the Quill.js editor
             var quill = quillInstances[inputId];
             quill.clipboard.dangerouslyPasteHTML(fill_week_text);            
@@ -622,17 +622,14 @@
               let day_text = `<p>[${days[j-1]}]<\p><br>`;
               fill_day_text += day_text;
             }
-
             // Set the content in the Quill.js editor
             var quill = quillInstances[inputId];
             quill.clipboard.dangerouslyPasteHTML(fill_day_text); 
 
           } else {
-
             // For other inputs, we leave the editor empty
             var quill = quillInstances[inputId];
             quill.clipboard.dangerouslyPasteHTML(''); 
-
           }
         }
       })
