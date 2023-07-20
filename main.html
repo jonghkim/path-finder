@@ -322,9 +322,19 @@
 
     ids.forEach(function(id) {
         // Create a new Quill instance for each id
-        var quill = new Quill('#' + id, {
-            theme: 'snow'
-        });
+        if (id == 'achievementYearlyMilestonesInput' || id == 'achievementYearlyActionPlansInput'){
+          var quill = new Quill('#' + id, {
+              theme: 'bubble',
+              modules: {
+                  toolbar: false  // Hide the toolbar
+                },
+              readOnly: true 
+          });
+        } else{
+          var quill = new Quill('#' + id, {
+              theme: 'snow'
+          });          
+        }
 
         if (id !== 'questionInput') {
           // Listen to text change events
@@ -336,17 +346,7 @@
         // Store the qu instance in the quillInstances dictionary
         quillInstances[id] = quill;
     });
-
-    var quillAchievementYearlyMilestonesInput = quillInstances['achievementYearlyMilestonesInput'];
-    var quillAchievementYearlyActionPlansInput = quillInstances['achievementYearlyActionPlansInput'];
-
-    quillAchievementYearlyMilestonesInput.enable(false);
-    quillAchievementYearlyActionPlansInput.enable(false);
-
-    // Apply grey background theme
-    document.getElementById('achievementYearlyMilestonesInput').querySelector('.ql-editor').style.backgroundColor = 'rgba(128, 128, 128, 0.5)';
-    document.getElementById('achievementYearlyActionPlansInput').querySelector('.ql-editor').style.backgroundColor = 'rgba(128, 128, 128, 0.5)';
-
+    
     // var quill = quillInstances['visionInput'];
     // var text = quill.getText(); // Get the text from the visionInput Quill instance
 
