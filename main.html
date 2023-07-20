@@ -601,6 +601,41 @@
       questionDisplay.innerHTML = randomQuestion;
     }    
 
+    var textareas = document.querySelectorAll('textarea');
+
+    textareas.forEach(function(textarea) {
+        // Adding a shortcut that will wrap the selected text with double asterisks when user presses `Ctrl + B`
+        // If the selected text is already bold, it will remove the bold syntax.
+        textarea.addEventListener('keydown', function(e) {
+            // Check if `Ctrl` (or `Cmd` on Mac) and `B` keys are pressed together
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+                e.preventDefault(); // Prevent the default action
+
+                // Get the selected text
+                var selectionStart = this.selectionStart;
+                var selectionEnd = this.selectionEnd;
+                var selectedText = this.value.substring(selectionStart, selectionEnd);
+
+                // Check if the selected text is already bold
+                if (selectedText.startsWith('**') && selectedText.endsWith('**')) {
+                    // If it's already bold, remove the bold syntax
+                    var nonBoldText = selectedText.slice(2, -2);
+                    this.value = this.value.slice(0, selectionStart) + nonBoldText + this.value.slice(selectionEnd);
+
+                    // Reset the cursor position
+                    this.setSelectionRange(selectionStart + nonBoldText.length, selectionEnd + nonBoldText.length);
+                } else {
+                    // If it's not bold, make it bold
+                    var boldText = '**' + selectedText + '**';
+                    this.value = this.value.slice(0, selectionStart) + boldText + this.value.slice(selectionEnd);
+
+                    // Reset the cursor position
+                    this.setSelectionRange(selectionStart + boldText.length, selectionEnd + boldText.length);
+                }
+            }
+        });
+    });
+
   </script>
 </body>
 </html>
