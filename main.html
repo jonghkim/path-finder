@@ -43,7 +43,7 @@
       color: #2c3e50;
     }
 
-    .tabcontent textarea {
+    /* .tabcontent textarea {
       width: 100%;
       height: 150px;
       padding: 10px;
@@ -52,9 +52,9 @@
       resize: vertical;
       font-size: 16px;
       box-sizing: border-box;
-    }
+    } */
 
-    .tabcontent textarea.small-textarea {
+    .tabcontent .small-textarea {
       width: 100%;
       height: 250px;
       padding: 10px;
@@ -65,7 +65,7 @@
       box-sizing: border-box;
     }
 
-    .tabcontent textarea.small-small-textarea {
+    .tabcontent .small-small-textarea {
       width: 100%;
       height: 150px;
       padding: 10px;
@@ -76,7 +76,7 @@
       box-sizing: border-box;      
     }
 
-    .tabcontent textarea.large-textarea {
+    .tabcontent .large-textarea {
       width: 100%;
       height: 560px;
       padding: 10px;
@@ -87,11 +87,11 @@
       box-sizing: border-box;
     }
 
-    .tabcontent textarea:focus {
+    /* .tabcontent textarea:focus {
       outline: none;
       border-color: #3498db;
       box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);      
-    }
+    } */
 
     .pane-container {
       display: flex;
@@ -144,7 +144,13 @@
   </style>
 
   <script src="questions_20230716.js"></script>
-  
+    
+  <!-- Include stylesheet -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+  <!-- Include the Quill library -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>  
+
 </head>
 
 <body>
@@ -170,36 +176,29 @@
 
   <div class="tabcontent" id="vision">
     <h2>Vision</h2>
-    <textarea id="visionInput" class="large-textarea" oninput="saveGoal('visionInput', selectedDate);" placeholder="Write your vision here"></textarea>
-  
-  </div>
-  
-  <!-- <div class="tabcontent" id="yearlyGoal">
-    <h2>Yearly Goal</h2>
-    <div class="yearlygoal">
-      <textarea id="yearlyGoalInput" class="large-textarea" oninput="saveGoal('yearlyGoalInput', selectedDate); updateMonthlyGoal(selectedDate);"></textarea>
-    </div>
-  </div> -->
+    <div id="visionInput" class="large-textarea"></div>
 
-  <div class="tabcontent tabcontent" id="yearlyGoal">
+  </div>
+
+  <div class="tabcontent" id="yearlyGoal">
     <h2>My Goals</h2>
-    <textarea id="yearlyMilestonesInput" class="small-textarea" oninput="saveGoal('yearlyMilestonesInput', selectedDate);"></textarea>
+    <div id="yearlyMilestonesInput" class="small-textarea"></div>
 
     <h2>What are the key actions?</h2>
-    <textarea id="yearlyActionPlansInput" class="large-textarea" oninput="saveGoal('yearlyActionPlansInput', selectedDate);" placeholder="Key actions"></textarea>
+    <div id="yearlyActionPlansInput" class="large-textarea"></div>
 
     <h2>Bringing Your Year Into Focus</h2>
     <label for="yearlyImprovement">How will you improve yourself this year?</label>
-    <textarea id="yearlyImprovement" class="small-textarea" oninput="saveGoal('yearlyImprovement', selectedDate);" placeholder="Your improvement goal"></textarea>
+    <div id="yearlyImprovement" class="small-textarea"></div>
   
     <label for="yearlyPerfectYear">What would it look like if this year went perfectly?</label>
-    <textarea id="yearlyPerfectYear" class="small-textarea" oninput="saveGoal('yearlyPerfectYear', selectedDate);" placeholder="Your perfect year"></textarea>
+    <div id="yearlyPerfectYear" class="small-textarea"></div>
   
     <label for="yearlyStartDoing">What do you want to start doing?</label>
-    <textarea id="yearlyStartDoing" class="small-textarea" oninput="saveGoal('yearlyStartDoing', selectedDate);" placeholder="Start doing"></textarea>
+    <div id="yearlyStartDoing" class="small-textarea"></div>
   
     <label for="yearlyStopDoing">What do you want to stop doing?</label>
-    <textarea id="yearlyStopDoing" class="small-textarea" oninput="saveGoal('yearlyStopDoing', selectedDate);" placeholder="Stop doing"></textarea>
+    <div id="yearlyStopDoing" class="small-textarea"></div>
       
   </div>
 
@@ -209,12 +208,12 @@
             <div class="left-pane">
                 <h2>Monthly Milestones</h2>
                 <label for="monthlyMilestonesInput">What do you want to achieve this month and how does it contributes to your higher goal?</label>
-                <textarea id="monthlyMilestonesInput" class="large-textarea" oninput="saveGoal('monthlyMilestonesInput', selectedDate);"></textarea>
+                <div id="monthlyMilestonesInput" class="large-textarea"></div>
             </div>
             <div class="right-pane">
                 <h2>Monthly Action Plans</h2>
                 <label for="monthlyMilestonesInput">What are the key actions to achieve those goals?</label>
-                <textarea id="monthlyActionPlansInput" class="large-textarea" oninput="saveGoal('monthlyActionPlansInput', selectedDate);"></textarea>
+                <div id="monthlyActionPlansInput" class="large-textarea"></div>
             </div>
         </div>
     </div>
@@ -226,33 +225,33 @@
               <div class="left-pane">
                   <h2>Weekly Goals</h2>
                   <label for="weeklyMilestonesInput">What is your focus this week?</label>
-                  <textarea id="weeklyMilestonesInput" class="large-textarea" oninput="saveGoal('weeklyMilestonesInput', selectedDate);"></textarea>
+                  <div id="weeklyMilestonesInput" class="large-textarea"></div>
               </div>
               <div class="right-pane">
                   <h2>Action Plans</h2>
                   <label for="weeklyActionPlansInput">What are the key actions?</label>
-                  <textarea id="weeklyActionPlansInput" class="large-textarea" oninput="saveGoal('weeklyActionPlansInput', selectedDate);"></textarea>
+                  <div id="weeklyActionPlansInput" class="large-textarea"></div>
             </div>
           </div>
       </div>
   </div>
   
-  <div class="tabcontent tabcontent" id="dailyGoal">
+  <div class="tabcontent" id="dailyGoal">
       <div class="dailyGoal">
           <div class="vertical-pane-container">
             <div class="top-pane">
               <h2>Daily Goal</h2>
               <label for="dailyMilestonesInput">What is your focus today?</label>
-              <textarea id="dailyMilestonesInput" class="small-small-textarea" oninput="saveGoal('dailyMilestonesInput', selectedDate);"></textarea>
+              <div id="dailyMilestonesInput" class="small-small-textarea"></div>
             </div>
             <div class="bottom-pane">
               <h2>Tasks</h2>
               <label for="dailyActionPlansInput">What are the important tasks?</label>
-              <textarea id="dailyActionPlansInput" class="small-textarea" oninput="saveGoal('dailyActionPlansInput', selectedDate);"></textarea>
+              <div id="dailyActionPlansInput" class="small-textarea"></div>
             </div>
             <div class="bottom-pane">
               <label for="dailyProgressInput">Done</label>
-              <textarea id="dailyProgressInput" class="small-small-textarea" oninput="saveGoal('dailyProgressInput', selectedDate);"></textarea>
+              <div id="dailyProgressInput" class="small-small-textarea"></div>
             </div>            
           </div>    
       </div>      
@@ -264,17 +263,17 @@
         <div class="vertical-pane-container">
           <div class="top-pane">
             <h2>Yearly Milestones</h2>
-            <textarea id="achievementYearlyMilestonesInput" class="small-textarea" disabled></textarea>
+            <div id="achievementYearlyMilestonesInput" class="small-textarea" disabled></div>
           </div>
           <div class="bottom-pane">
             <h2>Yearly Action Plans</h2>
-            <textarea id="achievementYearlyActionPlansInput" class="small-textarea" disabled></textarea>
+            <div id="achievementYearlyActionPlansInput" class="small-textarea" disabled></div>
           </div>
         </div>      
       </div>
       <div class="right-pane">
         <h2>Achievements & Reflection</h2>
-        <textarea id="achievementInput" class="large-textarea" oninput="saveGoal('achievementInput', selectedDate);"></textarea>
+        <div id="achievementInput" class="large-textarea"></div>
       </div>
     </div>
   </div>
@@ -283,7 +282,7 @@
     <h2>Question</h2>
     <button onclick="generateRandomQuestion()">Generate Question</button>
     <p id="questionDisplay"></p>
-    <textarea class="small-textarea"></textarea>
+    <div id="questionInput" class="small-textarea"></div>
   </div>
 
   <div class="tabcontent" id="about">
@@ -298,14 +297,66 @@
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
 
   <script>
-    
+
+    var quillInstances = {};
+
+    // Assuming ids is an array of your div ids
+    var ids = ['visionInput'
+              ,'yearlyMilestonesInput'
+              ,'yearlyActionPlansInput'
+              ,'yearlyImprovement'
+              ,'yearlyPerfectYear'
+              ,'yearlyStartDoing'
+              ,'yearlyStopDoing'
+              ,'monthlyMilestonesInput'
+              ,'monthlyActionPlansInput'
+              ,'weeklyMilestonesInput'
+              ,'weeklyActionPlansInput'
+              ,'dailyMilestonesInput'
+              ,'dailyActionPlansInput'
+              ,'dailyProgressInput'
+              ,'achievementYearlyMilestonesInput'
+              ,'achievementYearlyActionPlansInput'
+              ,'achievementInput'
+              ,'questionInput']; 
+
+    ids.forEach(function(id) {
+        // Create a new Quill instance for each id
+        var quill = new Quill('#' + id, {
+            theme: 'snow'
+        });
+
+        if (id !== 'questionInput') {
+          // Listen to text change events
+          quill.on('text-change', function() {
+              saveGoal(id, selectedDate);
+          });          
+        }
+
+        // Store the qu instance in the quillInstances dictionary
+        quillInstances[id] = quill;
+    });
+
+    var quillAchievementYearlyMilestonesInput = quillInstances['achievementYearlyMilestonesInput'];
+    var quillAchievementYearlyActionPlansInput = quillInstances['achievementYearlyActionPlansInput'];
+
+    quillAchievementYearlyMilestonesInput.enable(false);
+    quillAchievementYearlyActionPlansInput.enable(false);
+
+    // Apply grey background theme
+    document.getElementById('achievementYearlyMilestonesInput').querySelector('.ql-editor').style.backgroundColor = 'rgba(128, 128, 128, 0.5)';
+    document.getElementById('achievementYearlyActionPlansInput').querySelector('.ql-editor').style.backgroundColor = 'rgba(128, 128, 128, 0.5)';
+
+    // var quill = quillInstances['visionInput'];
+    // var text = quill.getText(); // Get the text from the visionInput Quill instance
+
     let selectedDate = new Date(); // Default to today's date
 
     function updateSelectedDate() {
       const datePicker = document.getElementById("datePicker");
       selectedDate = new Date(datePicker.value + "T12:00:00");
       loadSelectedDateData();
-    }
+    };
 
     function loadSelectedDateData() {
       const year = selectedDate.getFullYear();
@@ -336,8 +387,8 @@
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('achievementYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
-    }
+
+    };
 
     const firebaseConfig = {
       apiKey: "AIzaSyDGGHtfrqX6fEDFPZnvhWO1NQFNjL0P0Y8",
@@ -396,12 +447,10 @@
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
 
-      updateAchievement();
     });
 
+
     function saveGoal(inputId, selectedDateStr) {
-      const input = document.getElementById(inputId);
-      
       const selectedDate = new Date(selectedDateStr);
 
       // Get the year, month, and day from the selected date
@@ -410,7 +459,7 @@
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const week = getWeekNumber(selectedDate);
       
-      let documentName;
+      let documentName;    
 
       // Determine the document name based on the inputId and selected date
       if (inputId === 'yearlyMilestonesInput') {
@@ -445,9 +494,15 @@
         documentName = inputId; // Default to the inputId for other inputs
       }
 
+      // Get the Quill instance for this inputId
+      const quill = quillInstances[inputId];
+
+      // Get the value from the Quill editor
+      const value = quill.getText().trim() === '' ? null : quill.root.innerHTML;
+
       // Save the goal to Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).set({
-        value: input.value
+        value: value
       })
       .then(() => {
         console.log("Goal saved to Firestore");
@@ -457,10 +512,7 @@
       });
     }
 
-    // Load the goal from Firebase Firestore using the updated document name
     function loadGoal(inputId, selectedDateStr) {
-
-      const input = document.getElementById(inputId);
 
       const selectedDate = new Date(selectedDateStr);
 
@@ -505,33 +557,46 @@
         documentName = inputId; // Default to the inputId for other inputs
       }
 
-      // Load the goal from Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).get()
       .then((doc) => {
         if (doc.exists) {
           const goal = doc.data().value;
-          input.value = goal;
-        } else{
 
+          // Get the Quill instance for this inputId
+          var quill = quillInstances[inputId];
+          quill.clipboard.dangerouslyPasteHTML(goal);
+
+        } else {
           if (inputId === 'monthlyActionPlansInput'){
             let fill_week_text = '';
             for (let i = 1; i <= 4; i++) {
-              let week_text = `[Week ${i}] \n\n`;
+              let week_text = `<p>[Week ${i}]<\p><br>`;
               fill_week_text += week_text;
             }
-            input.value = fill_week_text;
+            
+            // Set the content in the Quill.js editor
+            var quill = quillInstances[inputId];
+            quill.clipboard.dangerouslyPasteHTML(fill_week_text);            
+
           } else if (inputId === 'weeklyActionPlansInput'){
             let fill_day_text = '';
             const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             for (let j = 1; j <= 7; j++) {
-              let day_text = `[${days[j-1]}] \n\n`;
+              let day_text = `<p>[${days[j-1]}]<\p><br>`;
               fill_day_text += day_text;
             }
-            input.value = fill_day_text;
-          } else {
-            input.value = "";
-          }
 
+            // Set the content in the Quill.js editor
+            var quill = quillInstances[inputId];
+            quill.clipboard.dangerouslyPasteHTML(fill_day_text); 
+
+          } else {
+
+            // For other inputs, we leave the editor empty
+            var quill = quillInstances[inputId];
+            quill.clipboard.dangerouslyPasteHTML(''); 
+
+          }
         }
       })
       .catch((error) => {
@@ -572,27 +637,20 @@
 
           if (leftPaneInputIds && prevGoalInputIds) {
             for (let i = 0; i < leftPaneInputIds.length; i++) {
-              const leftPaneInput = document.getElementById(leftPaneInputIds[i]);
-              const previousGoalInput = document.getElementById(prevGoalInputIds[i]);
-              if (leftPaneInput && previousGoalInput) {
-                leftPaneInput.value = previousGoalInput.value;
+              const leftPaneInputId = leftPaneInputIds[i];
+              const previousGoalInputId = prevGoalInputIds[i];
+
+              const leftPaneQuill = quillInstances[leftPaneInputId];
+              const previousGoalQuill = quillInstances[previousGoalInputId];
+
+              if (leftPaneQuill && previousGoalQuill) {
+                const previousGoalContent = previousGoalQuill.getContents();
+                leftPaneQuill.setContents(previousGoalContent);
               }
             }
-          }
+          }          
         }
       }    
-
-
-    function updateAchievement() {
-      const yearlyMilestonesInput = document.getElementById('yearlyMilestonesInput');
-      const yearlyActionPlansInput = document.getElementById('yearlyActionPlansInput');
-
-      const achievementYearlyMilestonesInput = document.getElementById('achievementYearlyMilestonesInput');
-      const achievementYearlyActionPlansInput = document.getElementById('achievementYearlyActionPlansInput');
-
-      achievementYearlyMilestonesInput.value = yearlyMilestonesInput.value;
-      achievementYearlyActionPlansInput.value = yearlyActionPlansInput.value;
-    }
 
     function generateRandomQuestion() {
       const questionDisplay = document.getElementById('questionDisplay');
@@ -600,42 +658,6 @@
       const randomQuestion = questions[randomIndex];
       questionDisplay.innerHTML = randomQuestion;
     }    
-
-    var textareas = document.querySelectorAll('textarea');
-
-    textareas.forEach(function(textarea) {
-        // Adding a shortcut that will wrap the selected text with double asterisks when user presses `Ctrl + B`
-        // If the selected text is already bold, it will remove the bold syntax.
-        textarea.addEventListener('keydown', function(e) {
-            // Check if `Ctrl` (or `Cmd` on Mac) and `B` keys are pressed together
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
-                e.preventDefault(); // Prevent the default action
-
-                // Get the selected text
-                var selectionStart = this.selectionStart;
-                var selectionEnd = this.selectionEnd;
-                var selectedText = this.value.substring(selectionStart, selectionEnd);
-
-                // Check if the selected text is already bold
-                if (selectedText.startsWith('**') && selectedText.endsWith('**')) {
-                    // If it's already bold, remove the bold syntax
-                    var nonBoldText = selectedText.slice(2, -2);
-                    this.value = this.value.slice(0, selectionStart) + nonBoldText + this.value.slice(selectionEnd);
-
-                    // Reset the cursor position
-                    this.setSelectionRange(selectionStart + nonBoldText.length, selectionEnd + nonBoldText.length);
-                } else {
-                    // If it's not bold, make it bold
-                    var boldText = '**' + selectedText + '**';
-                    this.value = this.value.slice(0, selectionStart) + boldText + this.value.slice(selectionEnd);
-
-                    // Reset the cursor position
-                    this.setSelectionRange(selectionStart + boldText.length, selectionEnd + boldText.length);
-                }
-            }
-        });
-    });
-
   </script>
 </body>
 </html>
