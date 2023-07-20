@@ -597,6 +597,7 @@
       .then((doc) => {
         if (doc.exists) {
           const goal = doc.data().value;
+          goal = goal.replace(/<br>/g, '\n');
 
           // Get the Quill instance for this inputId
           var quill = quillInstances[inputId];
