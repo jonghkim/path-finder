@@ -414,118 +414,41 @@
         // Store the qu instance in the quillInstances dictionary
         quillInstances[id] = quill;
     });
+    
+    // window.addEventListener('DOMContentLoaded', () => {
+    //   const today = new Date();
+    //   const year = today.getFullYear();
+    //   const month = String(today.getMonth() + 1).padStart(2, '0');
+    //   const day = String(today.getDate()).padStart(2, '0');
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
+    //   // Load the default data based on today's date
+    //   loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
+    //   // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
 
-      // Load the default data based on today's date
-      loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+    //   // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
 
-      loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('monthlyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('monthlyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
 
-      loadGoal('monthlyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('monthlyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
 
-      loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('dailyProgressInput',  'day-' + year + '-' + month + '-' + day);
 
-      loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('dailyProgressInput',  'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+    //   loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
 
-      loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+    // });
 
-    });
-
-    ids.forEach(function(id) {
-        // Create a new Quill instance for each id
-        if (id != 'achievementYearlyMilestonesInput' || id != 'achievementYearlyActionPlansInput'){
-
-          var quill = quillInstances[id];
-          quill.enable();
-        }
-    });
-
-    // var quill = quillInstances['visionInput'];
-    // var text = quill.getText(); // Get the text from the visionInput Quill instance
-
-    let selectedDate = new Date(); // Default to today's date
-
-    function updateSelectedDate() {
-      const datePicker = document.getElementById("datePicker");
-      selectedDate = new Date(datePicker.value + "T12:00:00");
-      loadSelectedDateData();
-    };
-
-    function loadSelectedDateData() {
-      const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const day = String(selectedDate.getDate()).padStart(2, '0');
-
-      // Load all goals and data based on the selected date
-      loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
-
-      loadGoal('monthlyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('monthlyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-
-      loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-
-      loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
-      loadGoal('dailyProgressInput',  'day-' + year + '-' + month + '-' + day);
-
-      loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
-      loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
-
-    };
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGGHtfrqX6fEDFPZnvhWO1NQFNjL0P0Y8",
-      authDomain: "pathfinder-fd96a.firebaseapp.com",
-      projectId: "pathfinder-fd96a",
-      storageBucket: "pathfinder-fd96a.appspot.com",
-      messagingSenderId: "801645100816",
-      appId: "1:801645100816:web:e9118c18d09a3fc79b2f95",
-      measurementId: "G-DPJQ376Q6J"
-    }; 
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const username = urlParams.get('username');
-
-    // Hide other tabs and load saved goals
-    const tabContents = document.querySelectorAll('.tabcontent');
-
-    tabContents.forEach(content => {
-      if (content.id !== 'weeklyGoal') {
-        content.style.display = 'none';
-      }
-    });
-  
     function saveGoal(inputId, selectedDateStr) {
       const selectedDate = new Date(selectedDateStr);
 
@@ -675,6 +598,85 @@
       });
     }
 
+    function loadSelectedDateData() {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+
+      // Load all goals and data based on the selected date
+      loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
+      // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+      // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
+
+      loadGoal('monthlyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('monthlyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+
+      loadGoal('weeklyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('weeklyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+
+      loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('dailyProgressInput',  'day-' + year + '-' + month + '-' + day);
+
+      loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+
+    };
+
+    function updateSelectedDate() {
+      const datePicker = document.getElementById("datePicker");
+      selectedDate = new Date(datePicker.value + "T12:00:00");
+      loadSelectedDateData();
+    };
+    
+    let selectedDate = new Date(); // Default to today's date
+
+    // var quill = quillInstances['visionInput'];
+    // var text = quill.getText(); // Get the text from the visionInput Quill instance
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGGHtfrqX6fEDFPZnvhWO1NQFNjL0P0Y8",
+      authDomain: "pathfinder-fd96a.firebaseapp.com",
+      projectId: "pathfinder-fd96a",
+      storageBucket: "pathfinder-fd96a.appspot.com",
+      messagingSenderId: "801645100816",
+      appId: "1:801645100816:web:e9118c18d09a3fc79b2f95",
+      measurementId: "G-DPJQ376Q6J"
+    }; 
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const username = urlParams.get('username');
+
+    loadSelectedDateData();
+
+    ids.forEach(function(id) {
+        // Create a new Quill instance for each id
+        if (id != 'achievementYearlyMilestonesInput' || id != 'achievementYearlyActionPlansInput'){
+
+          var quill = quillInstances[id];
+          quill.enable();
+        }
+    });
+
+    // Hide other tabs and load saved goals
+    const tabContents = document.querySelectorAll('.tabcontent');
+
+    tabContents.forEach(content => {
+      if (content.id !== 'weeklyGoal') {
+        content.style.display = 'none';
+      }
+    });
+  
     // Get the week number
     function getWeekNumber(d) {
       d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -729,6 +731,7 @@
       const randomQuestion = questions[randomIndex];
       questionDisplay.innerHTML = randomQuestion;
     }    
+    
   </script>
 </body>
 </html>
