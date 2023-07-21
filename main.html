@@ -328,6 +328,28 @@
   
   <script>    
 
+    import Quill from 'quill';
+
+    // Get the default List
+    const List = Quill.import("formats/list");
+
+    class BetterList extends List {
+      constructor(el) {
+        super(el);
+
+        const isCheckList = el.hasAttribute("data-checked");
+        el.addEventListener("touchstart", (e) => {
+          if (!isCheckList) {
+            return;
+          }
+          e.preventDefault();
+        });
+      }
+    }
+
+    // Register the BetterList
+    Quill.register("formats/list", BetterList);
+
     var quillInstances = {};
 
     // Assuming ids is an array of your div ids
