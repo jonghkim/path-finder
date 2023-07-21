@@ -528,7 +528,9 @@
           let goal = doc.data().value;
           // Get the Quill instance for this inputId
           var quill = quillInstances[inputId];
+          quill.disable();
           quill.clipboard.dangerouslyPasteHTML(goal);
+          quill.enable();
 
         } else {
           if (inputId === 'monthlyActionPlansInput'){
@@ -539,7 +541,9 @@
             }
             // Set the content in the Quill.js editor
             var quill = quillInstances[inputId];
+            quill.disable();
             quill.clipboard.dangerouslyPasteHTML(fill_week_text);            
+            quill.enable();
 
           } else if (inputId === 'weeklyActionPlansInput'){
             let fill_day_text = '';
@@ -550,12 +554,16 @@
             }
             // Set the content in the Quill.js editor
             var quill = quillInstances[inputId];
+            quill.disable();
             quill.clipboard.dangerouslyPasteHTML(fill_day_text); 
+            quill.enable();
 
           } else {
             // For other inputs, we leave the editor empty
             var quill = quillInstances[inputId];
+            quill.disable();
             quill.clipboard.dangerouslyPasteHTML(''); 
+            quill.enable();
           }
         }
       })
