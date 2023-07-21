@@ -327,9 +327,7 @@
   </div>
   
 
-  <script type="module">
-
-    import Quill from 'quill';
+  <script>    
 
     // Get the default List
     const List = Quill.import("formats/list");
@@ -349,11 +347,7 @@
     }
 
     // Register the BetterList
-    Quill.register("formats/list", BetterList);  </script>
-
-  </script>
-
-  <script>    
+    Quill.register("formats/list", BetterList);
 
     var quillInstances = {};
 
