@@ -326,7 +326,8 @@
     <p>Feel free to use this tool however you like, and please let me know if you have any suggestions for improvement!</p>
   </div>
   
-  <script>    
+
+  <script type="module">
 
     const Quill = require('quill');
 
@@ -348,7 +349,11 @@
     }
 
     // Register the BetterList
-    Quill.register("formats/list", BetterList);
+    Quill.register("formats/list", BetterList);  </script>
+
+  </script>
+
+  <script>    
 
     var quillInstances = {};
 
