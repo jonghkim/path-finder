@@ -549,9 +549,15 @@
           let goal = doc.data().value;
           // Get the Quill instance for this inputId
           var quill = quillInstances[inputId];
-          quill.disable();
-          quill.clipboard.dangerouslyPasteHTML(goal);
-          quill.enable();
+
+          if (inputId === 'achievementYearlyMilestonesInput' || inputId === 'achievementYearlyActionPlansInput'){
+            quill.disable();
+            quill.clipboard.dangerouslyPasteHTML(goal);
+          } else{
+            quill.disable();
+            quill.clipboard.dangerouslyPasteHTML(goal);
+            quill.enable();
+          }
 
         } else {
           if (inputId === 'monthlyActionPlansInput'){
