@@ -362,7 +362,10 @@
           });
         } else{
           var quill = new Quill('#' + id, {
-          modules: {                        
+          modules: {     
+            clipboard: {
+              matchVisual: false
+            },                   
             toolbar: [
                       ['bold', 'italic', 'underline', 'strike'],
                       [{ 'list': 'check' }],    // List buttons  { 'list': 'ordered' }, { 'list': 'bullet' }, 
