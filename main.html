@@ -437,6 +437,10 @@
           });          
         }
 
+        quill.root.spellcheck = false;
+        quill.root.focus();
+        quill.root.blur();
+
         // Store the qu instance in the quillInstances dictionary
         quillInstances[id] = quill;
     });
