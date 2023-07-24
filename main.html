@@ -338,21 +338,16 @@
     }
 
     function decryptText(cipherText) {
-    try {
-        var bytes = CryptoJS.AES.decrypt(cipherText, secretKey);
-        var decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+      try {
+          var bytes = CryptoJS.AES.decrypt(cipherText, secretKey);
+          var decryptedText = bytes.toString(CryptoJS.enc.Utf8);
 
-        // If the decrypted text is empty, it means decryption was not successful,
-        // so we assume the text was not encrypted
-        if (decryptedText === '') {
-            return cipherText;
-        } else {
-            return decryptedText;
-        }
-    } catch (error) {
-        // If there's an error in decryption, we assume the text was not encrypted
-        return cipherText;
-    }
+          return decryptedText;
+
+      } catch (error) {
+          // If there's an error in decryption, we assume the text was not encrypted
+          return cipherText;
+      }
     }
 
     // Get the default List
@@ -519,11 +514,7 @@
       const value = quill.getText().trim() === '' ? '' : quill.root.innerHTML;
 
       const encryptedValue = encryptText(value);
-
-      console.log(value)
-      console.log(encryptedValue)
-      console.log(decryptText(encryptedValue))
-
+      
       // Save the goal to Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).set({
         value: encryptedValue
