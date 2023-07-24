@@ -522,6 +522,7 @@
 
       console.log(value)
       console.log(encryptedValue)
+      console.log(decryptText(encryptedValue))
 
       // Save the goal to Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).set({
