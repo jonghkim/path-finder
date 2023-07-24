@@ -520,6 +520,9 @@
 
       const encryptedValue = encryptText(value);
 
+      console.log(value)
+      console.log(encryptedValue)
+
       // Save the goal to Firebase Firestore
       db.collection("users").doc(username).collection("goals").doc(documentName).set({
         value: encryptedValue
