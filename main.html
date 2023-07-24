@@ -516,7 +516,7 @@
       const quill = quillInstances[inputId];
 
       // Get the value from the Quill editor
-      const value = quill.getText().trim() === '' ? null : quill.root.innerHTML;
+      const value = quill.getText().trim() === '' ? '' : quill.root.innerHTML;
 
       const encryptedValue = encryptText(value);
 
