@@ -158,6 +158,25 @@
     vertical-align: middle; /* Align the bullet point in the middle vertically */
     }    
 
+    .link-button {
+        background-color: #10b5e7; /* Blue */
+        border: none;
+        color: white;
+        padding: 5px 5px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        /* margin: 4px 2px; */
+        transition-duration: 0.4s;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .link-button:hover {
+        background-color: white;
+        color: black;
+    }
 
   </style>
 
@@ -308,6 +327,11 @@
     <button onclick="generateRandomQuestion()">Generate Question</button>
     <p id="questionDisplay"></p>
     <div id="questionInput" class="small-textarea"></div>
+
+    <div id="answeredQuestionsContainer">
+      <h2>Answered Questions</h2>
+      <div id="answeredQuestions"></ul>
+    </div>    
   </div>
 
   <div class="tabcontent" id="about">
@@ -502,6 +526,7 @@
         documentName = 'day-' + year + '-' + month + '-' + day + '-progress';
       } else if(inputId === 'questionInput') {
         documentName = 'question-' + question_number;
+        fetchAndDisplayAnsweredQuestions();
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -660,7 +685,7 @@
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
-
+      fetchAndDisplayAnsweredQuestions();
     };
 
     function updateSelectedDate() {
@@ -757,12 +782,17 @@
 
     let question_number = 'none';
 
-    function generateRandomQuestion() {
+    function generateRandomQuestion(questionIndex) {
       const questionDisplay = document.getElementById('questionDisplay');
-      const randomIndex = Math.floor(Math.random() * questions.length);
-      const randomQuestion = questions[randomIndex];
-      questionDisplay.innerHTML = randomQuestion;
-      question_number = randomIndex;
+      
+      // If no question index is provided, choose a random index
+      if(questionIndex === undefined) {
+        questionIndex = Math.floor(Math.random() * questions.length);
+      }
+      
+      const question = questions[questionIndex];
+      questionDisplay.innerHTML = question;
+      question_number = questionIndex;
 
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
@@ -771,6 +801,50 @@
       loadGoal('questionInput', 'day-' + year + '-' + month + '-' + day);
     }
 
+    function fetchAndDisplayAnsweredQuestions() {
+        // Fetch all documents from Firestore
+        db.collection("users").doc(username).collection("goals")
+        .get()
+        .then((querySnapshot) => {
+            // Parse the document names and get the questions
+            let answeredQuestions = [];
+            querySnapshot.forEach((doc) => {
+                let docName = doc.id;
+                if(docName.startsWith('question-')) {
+                    let questionIndex = parseInt(docName.split('-')[1]);
+                    answeredQuestions.push(questionIndex);
+                }
+            });
+
+            // Display the answered questions
+            displayAnsweredQuestions(answeredQuestions);
+        })
+        .catch((error) => {
+            console.log("Error getting documents: ", error);
+        });
+    }
+
+    function displayAnsweredQuestions(answeredQuestions) {
+
+      const answeredQuestionsList = document.getElementById('answeredQuestions');
+      answeredQuestionsList.innerHTML = ''; // Reset the list
+      answeredQuestionsList.style.textAlign = 'left'; // Add left text alignment
+
+      answeredQuestions.forEach((questionIndex, index) => {
+        let question = questions[questionIndex];
+
+        if(question === undefined) {
+          return;
+        }
+        let match = question.match(/<b>(.*?)<\/b>/);
+        let boldText = match ? match[1] : question; // If no match, use the whole question
+
+        let listItem = document.createElement('ul');
+        listItem.innerHTML = `<b>${index}. ${boldText}</b> <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Link</button>`; // Display the text in bold, and add a button
+        answeredQuestionsList.appendChild(listItem);
+      });
+
+    }
   </script>
 </body>
 </html>

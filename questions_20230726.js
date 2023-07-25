@@ -105,45 +105,45 @@ var questions = [
     
     ,"<b>The evolved you.</b> You have grown immensely this year. How do you compare to the person you were when you began this planner? How will your learnings this year shape your objectives and actions for the upcoming year?"
 
-    // Chat GPT
-    ,"<b>Pace Yourself.</b> Progress can be slow and steady. Don't discount the small victories that lead you to your overall goal."
+    // // Chat GPT
+    // ,"<b>Pace yourself.</b> Progress can be slow and steady. Don't discount the small victories that lead you to your overall goal."
 
-    ,"<b>Self-care is Crucial.</b> Always find time for relaxation and restoration. It uplifts your physical health and mental wellbeing."
+    // ,"<b>Self-care is crucial.</b> Always find time for relaxation and restoration. It uplifts your physical health and mental wellbeing."
     
-    ,"<b>Embrace Uncertainty.</b> Life can be unpredictable, yet these uncertainties often lead to the most beautiful outcomes. Embrace them."
+    // ,"<b>Embrace uncertainty.</b> Life can be unpredictable, yet these uncertainties often lead to the most beautiful outcomes. Embrace them."
     
-    ,"<b>Let go of Perfection.</b> Perfection is an illusion. Instead of striving for it, aim for progress and continuous improvement."
+    // ,"<b>Let go of perfection.</b> Perfection is an illusion. Instead of striving for it, aim for progress and continuous improvement."
     
-    ,"<b>Seek Clarity.</b> Understand your purpose and intentions in every action. Clear purpose drives you to success."
+    // ,"<b>Seek clarity.</b> Understand your purpose and intentions in every action. Clear purpose drives you to success."
     
-    ,"<b>Stay Humble.</b> Humility opens doors to learning and growth. Never let success overshadow your humility."
+    // ,"<b>Stay humble.</b> Humility opens doors to learning and growth. Never let success overshadow your humility."
     
-    ,"<b>Forgiveness Heals.</b> Holding onto anger harms more than it helps. Forgive, not because they deserve it, but because you deserve peace."
+    // ,"<b>Forgiveness heals.</b> Holding onto anger harms more than it helps. Forgive, not because they deserve it, but because you deserve peace."
     
-    ,"<b>Consistency is Key.</b> Regular efforts, no matter how small, contribute significantly to achieving your goal."
+    // ,"<b>Consistency is Key.</b> Regular efforts, no matter how small, contribute significantly to achieving your goal."
     
-    ,"<b>Never Stop Learning.</b> Expand your knowledge constantly. The more you learn, the more you grow."
+    // ,"<b>Never stop learning.</b> Expand your knowledge constantly. The more you learn, the more you grow."
     
-    ,"<b>Take Responsible Risks.</b> Pushing boundaries often leads to great results. Learn to take calculated risks."
+    // ,"<b>Take responsible risks.</b> Pushing boundaries often leads to great results. Learn to take calculated risks."
     
-    ,"<b>Embrace Change.</b> Change is an integral part of growth. Embrace it with a positive mindset."
+    // ,"<b>Embrace change.</b> Change is an integral part of growth. Embrace it with a positive mindset."
     
-    ,"<b>Value Time.</b> Time is the one asset you can't get back. Use it wisely."
+    // ,"<b>Value time.</b> Time is the one asset you can't get back. Use it wisely."
     
-    ,"<b>Lead with Empathy.</b> Understand and share the feelings of others. It makes you a better leader and human."
+    // ,"<b>Lead with empathy.</b> Understand and share the feelings of others. It makes you a better leader and human."
     
-    ,"<b>Cultivate Resilience.</b> Life will have ups and downs. Build your resilience to navigate through tough times."
+    // ,"<b>Cultivate resilience.</b> Life will have ups and downs. Build your resilience to navigate through tough times."
     
-    ,"<b>Trust your Instincts.</b> Sometimes, your gut feeling can guide you when logic can't. Trust it."
+    // ,"<b>Trust your instincts.</b> Sometimes, your gut feeling can guide you when logic can't. Trust it."
     
-    ,"<b>Practice Mindfulness.</b> Living in the present moment reduces stress and improves mental health. Cultivate mindfulness."
+    // ,"<b>Practice mindfulness.</b> Living in the present moment reduces stress and improves mental health. Cultivate mindfulness."
     
-    ,"<b>Speak Kindly.</b> Your words can lift someone up or tear them down. Choose to spread kindness."
+    // ,"<b>Speak kindly.</b> Your words can lift someone up or tear them down. Choose to spread kindness."
     
-    ,"<b>Listen Actively.</b> Listening is just as important as speaking. Practice active listening to truly understand others."
+    // ,"<b>Listen actively.</b> Listening is just as important as speaking. Practice active listening to truly understand others."
     
-    ,"<b>Invest in Relationships.</b> Strong relationships are vital for a fulfilling life. Nurture your personal and professional relationships."
+    // ,"<b>Invest in relationships.</b> Strong relationships are vital for a fulfilling life. Nurture your personal and professional relationships."
     
-    ,"<b>Find Balance.</b> Maintaining a balance between various aspects of life is crucial for overall happiness and success."
+    // ,"<b>Find balance.</b> Maintaining a balance between various aspects of life is crucial for overall happiness and success."
 
 ]
