@@ -46,6 +46,8 @@
     }
   </style>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
 </head>
 
 <body>
@@ -66,6 +68,12 @@
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
   
   <script type="module">
+
+    var secretKey = "pathfinder"; // replace with your own secret key
+
+    function encryptText(plainText) {
+        return CryptoJS.AES.encrypt(plainText, secretKey).toString();
+    }
 
     const firebaseConfig = {
       apiKey: "AIzaSyDGGHtfrqX6fEDFPZnvhWO1NQFNjL0P0Y8",
@@ -134,7 +142,10 @@
 
       // Set the source URL of the iframe with the username query parameter
       const timestamp = new Date().getTime(); // Get current timestamp
-      const mainPageURL = `main.html?username=${username}&timestamp=${timestamp}`;      
+
+      const encrypt_username = encryptText(username);
+
+      const mainPageURL = `main.html?username=${encrypt_username}&timestamp=${timestamp}`;      
       mainContent.src = mainPageURL;
     }
 

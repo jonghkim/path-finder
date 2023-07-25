@@ -709,7 +709,10 @@
     const db = firebase.firestore();
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    const username = urlParams.get('username');
+
+    const encrypt_username = urlParams.get('username');
+    const decrypt_username = decryptText(encrypt_username);
+    const username = decrypt_username;
 
     loadSelectedDateData();
 
