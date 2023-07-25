@@ -763,6 +763,8 @@
       const randomQuestion = questions[randomIndex];
       questionDisplay.innerHTML = randomQuestion;
       question_number = randomIndex;
+
+      loadGoal('questionInput', 'day-' + year + '-' + month + '-' + day);
     }
 
   </script>
