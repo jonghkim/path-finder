@@ -120,6 +120,7 @@
           const errorCode = error.code;
           const errorMessage = error.message;
           console.error("Sign-in error:", errorCode, errorMessage);
+          window.alert(`Signin error: ${errorMessage}`);
         });
     }
 
