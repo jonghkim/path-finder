@@ -143,7 +143,7 @@
       // Set the source URL of the iframe with the username query parameter
       const timestamp = new Date().getTime(); // Get current timestamp
 
-      const encrypt_username = encryptText(username);
+      const encrypt_username = encodeURIComponent(encryptText(username));
 
       const mainPageURL = `main.html?username=${encrypt_username}&timestamp=${timestamp}`;      
       mainContent.src = mainPageURL;

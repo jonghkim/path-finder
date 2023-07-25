@@ -710,8 +710,8 @@
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
 
-    const encrypt_username = urlParams.get('username');
-    const decrypt_username = decryptText(encrypt_username);
+    const encryptedUsername = decodeURIComponent(urlParams.get('username'));
+    const decrypt_username = decryptText(encryptedUsername);
     const username = decrypt_username;
 
     loadSelectedDateData();
