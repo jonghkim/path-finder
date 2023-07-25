@@ -29,7 +29,7 @@ var questions = [
     
     "<b>Take control.</b> Don't wait for others to grant you permission. Where do you wish to lead this week? How can you demonstrate leadership in your own life?",
 
-    "<b>Wrap up pending tasks.</b> Perform a comprehensive check. What unfinished tasks need to be wrapped up? Often, we leave tasks hanging because they're difficult or because we avoid saying "no". Unburden yourself. Commit to your priorities and discard the rest.",
+    "<b>Wrap up pending tasks.</b> Perform a comprehensive check. What unfinished tasks need to be wrapped up? Often, we leave tasks hanging because they're difficult or because we avoid saying 'no'. Unburden yourself. Commit to your priorities and discard the rest.",
     
     "<b>Does your surrounding foster productivity?</b> Your environment impacts your output. Does your workspace stimulate creativity or suppress it? It should foster idea generation. What additions or removals are required to create such a space?",
 
@@ -50,7 +50,6 @@ var questions = [
     "<b>Transform challenges into opportunities.</b> What if you looked at problems as potential to bring about innovation? Welcome every obstacle this week as a positive opportunity — a chance to rise to the challenge and display your best self.",
     
     "<b>Avoid running on empty.</b> Research highlights the importance of breaks for productivity, and the activities you engage in during breaks are significant. Activities such as outdoor walks boost cerebral blood flow; coloring promotes mindfulness. How can you replenish or maintain your energy each day?",
-
 
     "<b>Choose consciously.</b> Don't let your life run on autopilot. List your top priorities and personal values. When making a decision, ask yourself: how does this align with the individual I aspire to be?",
 
