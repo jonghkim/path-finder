@@ -159,7 +159,7 @@
     }    
 
     .link-button {
-        background-color: #10b5e7; /* Blue */
+        background-color: #b4b9ba; /* Blue */
         border: none;
         color: white;
         padding: 5px 5px;
@@ -840,7 +840,7 @@
         let boldText = match ? match[1] : question; // If no match, use the whole question
 
         let listItem = document.createElement('ul');
-        listItem.innerHTML = `<b>${index}. ${boldText}</b> <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Link</button>`; // Display the text in bold, and add a button
+        listItem.innerHTML = `<b>${index}. ${boldText}</b> <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Visit</button>`; // Display the text in bold, and add a button
         answeredQuestionsList.appendChild(listItem);
       });
 
