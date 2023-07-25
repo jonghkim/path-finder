@@ -1,106 +1,150 @@
 var questions = [
-    "<b>What are you most looking forward to in the months ahead?</b> You just did the hard work breaking down your goals into strategic steps. What are you excited to learn, do, or discover?",
+    "<b>What excites you about the future?</b> After setting your goals and outlining the steps, what are the things you're keen to explore, learn or do?",
   
-    "<b>Get in balance.</b> Write out the main areas of your life: family, work, money, health, and anything else significant. Give each one a number from 1-10 for the amount of work or energy it requires from you. Where is most of your energy going? How would you like to shift the balance?",
-  
-    "<b>Track your progress.</b> How are you measuring your progress? What are your milestones? Make sure you are working in the right direction and making progress towards the finish line.",
-  
-    "<b>If you want to change your life, start small.</b> It is the small things we do every day that add up like compound interest in our lives. What small action or task can you start with to make progress on the greater goal?",
-  
-    "<b>Set yourself up for success.</b> What do you need in order to thrive? There are the basics: food, water, sleep. Are you getting enough? What else do you need? Maybe it's quiet time, nature, culture, community…",
-  
-    "<b>Make space for your superpowers.</b> What are your strengths? What are you better at than anyone else? It could be anything. How can you make those things a bigger part of your life?",
-  
-    "<b>Face your fears.</b> Go ahead: imagine the worst-case scenario. Dealing with reality is better than avoiding negative feelings. By addressing your fears head-on, you are empowered to take practical steps to avoid problems before they happen.",
-  
-    "<b>What is your purpose?</b> Don't just get things done. Do the work that matters. Reflect on the person you want to be this week. How can you align your actions with your intentions?",
-  
-    "<b>Exceed expectations.</b> What can you do to go over and above this week? Where will this effort have the greatest impact?",
-  
-    "<b>Ask for feedback.</b> Who helps you make your work even better? We all want to succeed on our own, but other people have so much to offer. This week, ask for feedback or collaborate with someone who can elevate your output.",
-  
-    "<b>Visualize your success.</b> Don't lose sight of the finish line. When you're in the weeds, remember to zoom out to make sure you're still headed in the right direction. What will it look like when you're done? What do you need to do today to get there?",
-  
-    "<b>Progress over perfection.</b> At a certain point, done is better than perfect. Where do you need to push ahead this week?",
-  
-    "<b>Learn from the best.</b> Let someone else's success inspire your own. What can you learn from their experience? How can you integrate those lessons into your own work?",
-  
-    "<b>Don't be an island.</b> Hard work and focus can sometimes feel lonely. Is there time for human connection in your life? How can you strengthen a relationship or nurture a new one this week?",
-  
-    "<b>Be your own boss.</b> Don't wait for someone else to give you permission. Where do you want to take charge this week? What can you do to be a leader in your own life?",
-  
-    "<b>Tie up loose ends.</b> Do a holistic check-in. What's been left pending that needs to be finalized? Often, we leave things hanging because we are avoiding saying \"no\" or taking on a daunting challenge. Free yourself. Commit to your priorities and let the rest go.",
-  
-    "<b>Does your environment inspire your best work?</b> Your input affects your output. What do you see and hear in your workspace? Does it inspire creativity, or stifle it? Your workspace should elevate your ideas. What do you need to add or take away for that to happen?",
-  
-    "<b>Focus on the positive.</b> It is so easy to notice what's going wrong. But what is going right? Make a list of things that are going well right now, and appreciate your part in making them happen.",
-  
-    "<b>Refresh your toolkit.</b> Do you have everything you need to succeed? This could be anything from a good night's sleep to the right computer. If something you have or do isn't working optimally for you, what can you do to upgrade it?",
-  
-    "<b>Let it go.</b> Are you holding onto things that no longer serve you? This could be anything from old job duties to personal grudges, all of which take up unproductive space in your life. What can you let go of this week?",
-  
-    "<b>Savor simple pleasures.</b> Write a list of activities that make you feel calm, present, and happy. As you discover little things that make your days brighter, make note of them. When you commit to feeling joy, you feel it more often.",
-  
-    "<b>Eyes on your own paper.</b> Comparison is a distraction. When you focus on someone else's success or failure, you lose focus on your own. Reflect on your goals and why they are meaningful to you, and free yourself from comparison.",
-  
-    "<b>Actions speak louder than words.</b> Success isn't loud. Success speaks for itself. What is something you have been intending to do, but haven't done yet? What is one action you can complete this week to turn that idea into reality?",
-  
-    "<b>Streamline your workflow.</b> When you're good at what you do, a lot depends on you. But that can slow the process down. Where can you delegate responsibility, so that work can flow around you?",
-  
-,"<b>Reframe a problem.</b> What if you saw a problem as an opportunity to change the way things are done? What if you greeted every challenge this week as though you considered it good luck — your chance to rise to the occasion and be your best self?"
+    "<b>Assess your life's equilibrium.</b> List the major sectors of your life: family, work, finances, health, etc. Rank each on a scale of 1-10 based on the energy or effort it demands. Where is the bulk of your energy directed? Would you like to alter this balance?",
 
-,"<b></>Don't wait until your tank is empty.</b> Studies show that breaks are key for productivity, and what you do with that time matters. A walk outside boosts blood flow to your brain; coloring creates a sense of mindfulness and flow. What can you do to boost or maintain your energy throughout each day?"
+    "<b>Measure your advancement.</b> What's your process for tracking progress? What milestones have you set? Ensure you're on the right path and making strides towards your ultimate goal.",
 
-,"<b></>Make deliberate choices.</b> Don't live life on autopilot. Make a list of your most important goals and personal values. When faced with a decision, ask yourself: how does this align with the person I want to be?"
+    "<b>Start with minor changes for major impact.</b> Small daily actions accumulate over time like compound interest. What minor task or action can you initiate to gradually achieve your larger goal?",
 
-,"<b></>Let it flow.</b> When we're stuck, it's tempting to keep it to ourselves. But secrecy creates more problems than it solves. This week, commit to sharing your status: the good and bad. Instead of being defensive, ask for help. Share your wins and boost your credibility. Be a conduit for good communication."
+    "<b>Equip yourself for achievement.</b> What are the essentials for you to flourish? This includes basic needs like food, water, sleep - are these sufficiently met? What else do you require? Perhaps solitude, nature, community, culture?",
 
-,"<b></>Set a daily intention.</b> Your mindset has more control over your day than you might think. Set an intention for your day — it can be something you want to do, a way you want to feel, or anything that inspires you. Giving your day a direction can help you see things in a new way and get more meaning out of your actions."
+    "<b>Utilize your unique strengths.</b> Identify your strong points. What are you exceptionally good at? How can you incorporate these strengths more into your daily life?",
 
-,"<b>Be the person people remember.</b> Who is someone who inspired you to be your best self? How can you be that person for others? Sometimes it's as simple as being a good listener or a supporter of someone's good ideas. Their success is your success."
+    "<b>Confront your anxieties.</b> Think about the worst possible outcome. It's often more productive to face the reality than to avoid negative emotions. By dealing with your fears directly, you can take measures to prevent issues before they occur.",
 
-,"<b>Notice your patterns.</b> Try keeping track of your wins and your challenges every day for a week. Do any patterns emerge? What can you learn by paying closer attention to your experiences?"
+    "<b>Define your mission.</b> Don't just complete tasks. Perform work that carries significance. Consider the person you aspire to be this week. How can your actions mirror your ambitions?",
 
-,"<b>Act the way you want to feel.</b> No one has more control over how you feel than you do. If you don't like how you've been feeling lately, what can you do to change that?"
+    "<b>Go beyond the norm.</b> What extra steps can you take this week? Where can the extra effort create the most impact?",
 
-,"<b>Plan your perfect day.</b> What would it look like if today went perfectly? How can you help things fall into place? Where do you have room for flexibility? With a clear vision, you are more likely to achieve the results you want."
+    "<b>Seek others' viewpoints.</b> Who assists in improving your work? We all aim to succeed independently, but there's a lot to learn from others. This week, ask for feedback or work together with someone who can enhance your output.",
 
-,"<b>Tap into your true self.</b> What inspires you? What values guide you? How can you celebrate and nurture the things that make you so uniquely you?"
+    "<b>Envision your achievement.</b> Keep your eyes on the goal. Amidst the daily grind, don't forget to take a step back to ensure you're still on track. What will the finish line look like? What actions do you need to take today to reach there?",
+    
+    "<b>Value progress over flawlessness.</b> At some point, getting things done is better than striving for perfection. Where do you need to press forward this week?",
+    
+    "<b>Draw inspiration from success stories.</b> Let other people's achievements motivate you. What lessons can you learn from their journeys? How can these insights be incorporated into your work?",
 
-,"<b>Boost your credibility.</b> Show, don't tell. What are some actions you can take this week that will help you earn the respect of those around you?"
+    "<b>Avoid isolating yourself.</b> Intense focus and hard work can sometimes feel isolating. Do you make time for social interactions? How can you enhance a relationship or cultivate a new one this week?",
+    
+    "<b>Take control.</b> Don't wait for others to grant you permission. Where do you wish to lead this week? How can you demonstrate leadership in your own life?",
 
-,"<b>Quality, not quantity.</b> What tasks would benefit most from deep, focused attention this week? Instead of trying to do it all, pick a handful of things to do really well. "
+    "<b>Wrap up pending tasks.</b> Perform a comprehensive check. What unfinished tasks need to be wrapped up? Often, we leave tasks hanging because they're difficult or because we avoid saying "no". Unburden yourself. Commit to your priorities and discard the rest.",
+    
+    "<b>Does your surrounding foster productivity?</b> Your environment impacts your output. Does your workspace stimulate creativity or suppress it? It should foster idea generation. What additions or removals are required to create such a space?",
 
-,"<b>Be heard. How can you increase your impact?</b> Who is your most important audience and how can you make your actions or words matter most to them?"
+    "<b>Accentuate the positive.</b> It's easy to notice the negatives. But what's going well? List down the positive aspects of your life and acknowledge your contribution to them.",
 
-,"<b>You can do anything,</b> but not everything. There are only so many hours in the day. What are your top priorities? What deserves your focus, and what can you let go of?"
+    "<b>Upgrade your toolkit.</b> Do you possess all the resources required for success? This could be anything from a sound sleep to the right gadget. If something isn't working well for you, how can you improve it?",
 
-,"<b>Practice gratitude.</b> Who are you grateful for? What little things make your days special? Write a list of the people, places, and things that you are thankful to have in your life."
+    "<b>Release what no longer benefits you.</b> Are you clinging onto things that no longer serve a purpose? This could range from outdated job duties to personal grievances, all of which occupy unnecessary space in your life. What can you let go of this week?",
+    
+    "<b>Cherish simple joys.</b> List activities that make you feel calm, focused, and happy. Make note of the little things that add a spark to your day. By committing to enjoy, you're likely to experience it more.",
 
-,"<b>Let your mind wander.</b> Pay attention to your daydreams and the things that distract you throughout the day. Record them here and see if there are any themes. You may discover a seed of an idea that you could nurture and grow into something big."
+    "<b>Maintain your focus.</b> It's easy to get distracted by other people's achievements or setbacks. Concentrate on your personal objectives and the reasons they hold significance to you. Unshackle yourself from the bonds of comparison.",
 
-,"<b>Reflect on your day.</b> We start most days with a plan, but how often do you check in at the end of the day? Commit to spending 5-10 minutes at the end of each day to reflect on what went well, what was hard, and any thoughts or people that inspired you."
+    "<b>Make your intentions tangible.</b> Triumph is subtle; it's its own spokesperson. What actions have you been planning, but haven't executed? Identify a task you can accomplish this week to transform your plans into reality.",
+    
+    "<b>Optimize your work process.</b> As an expert, a lot of tasks fall on your plate, potentially slowing down your progress. Where can you pass on responsibilities to ensure a smoother workflow?",
+    
+    "<b>Transform challenges into opportunities.</b> What if you looked at problems as potential to bring about innovation? Welcome every obstacle this week as a positive opportunity — a chance to rise to the challenge and display your best self.",
+    
+    "<b>Avoid running on empty.</b> Research highlights the importance of breaks for productivity, and the activities you engage in during breaks are significant. Activities such as outdoor walks boost cerebral blood flow; coloring promotes mindfulness. How can you replenish or maintain your energy each day?",
 
-,"<b>Streamline your space.</b> Look around you right now. Are there things crowding your workspace that are getting in the way of clear thoughts or clear processes? How can you reduce distractions and make space for what you need most?"
 
-,"<b>Stop putting that thing off.</b> Small problems often go unsolved because they are small, but consider how the few minutes you spend on a small problem (like missing keys or a semi-functional appliance) every day add up to hours or even days of your life. This week, fix one small problem. You might be surprised at how much it changes your outlook."
+    "<b>Choose consciously.</b> Don't let your life run on autopilot. List your top priorities and personal values. When making a decision, ask yourself: how does this align with the individual I aspire to be?",
 
-,"<b>Schedule time for yourself.</b> So much of the work we do is for other people, on their timelines. This week, block off some time that is just for you. Whether it's a quiet cup of coffee on a weekend morning or a day-long hike on your favorite trail, make yourself a priority."
+    "<b>Embrace open communication.</b> When we hit a roadblock, we often keep it to ourselves, but this can exacerbate the issue. This week, pledge to share your progress: the ups and downs. Instead of putting up a defense, seek help. Share your victories and strengthen your credibility. Foster a culture of transparent communication.",
+    
+    "<b>Establish a daily goal.</b> Your mindset has more control over your day than you might realize. Set a goal for your day — it could be an accomplishment you aim for, a mood you wish to cultivate, or anything that motivates you. By giving your day a purpose, you may view things from a new perspective and find more meaning in your actions.",
+    
+    "<b>Be a source of inspiration.</b> Who has inspired you to be your best self? How can you play that role for others? Sometimes, being a good listener or supporting someone's creative ideas can make a difference. Their triumphs become your triumphs.",
+    
+    "<b>Identify your tendencies.</b> Attempt to record your successes and hurdles every day for a week. Can you see any patterns? What insights can be gained by paying closer attention to your experiences?",
+    
+    "<b>Embody your desired feelings.</b> You have the utmost control over how you feel. If you're not content with your recent emotional state, what steps can you take to alter it?",
+    
+    "<b>Visualize your ideal day.</b> What would a perfect day look like for you? How can you contribute to making things go smoothly? Where can you incorporate flexibility? By having a clear image, you're more likely to attain the outcomes you desire.",
+    
+    "<b>Connect with your inner self.</b> What sparks your passion? What values steer your course? How can you celebrate and nurture the traits that make you uniquely you?",
+    
+    "<b>Amplify your credibility.</b> Actions are more powerful than words. What steps can you take this week to garner the respect of those around you?",
+    
+    "<b>Focus on quality over quantity.</b> Which tasks would benefit most from deep, focused attention this week? Instead of trying to do it all, choose a few tasks and execute them exceptionally well.",
+    
+    "<b>Amplify your impact.</b> Who is the most critical audience for your actions or words? How can you make what you do or say more meaningful to them?",
+    
+    "<b>You're capable, but prioritize.</b> The day only has so many hours. What are your main objectives? What deserves your focus, and what can you relinquish?",
+    
+    "<b>Cultivate gratitude.</b> Who are the people you're grateful for? What little things make your days special? Compile a list of the individuals, places, and things that you're thankful to have in your life.",
 
-,"<b>Make your minutes matter.</b> When you're fully present in the moment, your efforts have more impact. Wherever you are this week, commit to being fully there. Consider creating an end-of-day ritual so that when you're off the clock, you're really off. When you come back to work, you'll be more focused and efficient."
+    "<b>Let your thoughts roam.</b> Pay heed to your daydreams and daily distractions. Note them down and look for common themes. You might stumble upon an idea seed that you can nurture into something significant.",
 
-,"<b>Stop the cycle.</b> If you do what you've always done, you'll keep getting the same results. What are some recurring problems in your life? List 3 completely new ways to deal with them — you might surprise yourself with a brilliant solution."
+    "<b>Reflect on your daily journey.</b> We usually begin days with a plan, but how often do you reflect at the end of the day? Commit to spending 5-10 minutes each day to ponder over what went well, what was challenging, and any inspiring thoughts or people.",
+    
+    "<b>Simplify your environment.</b> Take a look around you. Are there items cluttering your workspace that hinder clear thinking or processes? How can you minimize distractions and create space for what you need most?",
 
-,"<b>Grow through what you go through.</b> What challenges have you faced this year? What did you learn?"
+    "<b>Address the small issues.</b> Small problems often remain unresolved because they seem insignificant, but consider how the time spent on small issues every day adds up over time. This week, resolve one small issue. You might be surprised at how it changes your perspective.",
 
-,"<b>Share your success.</b> We all need other people to succeed. What is something good that happened recently, thanks in part to someone else? Have you thanked them? When you spread positivity and gratitude, those things come back to you."
+    "<b>Carve out time for self-care.</b> A significant portion of our work is for others and on their timelines. This week, set aside some time exclusively for you. Whether it's a peaceful cup of coffee on a weekend morning or a day-long hike on your favorite trail, prioritize yourself.",
+    
+    ,"<b>Value your time.</b> Being fully immersed in your activities can enhance the results. This week, strive to be wholly present in every situation. Perhaps establish a closing ritual for the day to ensure a complete disconnect from work. This way, your work hours will be more productive."
 
-,"<b>What makes you feel good?</b> Listen to your body and your heart. What do you need in order to feel nourished, supported, and happy? How can you get more of that this week?"
+    ,"<b>Break the pattern.</b> Repeating the same actions will yield the same results. Are there issues in your life that keep recurring? Think of 3 entirely different strategies to tackle them - you might stumble upon an innovative solution."
+    
+    ,"<b>Learn from your experiences.</b> What were the hurdles you faced this year? What lessons did they teach you?"
+    
+    ,"<b>Spread the joy of your achievements.</b> Success is a collective endeavor. Can you recall a recent accomplishment that was partly because of someone else's contribution? Did you express your gratitude? Spreading positivity and thankfulness boomerangs back to you."
+    
+    ,"<b>Understand what uplifts you.</b> Tune into your physical and emotional needs. What are the things that make you feel loved, supported, and content? How can you incorporate more of that into your week?"
+    
+    ,"<b>Acknowledge your triumphs.</b> Never-ending tasks can often overshadow your victories. If you do not take a moment to recognize your accomplishments, they might just fade away. Think of a recent achievement. Who can you celebrate it with? Why does it hold value?"
+    
+    ,"<b>Trust your instincts.</b> While making choices, we often lean on rationality. However, what does your instinct suggest? How would you feel about deciding based on your inner voice, rather than rational thinking?"
+    
+    ,"<b>Visualize and plan backwards.</b> Envision your life two decades from now. Your blueprint should indicate your end goal. Consider your current status. What single step can you take today to steer towards the life you aspire to lead?"
+    
+    ,"<b>The evolved you.</b> You have grown immensely this year. How do you compare to the person you were when you began this planner? How will your learnings this year shape your objectives and actions for the upcoming year?"
 
-,"<b>Celebrate your wins.</b> There is always more work to do. If you don't set aside time to acknowledge your wins, they will just pass you by. What is a recent success? Who can you share it with? Why is it meaningful?"
+    // Chat GPT
+    ,"<b>Pace Yourself.</b> Progress can be slow and steady. Don't discount the small victories that lead you to your overall goal."
 
-,"<b>Follow your intuition.</b> When it comes to decision-making, we usually rely on logic. But what does your gut tell you? How would it feel to make a decision based on what you feel, more than what you think?"
+    ,"<b>Self-care is Crucial.</b> Always find time for relaxation and restoration. It uplifts your physical health and mental wellbeing."
+    
+    ,"<b>Embrace Uncertainty.</b> Life can be unpredictable, yet these uncertainties often lead to the most beautiful outcomes. Embrace them."
+    
+    ,"<b>Let go of Perfection.</b> Perfection is an illusion. Instead of striving for it, aim for progress and continuous improvement."
+    
+    ,"<b>Seek Clarity.</b> Understand your purpose and intentions in every action. Clear purpose drives you to success."
+    
+    ,"<b>Stay Humble.</b> Humility opens doors to learning and growth. Never let success overshadow your humility."
+    
+    ,"<b>Forgiveness Heals.</b> Holding onto anger harms more than it helps. Forgive, not because they deserve it, but because you deserve peace."
+    
+    ,"<b>Consistency is Key.</b> Regular efforts, no matter how small, contribute significantly to achieving your goal."
+    
+    ,"<b>Never Stop Learning.</b> Expand your knowledge constantly. The more you learn, the more you grow."
+    
+    ,"<b>Take Responsible Risks.</b> Pushing boundaries often leads to great results. Learn to take calculated risks."
+    
+    ,"<b>Embrace Change.</b> Change is an integral part of growth. Embrace it with a positive mindset."
+    
+    ,"<b>Value Time.</b> Time is the one asset you can't get back. Use it wisely."
+    
+    ,"<b>Lead with Empathy.</b> Understand and share the feelings of others. It makes you a better leader and human."
+    
+    ,"<b>Cultivate Resilience.</b> Life will have ups and downs. Build your resilience to navigate through tough times."
+    
+    ,"<b>Trust your Instincts.</b> Sometimes, your gut feeling can guide you when logic can't. Trust it."
+    
+    ,"<b>Practice Mindfulness.</b> Living in the present moment reduces stress and improves mental health. Cultivate mindfulness."
+    
+    ,"<b>Speak Kindly.</b> Your words can lift someone up or tear them down. Choose to spread kindness."
+    
+    ,"<b>Listen Actively.</b> Listening is just as important as speaking. Practice active listening to truly understand others."
+    
+    ,"<b>Invest in Relationships.</b> Strong relationships are vital for a fulfilling life. Nurture your personal and professional relationships."
+    
+    ,"<b>Find Balance.</b> Maintaining a balance between various aspects of life is crucial for overall happiness and success."
 
-,"<b>Work backwards</b>. Imagine where you want to be in 20 years. Your map needs to show your destination. Now think about where you are now. What is one thing you can do today to move in the direction of the life you want to live?"
-
-,"<b>A new you</b>. You have come a long way this year. How have you changed since you first started this planner? How will your experiences this year inform your goals and actions next year?"]
+]

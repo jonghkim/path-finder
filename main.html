@@ -212,17 +212,17 @@
     <h2>What are the key actions?</h2>
     <div id="yearlyActionPlansInput" class="large-textarea"></div>
 
-    <h2>Bringing Your Year Into Focus</h2>
-    <label for="yearlyImprovement">How will you improve yourself this year?</label>
+    <h2>Your Focus of This Year</h2>
+    <label for="yearlyImprovement">How will you improve yourself?</label>
     <div id="yearlyImprovement" class="small-textarea"></div>
   
-    <label for="yearlyPerfectYear">What would it look like if this year went perfectly?</label>
+    <label for="yearlyPerfectYear">What would the ideal year look like?</label>
     <div id="yearlyPerfectYear" class="small-textarea"></div>
   
-    <label for="yearlyStartDoing">What do you want to start doing?</label>
+    <label for="yearlyStartDoing">What do you want to initiate?</label>
     <div id="yearlyStartDoing" class="small-textarea"></div>
   
-    <label for="yearlyStopDoing">What do you want to stop doing?</label>
+    <label for="yearlyStopDoing">What would you like to stop doing?</label>
     <div id="yearlyStopDoing" class="small-textarea"></div>
       
   </div>
@@ -232,7 +232,7 @@
         <div class="pane-container">
             <div class="left-pane">
                 <h2>Monthly Milestones</h2>
-                <label for="monthlyMilestonesInput">What do you want to achieve this month and how does it contributes to your higher goal?</label>
+                <label for="monthlyMilestonesInput">What do you want to accomplish this month, and how does it contributes to your higher goal?</label>
                 <div id="monthlyMilestonesInput" class="large-textarea"></div>
             </div>
             <div class="right-pane">
@@ -307,7 +307,8 @@
     <h2>Question</h2>
     <button onclick="generateRandomQuestion()">Generate Question</button>
     <p id="questionDisplay"></p>
-    <div id="questionInput" class="small-textarea"></div>
+    <div id="questionInput" class="large-textarea"></div>
+    <label for="questionInput">Powered by ChatGPT</label>
   </div>
 
   <div class="tabcontent" id="about">
@@ -448,12 +449,9 @@
         });
         }
 
-        if (id !== 'questionInput') {
-          // Listen to text change events
-          quill.on('text-change', function() {
+        quill.on('text-change', function() {
               saveGoal(id, selectedDate);
-          });          
-        }
+        });          
 
         quill.root.spellcheck = false;
         quill.root.focus();
@@ -503,6 +501,8 @@
         documentName = 'day-' + year + '-' + month + '-' + day + '-actionplans';
       } else if (inputId === 'dailyProgressInput') {
         documentName = 'day-' + year + '-' + month + '-' + day + '-progress';
+      } else if(inputId === 'questionInput') {
+        documentName = 'question-' + question_number;
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -568,6 +568,8 @@
         documentName = 'day-' + year + '-' + month + '-' + day + '-actionplans';
       } else if (inputId === 'dailyProgressInput') {
         documentName = 'day-' + year + '-' + month + '-' + day + '-progress';
+      } else if(inputId === 'questionInput') {
+        documentName = 'question-' + question_number;
       } else {
         documentName = inputId; // Default to the inputId for other inputs
       }
@@ -754,12 +756,15 @@
         }
       }    
 
+    let question_number = 'none';
+
     function generateRandomQuestion() {
       const questionDisplay = document.getElementById('questionDisplay');
       const randomIndex = Math.floor(Math.random() * questions.length);
       const randomQuestion = questions[randomIndex];
       questionDisplay.innerHTML = randomQuestion;
-    }    
+      question_number = randomIndex;
+    }
 
   </script>
 </body>
