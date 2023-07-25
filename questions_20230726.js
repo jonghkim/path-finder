@@ -87,7 +87,7 @@ var questions = [
 
     "<b>Carve out time for self-care.</b> A significant portion of our work is for others and on their timelines. This week, set aside some time exclusively for you. Whether it's a peaceful cup of coffee on a weekend morning or a day-long hike on your favorite trail, prioritize yourself.",
     
-    ,"<b>Value your time.</b> Being fully immersed in your activities can enhance the results. This week, strive to be wholly present in every situation. Perhaps establish a closing ritual for the day to ensure a complete disconnect from work. This way, your work hours will be more productive."
+    "<b>Value your time.</b> Being fully immersed in your activities can enhance the results. This week, strive to be wholly present in every situation. Perhaps establish a closing ritual for the day to ensure a complete disconnect from work. This way, your work hours will be more productive."
 
     ,"<b>Break the pattern.</b> Repeating the same actions will yield the same results. Are there issues in your life that keep recurring? Think of 3 entirely different strategies to tackle them - you might stumble upon an innovative solution."
     
