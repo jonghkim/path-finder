@@ -330,8 +330,8 @@
 
     <div id="answeredQuestionsContainer">
       <h2>Answered Questions</h2>
-      <div id="answeredQuestions"></ul>
-    </div>    
+      <div id="answeredQuestions"></div>    
+    </div>
   </div>
 
   <div class="tabcontent" id="about">
@@ -830,18 +830,22 @@
       answeredQuestionsList.innerHTML = ''; // Reset the list
       answeredQuestionsList.style.textAlign = 'left'; // Add left text alignment
 
+      let question_counter = 1;
+
       answeredQuestions.forEach((questionIndex, index) => {
         let question = questions[questionIndex];
 
         if(question === undefined) {
           return;
         }
+
         let match = question.match(/<b>(.*?)<\/b>/);
         let boldText = match ? match[1] : question; // If no match, use the whole question
 
         let listItem = document.createElement('ul');
-        listItem.innerHTML = `<b>${index}. ${boldText}</b> <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Visit</button>`; // Display the text in bold, and add a button
+        listItem.innerHTML = `<b>${question_counter}. ${boldText}</b> <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Visit</button>`; // Display the text in bold, and add a button
         answeredQuestionsList.appendChild(listItem);
+        question_counter = question_counter+1;
       });
 
     }
