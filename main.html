@@ -260,7 +260,11 @@
 
   <div class="tabcontent large-tabcontent" id="monthlyGoal">
     <div class="monthlyGoal">
-        <div class="pane-container">
+      <h2>Monthly Milestones</h2>
+      <label for="monthlyMilestonesInput">What do you want to accomplish this month, and how does it contributes to your higher goal?</label>
+      <div id="monthlyMilestonesInput" class="large-textarea"></div>
+
+        <!-- <div class="pane-container">
             <div class="left-pane">
                 <h2>Monthly Milestones</h2>
                 <label for="monthlyMilestonesInput">What do you want to accomplish this month, and how does it contributes to your higher goal?</label>
@@ -271,13 +275,16 @@
                 <label for="monthlyMilestonesInput">What are the key actions to achieve those goals?</label>
                 <div id="monthlyActionPlansInput" class="large-textarea"></div>
             </div>
-        </div>
+        </div> -->
     </div>
   </div>
 
   <div class="tabcontent large-tabcontent" id="weeklyGoal">
       <div class="weeklyGoal">
-          <div class="pane-container">
+        <h2>Weekly Goals</h2>
+        <label for="weeklyMilestonesInput">What is your focus this week?</label>
+        <div id="weeklyMilestonesInput" class="large-textarea"></div>        
+          <!-- <div class="pane-container">
               <div class="left-pane">
                   <h2>Weekly Goals</h2>
                   <label for="weeklyMilestonesInput">What is your focus this week?</label>
@@ -288,35 +295,42 @@
                   <label for="weeklyActionPlansInput">What are the key actions?</label>
                   <div id="weeklyActionPlansInput" class="large-textarea"></div>
             </div>
-          </div>
+          </div> -->
       </div>
   </div>
   
   <div class="tabcontent" id="dailyGoal">
       <div class="dailyGoal">
-          <div class="vertical-pane-container">
+        <h2>Daily Goal</h2>
+        <label for="dailyMilestonesInput">What is your focus today?</label>
+        <div id="dailyMilestonesInput" class="large-large-textarea"></div>
+          <!-- <div class="vertical-pane-container">
             <div class="top-pane">
               <h2>Daily Goal</h2>
               <label for="dailyMilestonesInput">What is your focus today?</label>
-              <div id="dailyMilestonesInput" class="small-textarea"></div>
+              <div id="dailyMilestonesInput" class="large-large-textarea"></div>
             </div>
             <div class="bottom-pane">
               <h2>Tasks</h2>
               <label for="dailyActionPlansInput">What are the important tasks?</label>
-              <div id="dailyActionPlansInput" class="large-textarea"></div>
+              <div id="dailyActionPlansInput" class="large-large-textarea"></div>
             </div>
             <div class="bottom-pane">
               <label for="dailyProgressInput">Challenges and Reflection</label>
               <div id="dailyProgressInput" class="small-textarea"></div>
             </div>            
-          </div>    
+          </div>     -->
       </div>      
   </div>
   
   <div class="tabcontent large-tabcontent" id="achievement">
     <div class="pane-container">
       <div class="left-pane">
-        <div class="vertical-pane-container">
+        <div class="top-pane">
+          <h2>Yearly Milestones</h2>
+          <div id="achievementYearlyMilestonesInput" class="large-textarea" disabled></div>
+        </div>        
+        <!-- <div class="vertical-pane-container">
           <div class="top-pane">
             <h2>Yearly Milestones</h2>
             <div id="achievementYearlyMilestonesInput" class="small-textarea" disabled></div>
@@ -325,7 +339,7 @@
             <h2>Yearly Action Plans</h2>
             <div id="achievementYearlyActionPlansInput" class="small-textarea" disabled></div>
           </div>
-        </div>      
+        </div>       -->
       </div>
       <div class="right-pane">
         <h2>Achievements & Reflection</h2>
