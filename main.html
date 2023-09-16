@@ -901,6 +901,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
+        
         var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         
@@ -909,15 +910,21 @@
         
         // Callback for date selection
         select: function(info) {
-            // You can interact with the selected date range with info.start and info.end
-            // In this example, we'll just change the background color of the selected date
-            var cells = calendar.getCells(info.start, info.end);
-            for (var cell of cells) {
-                cell.classList.add('highlighted');
+            let startDate = info.start;
+            let endDate = info.end;
+            
+            // Loop through each day between start and end date
+            while (startDate < endDate) {
+                let dateStr = FullCalendar.formatDate(startDate, { month: 'numeric', day: 'numeric', year: 'numeric' });
+                let cell = document.querySelector('.fc-day[data-date="' + dateStr + '"]');
+                if (cell) {
+                    cell.classList.add('highlighted');
+                }
+                startDate.setDate(startDate.getDate() + 1); // Move to next day
             }
         },
         
-        // Deselect event to remove highlighting if needed
+        // Deselect event to remove highlighting
         unselect: function() {
             let highlightedCells = document.querySelectorAll('.highlighted');
             highlightedCells.forEach(cell => {
@@ -927,7 +934,7 @@
         
         // This prevents a new selection from being immediately unselected
         unselectAuto: false
-        });
+    });
     
         calendar.render();
       });
