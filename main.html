@@ -396,13 +396,6 @@
     <p>Feel free to use this tool however you like, and please let me know if you have any suggestions for improvement! <a href="mailto:quantic.jh@gmail.com">Email To: Jongho Kim</a></p>
   </div>
   
-
-  <div id="eventInputModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px;">
-    <label for="eventText">Add Text:</label>
-    <input type="text" id="eventText">
-    <button onclick="addEventToCalendar()">Add</button>
-  </div>
-
   <script>    
     var secretKey = "pathfinder"; // replace with your own secret key
 
@@ -908,7 +901,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
-
         var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         
@@ -917,19 +909,18 @@
         
         // Callback for date selection
         select: function(info) {
-            selectedDates = []; // Reset the array
-            
             let startDate = info.start;
             let endDate = info.end;
             
             // Loop through each day between start and end date
             while (startDate < endDate) {
-                selectedDates.push(new Date(startDate)); // Store the date
+                let dateStr = FullCalendar.formatDate(startDate, { month: 'numeric', day: 'numeric', year: 'numeric' });
+                let cell = document.querySelector('.fc-day[data-date="' + dateStr + '"]');
+                if (cell) {
+                    cell.classList.add('highlighted');
+                }
                 startDate.setDate(startDate.getDate() + 1); // Move to next day
             }
-            
-            // Show modal to input text
-            document.getElementById('eventInputModal').style.display = 'block';
         },
         
         // Deselect event to remove highlighting
@@ -942,24 +933,10 @@
         
         // This prevents a new selection from being immediately unselected
         unselectAuto: false
-         });
+    });
     
         calendar.render();
       });
-
-      // This function will be called when you click the "Add" button in the modal
-      function addEventToCalendar() {
-        let eventText = document.getElementById('eventText').value;
-        selectedDates.forEach(date => {
-            calendar.addEvent({
-                title: eventText,
-                start: date,
-                allDay: true
-            });
-        });
-        // Hide the modal
-        document.getElementById('eventInputModal').style.display = 'none';
-      }      
   </script>
 </body>
 </html>
