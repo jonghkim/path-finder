@@ -655,38 +655,42 @@
           }
 
         } else {
-          if (inputId === 'monthlyActionPlansInput'){
-            let fill_week_text = '';
-            for (let i = 1; i <= 4; i++) {
-              let week_text = `<p>[Week ${i}]<\p><br>`;
-              fill_week_text += week_text;
-            }
-            // Set the content in the Quill.js editor
-            var quill = quillInstances[inputId];
-            quill.disable();
-            quill.clipboard.dangerouslyPasteHTML(fill_week_text);            
-            quill.enable();
+          // if (inputId === 'monthlyActionPlansInput'){
+          //   let fill_week_text = '';
+          //   for (let i = 1; i <= 4; i++) {
+          //     let week_text = `<p>[Week ${i}]<\p><br>`;
+          //     fill_week_text += week_text;
+          //   }
+          //   // Set the content in the Quill.js editor
+          //   var quill = quillInstances[inputId];
+          //   quill.disable();
+          //   quill.clipboard.dangerouslyPasteHTML(fill_week_text);            
+          //   quill.enable();
 
-          } else if (inputId === 'weeklyActionPlansInput'){
-            let fill_day_text = '';
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            for (let j = 1; j <= 7; j++) {
-              let day_text = `<p>[${days[j-1]}]<\p><br>`;
-              fill_day_text += day_text;
-            }
-            // Set the content in the Quill.js editor
-            var quill = quillInstances[inputId];
-            quill.disable();
-            quill.clipboard.dangerouslyPasteHTML(fill_day_text); 
-            quill.enable();
+          // } else if (inputId === 'weeklyActionPlansInput'){
+          //   let fill_day_text = '';
+          //   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+          //   for (let j = 1; j <= 7; j++) {
+          //     let day_text = `<p>[${days[j-1]}]<\p><br>`;
+          //     fill_day_text += day_text;
+          //   }
+          //   // Set the content in the Quill.js editor
+          //   var quill = quillInstances[inputId];
+          //   quill.disable();
+          //   quill.clipboard.dangerouslyPasteHTML(fill_day_text); 
+          //   quill.enable();
 
-          } else {
-            // For other inputs, we leave the editor empty
+          // } else {
+          //   // For other inputs, we leave the editor empty
+          //   var quill = quillInstances[inputId];
+          //   quill.disable();
+          //   quill.clipboard.dangerouslyPasteHTML(''); 
+          //   quill.enable();
+          // }
             var quill = quillInstances[inputId];
             quill.disable();
             quill.clipboard.dangerouslyPasteHTML(''); 
-            quill.enable();
-          }
+            quill.enable();          
         }
       })
       .catch((error) => {
