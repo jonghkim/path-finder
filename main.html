@@ -190,6 +190,10 @@
         color: black;
     }
 
+    .highlighted {
+        background-color: yellow !important;
+        border-color: #FFD700 !important;
+    }
   </style>
 
   <script src="questions_20230727.js"></script>
@@ -207,6 +211,10 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap-colorpicker@3.4.0/dist/js/bootstrap-colorpicker.min.js"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+  <link href='https://fullcalendar.io/releases/fullcalendar/5.10.0/main.css' rel='stylesheet' />
+  <script src='https://fullcalendar.io/releases/fullcalendar/5.10.0/main.js'></script>
+
 </head>
 
 <body>
@@ -279,12 +287,9 @@
     </div>
   </div>
 
-  <div class="tabcontent" id="weeklyGoal">
-      <div class="weeklyGoal">
-        <h2>Weekly Goals</h2>
-        <label for="weeklyMilestonesInput">What is your focus this week?</label>
-        <div id="weeklyMilestonesInput" class="large-textarea"></div>        
-          <!-- <div class="pane-container">
+  <div class="tabcontent large-tabcontent" id="weeklyGoal">
+      <!-- <div class="weeklyGoal">     
+          <div class="pane-container">
               <div class="left-pane">
                   <h2>Weekly Goals</h2>
                   <label for="weeklyMilestonesInput">What is your focus this week?</label>
@@ -295,7 +300,19 @@
                   <label for="weeklyActionPlansInput">What are the key actions?</label>
                   <div id="weeklyActionPlansInput" class="large-textarea"></div>
             </div>
-          </div> -->
+          </div> 
+      </div> -->
+      <div class="pane-container">
+        <div class="left-pane">
+
+         <div id="calendar"></div>
+
+        </div>
+        <div class="right-pane">
+          <h2>Weekly Goals</h2>
+          <label for="weeklyMilestonesInput">What is your focus this week?</label>
+          <div id="weeklyMilestonesInput" class="large-textarea"></div>
+      </div>
       </div>
   </div>
   
@@ -877,6 +894,23 @@
       });
 
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        dateClick: function(info) {
+            if(info.dateStr) {
+                let elements = document.querySelectorAll('.highlighted');
+                elements.forEach(el => {
+                    el.classList.remove('highlighted');
+                });
+                info.dayEl.classList.add('highlighted');
+            }
+        }
+    });
+    calendar.render();
+    });    
   </script>
 </body>
 </html>
