@@ -245,6 +245,7 @@
       <button class="tablink" onclick="openTab(event, 'monthlyGoal')">Monthly Goal</button>
       <button class="tablink" onclick="openTab(event, 'weeklyGoal')">Weekly Goal</button>
       <button class="tablink" onclick="openTab(event, 'dailyGoal')">Daily To Do</button>
+      <button class="tablink" onclick="openTab(event, 'deadlines')">Deadlines</button>
       <button class="tablink" onclick="openTab(event, 'achievement')">Achievements & Reflection</button>
       <button class="tablink" onclick="openTab(event, 'question')">Question</button>
       <button class="tablink" onclick="openTab(event, 'about')">About</button>
@@ -359,6 +360,11 @@
       </div>      
   </div>
   
+  <div class="tabcontent" id="deadlines">
+    <h2>Deadlines</h2>
+    <div id="deadlineInput" class="large-textarea"></div>
+  </div>
+
   <div class="tabcontent large-tabcontent" id="achievement">
     <div class="pane-container">
       <div class="left-pane">
@@ -474,6 +480,7 @@
               ,'weeklyMilestonesInput'
               // ,'weeklyActionPlansInput'
               ,'dailyMilestonesInput'
+              ,'deadlineInput'
               // ,'dailyActionPlansInput'
               // ,'dailyProgressInput'
               ,'achievementYearlyMilestonesInput'
@@ -750,6 +757,7 @@
       loadGoal('dailyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
       // loadGoal('dailyActionPlansInput',  'day-' + year + '-' + month + '-' + day);
       // loadGoal('dailyProgressInput',  'day-' + year + '-' + month + '-' + day);
+      loadGoal('deadlineInput', 'day-' + year + '-' + month + '-' + day);
 
       loadGoal('achievementInput', 'day-' + year + '-' + month + '-' + day);
       loadGoal('achievementYearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
