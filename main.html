@@ -193,6 +193,16 @@
     .fullcalendar .highlighted {
     background-color: #FFD700 !important;
     }
+
+    /* Add this to your CSS file or within a <style> tag in the head of your HTML document */
+    .tab-container {
+      margin: 20px; /* This adds a margin of 20px on all sides of the container. Adjust the value as needed. */
+    }
+
+    .tablink {
+      margin-right: 10px; /* This adds a right margin to each button. Adjust as desired. */
+      /* You can add more styles like padding, border, background-color, etc. for your buttons here if needed */
+    }
   </style>
 
   <script src="questions_20230727.js"></script>
@@ -221,15 +231,18 @@
   <!-- <h1>Find Your Path</h1> -->
 
   <!-- Tabs -->
-  <div id="tabs">
-    <button class="tablink" onclick="openTab(event, 'vision')">Vision</button>
-    <button class="tablink" onclick="openTab(event, 'yearlyGoal')">Yearly Goal</button>
-    <button class="tablink" onclick="openTab(event, 'monthlyGoal')">Monthly Goal</button>
-    <button class="tablink" onclick="openTab(event, 'weeklyGoal')">Weekly Goal</button>
-    <button class="tablink" onclick="openTab(event, 'dailyGoal')">Daily To Do</button>
-    <button class="tablink" onclick="openTab(event, 'achievement')">Achievements & Reflection</button>
-    <button class="tablink" onclick="openTab(event, 'question')">Question</button>
-    <button class="tablink" onclick="openTab(event, 'about')">About</button>
+  <div class="tab-container">
+
+    <div id="tabs">
+      <button class="tablink" onclick="openTab(event, 'vision')">Vision</button>
+      <button class="tablink" onclick="openTab(event, 'yearlyGoal')">Yearly Goal</button>
+      <button class="tablink" onclick="openTab(event, 'monthlyGoal')">Monthly Goal</button>
+      <button class="tablink" onclick="openTab(event, 'weeklyGoal')">Weekly Goal</button>
+      <button class="tablink" onclick="openTab(event, 'dailyGoal')">Daily To Do</button>
+      <button class="tablink" onclick="openTab(event, 'achievement')">Achievements & Reflection</button>
+      <button class="tablink" onclick="openTab(event, 'question')">Question</button>
+      <button class="tablink" onclick="openTab(event, 'about')">About</button>
+    </div>
   </div>
 
   <!-- Date selection -->
