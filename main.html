@@ -889,6 +889,27 @@
             console.log("Error getting documents: ", error);
         });
     }
+    
+    function removeQuestion(answeredQuestions, index) {
+        // Assuming answeredQuestions is available globally
+        answeredQuestions.splice(index, 1); // Remove the question at the given index
+
+        // Redisplay the list
+        displayAnsweredQuestions(answeredQuestions);
+
+        // Create the document name in the format 'question-{index}'
+        let docName = `question-${index}`;
+
+        // Delete the document from Firestore
+        db.collection("users").doc(username).collection("goals").doc(docName)
+        .delete()
+        .then(() => {
+            console.log("Document successfully deleted!");
+        })
+        .catch((error) => {
+            console.error("Error removing document: ", error);
+        });  
+    }
 
     function displayAnsweredQuestions(answeredQuestions) {
 
@@ -909,7 +930,13 @@
         let boldText = match ? match[1] : question; // If no match, use the whole question
 
         let listItem = document.createElement('ul');
-        listItem.innerHTML = `<b>${question_counter}. ${boldText}</b> <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Visit</button>`; // Display the text in bold, and add a button
+
+        listItem.innerHTML = `
+            <b>${question_counter}. ${boldText}</b> 
+            <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Visit</button>
+            <button class="remove-button" onclick="removeQuestion(${answeredQuestions},${index})">Remove</button>
+        `; // Display the text in bold, and add a "Visit" and "Remove" button
+
         answeredQuestionsList.appendChild(listItem);
         question_counter = question_counter+1;
       });
