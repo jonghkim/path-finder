@@ -933,7 +933,7 @@
         listItem.innerHTML = `
             <b>${question_counter}. ${boldText}</b> 
             <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Visit</button>
-            <button class="remove-button" onclick="removeQuestion(${questionIndex})">Remove</button>
+            <button class="link-button" onclick="removeQuestion(${questionIndex})">Remove</button>
         `; // Display the text in bold, and add a "Visit" and "Remove" button
 
         answeredQuestionsList.appendChild(listItem);
