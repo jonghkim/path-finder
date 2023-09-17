@@ -890,28 +890,20 @@
         });
     }
     
-    function removeQuestion(answeredQuestions, questionIndex) {
+    function removeQuestion(questionIndex) {
         // Assuming answeredQuestions is available globally
-
-        console.log(answeredQuestions, typeof answeredQuestions);
         console.log(questionIndex);
-        console.log(answeredQuestions);
-        
+
         // Create the document name in the format 'question-{index}'
         let docName = `question-${questionIndex}`;
-        
-        console.log(docName);
-
-        answeredQuestions.splice(questionIndex, 1); // Remove the question at the given index
-
-        // Redisplay the list
-        displayAnsweredQuestions(answeredQuestions);
 
         // Delete the document from Firestore
         db.collection("users").doc(username).collection("goals").doc(docName)
         .delete()
         .then(() => {
             console.log("Document successfully deleted!");
+            fetchAndDisplayAnsweredQuestions();
+
         })
         .catch((error) => {
             console.error("Error removing document: ", error);
@@ -941,7 +933,7 @@
         listItem.innerHTML = `
             <b>${question_counter}. ${boldText}</b> 
             <button class="link-button" onclick="generateRandomQuestion(${questionIndex})">Visit</button>
-            <button class="remove-button" onclick="removeQuestion(${answeredQuestions},${questionIndex})">Remove</button>
+            <button class="remove-button" onclick="removeQuestion(${questionIndex})">Remove</button>
         `; // Display the text in bold, and add a "Visit" and "Remove" button
 
         answeredQuestionsList.appendChild(listItem);
