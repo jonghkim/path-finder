@@ -894,17 +894,18 @@
         // Assuming answeredQuestions is available globally
 
         console.log(answeredQuestions, typeof answeredQuestions);
-
-        answeredQuestions.splice(questionIndex, 1); // Remove the question at the given index
+        console.log(questionIndex);
 
         // Redisplay the list
         displayAnsweredQuestions(answeredQuestions);
 
         // Create the document name in the format 'question-{index}'
         let docName = `question-${questionIndex}`;
-
-        console.log(docName);
         
+        console.log(docName);
+
+        answeredQuestions.splice(questionIndex, 1); // Remove the question at the given index
+
         // Delete the document from Firestore
         db.collection("users").doc(username).collection("goals").doc(docName)
         .delete()
