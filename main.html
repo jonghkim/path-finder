@@ -892,6 +892,9 @@
     
     function removeQuestion(answeredQuestions, index) {
         // Assuming answeredQuestions is available globally
+
+        console.log(answeredQuestions, typeof answeredQuestions);
+
         answeredQuestions.splice(index, 1); // Remove the question at the given index
 
         // Redisplay the list
