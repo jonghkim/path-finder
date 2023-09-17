@@ -895,7 +895,8 @@
 
         console.log(answeredQuestions, typeof answeredQuestions);
         console.log(questionIndex);
-
+        console.log(answeredQuestions);
+        
         // Create the document name in the format 'question-{index}'
         let docName = `question-${questionIndex}`;
         
@@ -905,7 +906,7 @@
 
         // Redisplay the list
         displayAnsweredQuestions(answeredQuestions);
-        
+
         // Delete the document from Firestore
         db.collection("users").doc(username).collection("goals").doc(docName)
         .delete()
