@@ -241,7 +241,7 @@
 
     <div id="tabs">
       <button class="tablink" onclick="openTab(event, 'vision')">Vision</button>
-      <!-- <button class="tablink" onclick="openTab(event, 'yearlyGoal')">Yearly Goal</button> -->
+      <button class="tablink" onclick="openTab(event, 'yearlyGoal')">Yearly Goal</button>
       <!-- <button class="tablink" onclick="openTab(event, 'monthlyGoal')">Monthly Goal</button> -->
       <button class="tablink" onclick="openTab(event, 'deadlines')">Progress Report</button>
       <!-- <button class="tablink" onclick="openTab(event, 'weeklyGoal')">Weekly Goal</button> -->
@@ -260,13 +260,14 @@
 
   <div class="tabcontent" id="vision">
     <h2>Vision</h2>
-    <div id="visionInput" class="large-large-textarea"></div>
+    <div id="visionInput" class="large-textarea"></div>
+
   </div>
-<!-- 
+
   <div class="tabcontent" id="yearlyGoal">
     <h2>My Goals</h2>
-    <div id="yearlyMilestonesInput" class="small-textarea"></div>
-
+    <div id="yearlyMilestonesInput" class="large-large-textarea"></div>
+<!-- 
     <h2>What are the key actions?</h2>
     <div id="yearlyActionPlansInput" class="large-textarea"></div>
 
@@ -281,9 +282,9 @@
     <div id="yearlyStartDoing" class="small-textarea"></div>
   
     <label for="yearlyStopDoing">What would you like to stop doing?</label>
-    <div id="yearlyStopDoing" class="small-textarea"></div>
+    <div id="yearlyStopDoing" class="small-textarea"></div> -->
       
-  </div> -->
+  </div>
 
   <!-- <div class="tabcontent" id="monthlyGoal">
     <div class="monthlyGoal">
@@ -474,11 +475,11 @@
     // Assuming ids is an array of your div ids
     var ids = ['visionInput'
               ,'yearlyMilestonesInput'
-              ,'yearlyActionPlansInput'
-              ,'yearlyImprovement'
-              ,'yearlyPerfectYear'
-              ,'yearlyStartDoing'
-              ,'yearlyStopDoing'
+              // ,'yearlyActionPlansInput'
+              // ,'yearlyImprovement'
+              // ,'yearlyPerfectYear'
+              // ,'yearlyStartDoing'
+              // ,'yearlyStopDoing'
               // ,'monthlyMilestonesInput'
               // ,'monthlyActionPlansInput'
               // ,'weeklyMilestonesInput'
@@ -743,13 +744,13 @@
 
       // Load all goals and data based on the selected date
       loadGoal('visionInput', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyImprovement', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyPerfectYear', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStartDoing', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyStopDoing', 'day-' + year + '-' + month + '-' + day);
       // loadGoal('yearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
-      // loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyMilestonesInput', 'day-' + year + '-' + month + '-' + day);
+      loadGoal('yearlyActionPlansInput', 'day-' + year + '-' + month + '-' + day);
       // loadGoal('monthlyYearlyGoalInput', 'day-' + year + '-' + month + '-' + day);
 
       // loadGoal('monthlyMilestonesInput',  'day-' + year + '-' + month + '-' + day);
