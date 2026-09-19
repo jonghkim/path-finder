@@ -763,7 +763,7 @@
   function mountQuill(tab) {
     quill = new Quill('#noteEditor', {
       theme: 'snow', placeholder: tab.ph,
-      modules: { clipboard: { matchVisual: false }, toolbar: [['bold', 'italic', 'underline', 'strike'], [{ list: 'check' }, { list: 'bullet' }], [{ indent: '-1' }, { indent: '+1' }], [{ header: [1, 2, 3, false] }], ['link'], ['clean']] },
+      modules: { clipboard: { matchVisual: false }, toolbar: [['bold', 'italic', 'underline', 'strike'], [{ color: ['#979A9B', '#937264', '#FFA344', '#FFDC49', '#4DAB9A', '#529CCA', '#9A6DD7', '#E255A1', '#FF7369', false] }, { background: ['#FFF3BF', '#FFE0CC', '#D3F2E5', '#D6E9FA', '#EBDFF7', '#FADCE9', false] }], [{ list: 'check' }, { list: 'bullet' }], [{ indent: '-1' }, { indent: '+1' }], [{ header: [1, 2, 3, false] }], ['link', 'image'], ['clean']] },
       formats: ['bold', 'italic', 'underline', 'strike', 'list', 'indent', 'header', 'link', 'color', 'background', 'code-block', 'blockquote', 'image', 'video', 'code', 'script', 'align', 'size', 'font']
     });
     quill.root.spellcheck = false;
