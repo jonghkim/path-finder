@@ -291,37 +291,46 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .tag { font-size: 11.5px; color: var(--ink-2); padding: 1px 6px; border-radius: 5px; background: var(--surface-2); white-space: nowrap; max-width: 38%; overflow: hidden; text-overflow: ellipsis; flex: none; }
 .tag .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--cat); margin-right: 4px; vertical-align: 1px; }
 
-/* Day timeline */
-.dayline { position: relative; height: 80px; margin: 12px 0 8px; }
-.dayline .hours { position: absolute; inset: 0 0 auto 0; height: 14px; }
-.dayline .hour { position: absolute; top: 0; font-size: 11px; color: var(--ink-2); font-family: var(--mono); transform: translateX(-50%); }
-.dayline .track { position: absolute; left: 0; right: 0; top: 20px; height: 52px; border-radius: 8px; background: var(--surface-2); }
-.dayline .blk {
-  position: absolute; top: 20px; height: 52px; border-radius: 7px; background: var(--cat, var(--accent)); opacity: .92;
-  color: #fff; font-size: 12px; font-weight: 600; padding: 8px 8px 0; line-height: 1.3; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  cursor: grab; box-shadow: inset 0 0 0 2px var(--surface);
+/* Day calendar (vertical) */
+.cal { position: relative; max-height: 560px; overflow-y: auto; margin: 6px -8px 0; padding: 0 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.cal-body { position: relative; }
+.cal-hour { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
+.cal-hour span { position: absolute; left: 0; top: -8px; font-size: 11px; color: var(--ink-2); font-family: var(--mono); background: var(--surface); padding-right: 6px; }
+.cal-blocks { position: absolute; top: 0; bottom: 0; left: 52px; right: 4px; touch-action: none; }
+.cal-blk {
+  position: absolute; box-sizing: border-box; border-radius: 7px; background: var(--cat, var(--accent)); color: #fff;
+  padding: 5px 9px; font-size: 13px; font-weight: 600; line-height: 1.3; overflow: hidden; cursor: grab;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
 }
-.dayline .blk small { display: block; font-size: 10.5px; font-weight: 500; opacity: .85; font-family: var(--mono); }
-.dayline .blk.past { opacity: .45; }
-.dayline .blk.pinned { box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 4px var(--cat, var(--accent)); }
-.dayline .blk.drag { opacity: 1; z-index: 3; box-shadow: var(--shadow); cursor: grabbing; }
-.dayline { touch-action: none; }
-.dayline .now { position: absolute; top: 14px; bottom: 0; width: 2px; background: var(--crit); border-radius: 1px; }
-.dayline .now::after { content: ""; position: absolute; top: -4px; left: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--crit); }
-.blk-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
-.blk-add input[type="text"] { flex: 1 1 200px; }
-.blk-add select { max-width: 200px; }
-.blk-list .item { padding: 6px 10px; }
-.blk-time { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); width: 96px; flex: none; }
+.cal-blk .cb-t { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-blk small { display: block; font-size: 11px; font-weight: 500; opacity: .9; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.cal-blk.short { padding: 3px 9px; font-size: 12.5px; }
+.cal-blk.short small { display: none; }
+.cal-blk.tiny { padding: 0 9px; font-size: 11.5px; line-height: 12px; }
+.cal-blk.tiny small { display: none; }
+.cal-blk .cal-rs { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; cursor: ns-resize; }
+.cal-blk .cal-rs::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 28px; height: 3px; margin-left: -14px; border-radius: 2px; background: rgba(255,255,255,.55); opacity: 0; }
+.cal-blk:hover .cal-rs::after { opacity: 1; }
+.cal-blk.past { opacity: .45; }
+.cal-blk.pinned { box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 4px var(--cat, var(--accent)); }
+.cal-blk.drag { z-index: 3; box-shadow: var(--shadow); cursor: grabbing; opacity: .95; }
+.cal-now { position: absolute; left: 48px; right: 0; height: 0; border-top: 2px solid var(--crit); z-index: 2; pointer-events: none; }
+.cal-now::before { content: ""; position: absolute; left: -5px; top: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--crit); }
+.cal-now span { position: absolute; right: 0; top: -18px; font-size: 10.5px; font-family: var(--mono); color: var(--crit); font-weight: 600; }
 
 /* Bottleneck */
 .bn { display: grid; gap: 10px; }
 .bn-item { padding: 12px 14px; border-radius: 12px; border-left: 3px solid var(--warn); background: var(--warn-soft); }
 .bn-item.blocked { border-left-color: var(--crit); background: var(--crit-soft); }
 .bn-item .h { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-weight: 600; }
-.bn-item .why { margin-top: 4px; color: var(--ink-2); font-size: 14px; }
-.bn-item .next { margin-top: 6px; font-size: 13px; }
-.bn-item .next b { color: var(--ink-2); font-weight: 600; margin-right: 6px; }
+.bn-item .h select { padding: 2px 6px; font-size: 12.5px; background: transparent; border-color: transparent; }
+.bn-item .h select:hover { border-color: var(--line-strong); }
+.bn-edit { display: block; width: 100%; margin-top: 8px; background: transparent; border-color: transparent; padding: 4px 6px; font-size: 14px; color: var(--ink); }
+.bn-edit:hover { border-color: var(--line-strong); }
+.bn-edit:focus { background: var(--surface); }
+textarea.bn-edit { min-height: 0; resize: none; }
+input.bn-edit { font-size: 13.5px; }
+.bn-flag { width: 100%; font-size: 13px; color: var(--ink-2); padding: 6px 8px; }
 .pace { font-size: 12px; color: var(--ink-3); }
 
 /* Goal compact rows */

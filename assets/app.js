@@ -249,13 +249,13 @@
             <form class="inline-add must-add" data-form="must-add">
               <input type="text" name="text" placeholder="Add a must-do…" required maxlength="140">
               <select name="minutes" title="How long will it take?">${DUR.map(d => `<option value="${d}" ${d === 45 ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
-              <select name="goalId"><option value="">No goal</option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
+              <select name="goalId"><option value=""></option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
               <button class="btn btn-sm" type="submit">Add</button>
             </form>
           </section>
 
           <section class="card">
-            <div class="card-head"><h3>Today's timeline</h3><span class="muted small">Auto-placed from your must-dos · drag a block to pin it</span></div>
+            <div class="card-head"><h3>Today's timeline</h3><span class="muted small">Auto-placed from must-dos · drag a block to pin its time</span></div>
             ${renderDayline(sched)}
             <div class="row small muted" style="margin-top:6px">${sched.length ? `Ends ${minsToHM(Math.max(...sched.map(x => x.end)))}` : 'Nothing scheduled yet.'} · ${(S.day.sessions || []).length} focus session${(S.day.sessions || []).length === 1 ? '' : 's'} logged (${fmtDur(focusUsedMins())})
               <button class="btn btn-xs" data-action="go-focus" style="margin-left:auto">Open Focus</button></div>
@@ -267,13 +267,15 @@
             <div class="card-head"><h3>Bottleneck</h3><span class="muted small">${bns.length ? `${bns.length} flagged` : 'clear'}</span></div>
             <div class="bn">
               ${bns.map(g => `
-                <div class="bn-item ${g.status === 'blocked' ? 'blocked' : ''}" data-action="open-goal" data-id="${g.id}" style="cursor:pointer">
-                  <div class="h"><span>${esc(g.title)}</span><span class="status status-${g.status}">${STATUS[g.status]}</span></div>
+                <div class="bn-item ${g.status === 'blocked' ? 'blocked' : ''}">
+                  <div class="h"><span data-action="open-goal" data-id="${g.id}" style="cursor:pointer">${esc(g.title)}</span>
+                    <select class="status status-${g.status}" data-action="goal-status" data-id="${g.id}"><option value="at-risk" ${g.status === 'at-risk' ? 'selected' : ''}>At risk</option><option value="blocked" ${g.status === 'blocked' ? 'selected' : ''}>Blocked</option><option value="on-track">Resolved</option></select></div>
                   ${g.deadline ? `<div class="pace">${dLabel(daysUntil(g.deadline))} · ${fmtDow(g.deadline)}</div>` : ''}
-                  ${g.bottleneck ? `<div class="why">${esc(g.bottleneck)}</div>` : ''}
-                  ${g.next ? `<div class="next"><b>Next</b>${esc(g.next)}</div>` : ''}
+                  <textarea class="bn-edit" data-action="goal-field" data-id="${g.id}" data-k="bottleneck" placeholder="What is blocking this?" rows="2">${esc(g.bottleneck || '')}</textarea>
+                  <input class="bn-edit" data-action="goal-field" data-id="${g.id}" data-k="next" value="${esc(g.next || '')}" placeholder="Next action to unblock it">
                 </div>`).join('')}
-              ${bns.length ? '' : '<div class="empty">Nothing is blocked. Mark a goal "at risk" or "blocked" in Goals to surface it here.</div>'}
+              ${bns.length ? '' : '<div class="empty">Nothing is blocked.</div>'}
+              ${activeGoals().some(g => !isBottleneck(g)) ? `<select class="bn-flag" data-action="bn-flag"><option value="">Flag a goal as at risk…</option>${activeGoals().filter(g => !isBottleneck(g)).map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>` : ''}
             </div>
           </section>
 
@@ -287,7 +289,7 @@
           </section>
         </div>
       </div>`;
-    wireMustDrag(main); wireDayline(main);
+    wireMustDrag(main); wireDayline(main); scrollCalToNow();
   }
   function mottoBlock() {
     const list = (S.settings.mottos || []).filter(m => m && m.trim());
@@ -318,38 +320,59 @@
     });
     return out.sort((a, b) => a.start - b.start);
   }
+  const HH = 56; // px per hour in the day calendar
   function renderDayline(sched) {
-    const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60, span = e - s;
+    const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60;
     const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
-    const x = m => clamp((m - s) / span * 100, 0, 100);
-    const hours = []; for (let h = S.settings.dayStart; h <= S.settings.dayEnd; h += 2) hours.push(h);
-    return `<div class="dayline">
-      <div class="hours">${hours.map(h => `<span class="hour" style="left:${x(h * 60)}%">${pad(h % 24)}</span>`).join('')}</div>
-      <div class="track"></div>
-      ${sched.map(({ m, start, end, pinned }) => { if (end <= s || start >= e) return ''; const g = m.goalId && goalById(m.goalId);
-        return `<div class="blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''}" style="left:${x(start)}%;width:${x(end) - x(start)}%;--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${end - start}">${esc(m.text)}<small>${minsToHM(start)}–${minsToHM(end)}</small></div>`; }).join('')}
-      ${S.dayKey === todayKey() && nowM >= s && nowM <= e ? `<div class="now" style="left:${x(nowM)}%"></div>` : ''}
-    </div>`;
+    const y = m => (m - s) / 60 * HH;
+    const hours = []; for (let h = S.settings.dayStart; h < S.settings.dayEnd; h++) hours.push(h);
+    // lanes for overlapping blocks
+    const items = sched.filter(x => x.end > s && x.start < e).sort((a, b) => a.start - b.start || b.end - a.end);
+    const lanesEnd = []; items.forEach(it => { let l = lanesEnd.findIndex(en => en <= it.start); if (l < 0) { l = lanesEnd.length; lanesEnd.push(0); } lanesEnd[l] = it.end; it.lane = l; });
+    // group width: number of lanes that overlap each item
+    items.forEach(it => { it.cols = 1 + Math.max(0, ...items.filter(o => o !== it && o.start < it.end && o.end > it.start).map(o => o.lane), it.lane); });
+    return `<div class="cal" id="cal"><div class="cal-body" style="height:${y(e)}px">
+      ${hours.map(h => `<div class="cal-hour" style="top:${y(h * 60)}px"><span>${pad(h)}:00</span></div>`).join('')}
+      <div class="cal-blocks">
+      ${items.map(({ m, start, end, pinned, lane, cols }) => { const g = m.goalId && goalById(m.goalId); const dur = end - start;
+        return `<div class="cal-blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''} ${dur <= 20 ? 'tiny' : dur <= 40 ? 'short' : ''}" style="top:${y(Math.max(start, s))}px;height:${Math.max(10, y(Math.min(end, e)) - y(Math.max(start, s)) - 2)}px;left:calc(${lane / cols * 100}% + 2px);width:calc(${100 / cols}% - 4px);--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${dur}">
+          <span class="cb-t">${esc(m.text)}</span><small>${minsToHM(start)}–${minsToHM(end)}${g ? ' · ' + esc(g.title) : ''}${pinned ? ' 📌' : ''}</small><i class="cal-rs" title="Drag to change duration"></i></div>`; }).join('')}
+      </div>
+      ${S.dayKey === todayKey() && nowM >= s && nowM <= e ? `<div class="cal-now" style="top:${y(nowM)}px"><span>${minsToHM(nowM)}</span></div>` : ''}
+    </div></div>`;
   }
-  // Drag a block horizontally to pin it to a time (15-minute snap). Pointer events so touch works too.
+  function scrollCalToNow() {
+    const cal = $('#cal'); if (!cal) return;
+    const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes(); const s = S.settings.dayStart * 60;
+    const first = (S.day.musts || []).length ? Math.min(nowM, ...scheduleMusts().map(x => x.start)) : nowM;
+    cal.scrollTop = Math.max(0, (Math.min(first, nowM) - s) / 60 * HH - 40);
+  }
+  // Drag a block vertically to pin it to a time (15-minute snap). Pointer events so touch works too.
   function wireDayline(root) {
-    const dl = $('.dayline', root); if (!dl) return;
-    dl.addEventListener('pointerdown', e => {
-      const blk = e.target.closest('.blk'); if (!blk || e.button) return;
+    const cal = $('#cal', root); if (!cal) return;
+    cal.addEventListener('pointerdown', e => {
+      const blk = e.target.closest('.cal-blk'); if (!blk || e.button) return;
       e.preventDefault(); blk.setPointerCapture(e.pointerId);
-      const track = $('.track', dl).getBoundingClientRect();
-      const s = S.settings.dayStart * 60, span = S.settings.dayEnd * 60 - s;
-      const dur = +blk.dataset.dur, start0 = +blk.dataset.start, x0 = e.clientX; let st = null;
+      const resizing = e.target.classList.contains('cal-rs');
+      const s = S.settings.dayStart * 60, dur0 = +blk.dataset.dur, start0 = +blk.dataset.start, y0 = e.clientY; let st = null, dur = dur0;
+      const sm = blk.querySelector('small');
       const onMove = ev => {
-        const dx = (ev.clientX - x0) / track.width * span;
-        if (st == null && Math.abs(ev.clientX - x0) < 4) return;
-        st = clamp(Math.round((start0 + dx) / 15) * 15, s, S.settings.dayEnd * 60 - dur);
-        blk.classList.add('drag'); blk.style.left = ((st - s) / span * 100) + '%'; const sm = blk.querySelector('small'); if (sm) sm.textContent = `${minsToHM(st)}–${minsToHM(st + dur)}`;
+        if (st == null && Math.abs(ev.clientY - y0) < 4) return;
+        blk.classList.add('drag');
+        if (resizing) {
+          st = start0; dur = clamp(Math.round((dur0 + (ev.clientY - y0) / HH * 60) / 15) * 15, 15, S.settings.dayEnd * 60 - start0);
+          blk.style.height = (dur / 60 * HH - 2) + 'px'; blk.classList.toggle('short', dur <= 40 && dur > 20); blk.classList.toggle('tiny', dur <= 20);
+        } else {
+          st = clamp(Math.round((start0 + (ev.clientY - y0) / HH * 60) / 15) * 15, s, S.settings.dayEnd * 60 - dur);
+          blk.style.top = ((st - s) / 60 * HH) + 'px'; blk.style.left = '2px'; blk.style.width = 'calc(100% - 4px)';
+        }
+        if (sm) sm.textContent = `${minsToHM(st)}–${minsToHM(st + dur)}${resizing ? ' · ' + fmtDur(dur) : ''}`;
       };
       const onUp = () => {
         blk.removeEventListener('pointermove', onMove); blk.removeEventListener('pointerup', onUp); blk.removeEventListener('pointercancel', onUp);
         if (st == null) return;
-        const m = (S.day.musts || []).find(x => x.id === blk.dataset.id); if (m) { m.start = minsToHM(st); saveDay(); }
+        const m = (S.day.musts || []).find(x => x.id === blk.dataset.id);
+        if (m) { if (resizing) m.minutes = dur; else m.start = minsToHM(st); saveDay(); }
         render();
       };
       blk.addEventListener('pointermove', onMove); blk.addEventListener('pointerup', onUp); blk.addEventListener('pointercancel', onUp);
@@ -686,7 +709,7 @@
   function destroyQuill() { quill = null; }
   function renderNotes(main) {
     const tab = NOTE_TABS.find(t => t.id === S.notesTab) || NOTE_TABS[0];
-    main.innerHTML = `<div class="view-head"><div><h1>Notes</h1><div class="sub">Your existing journals, unchanged — same storage, new coat of paint.</div></div></div>
+    main.innerHTML = `<div class="view-head"><div><h1>Notes</h1></div></div>
       <div class="notes-tabs">${NOTE_TABS.map(t => `<button class="notes-tab ${t.id === tab.id ? 'active' : ''}" data-action="notes-tab" data-tab="${t.id}">${t.label}</button>`).join('')}</div>
       <div class="notes-bar">
         ${tab.dated || tab.id === 'yearly' || tab.id === 'achievement' ? `<input type="date" value="${S.notesDate}" data-action="notes-date"><button class="btn btn-sm" data-action="notes-today">Today</button>` : ''}
@@ -796,6 +819,8 @@
     switch (a) {
       case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { m.done = t.checked; saveDay(); render(); } break; }
       case 'goal-status': { const g = goalById(id); if (g) { g.status = t.value; saveGoals(); render(); } break; }
+      case 'goal-field': { const g = goalById(id); if (g) { g[t.dataset.k] = t.value.trim(); saveGoals(); } break; }
+      case 'bn-flag': { const g = goalById(t.value); if (g) { g.status = 'at-risk'; saveGoals(); render(); const ta = $(`.bn-edit[data-id="${g.id}"]`); if (ta) ta.focus(); } break; }
       case 'ms-toggle': { const g = goalById(id); const m = g && (g.milestones || []).find(x => x.id === t.dataset.ms); if (m) { m.done = t.checked; saveGoals(); render(); } break; }
       case 'fx-task': { const m = (S.day.musts || []).find(x => x.id === t.value); Timer.st.taskId = t.value; Timer.st.label = m ? m.text : ''; Timer.save(); $('.focus-dial .task').textContent = Timer.st.label; break; }
       case 'preset-input': { const n = parseInt(t.value); if (n > 0 && n <= 240) { Timer.reset('work', n, true); renderFocus($('#main')); } break; }
@@ -817,6 +842,6 @@
   });
 
   // minute tick for "now" marker on Today
-  setInterval(() => { if (S.view === 'today' && !$('#modalRoot').firstChild && document.activeElement.tagName !== 'INPUT') { const dl = $('.dayline'); if (dl) { dl.outerHTML = renderDayline(scheduleMusts()); wireDayline($('#main')); } } }, 60000);
+  setInterval(() => { if (S.view === 'today' && !$('#modalRoot').firstChild && document.activeElement.tagName !== 'INPUT') { const nl = $('.cal-now'); if (nl) { const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes(); nl.style.top = ((nowM - S.settings.dayStart * 60) / 60 * HH) + 'px'; nl.querySelector('span').textContent = minsToHM(nowM); } } }, 60000);
 
 })();
