@@ -1,0 +1,767 @@
+/* Pathfinder app — vanilla JS, Firebase compat v8, Quill for notes. */
+(function () {
+  'use strict';
+
+  // ---------------------------------------------------------------- utils
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const pad = n => String(n).padStart(2, '0');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parseDay = s => new Date(s + 'T12:00:00');
+  const todayKey = () => dateKey(new Date());
+  const daysUntil = s => Math.round((parseDay(s) - parseDay(todayKey())) / 86400000);
+  const addDays = (s, n) => { const d = parseDay(s); d.setDate(d.getDate() + n); return dateKey(d); };
+  const fmtShort = s => { const d = parseDay(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
+  const fmtLong = s => parseDay(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dLabel = n => n === 0 ? 'D-Day' : n > 0 ? `D-${n}` : `D+${-n}`;
+  const minsToHM = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+  const hmToMins = s => { const [h, m] = s.split(':').map(Number); return h * 60 + (m || 0); };
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+  const CATS = {
+    research: { label: 'Research', v: 'var(--cat-research)' },
+    jobmarket: { label: 'Job market', v: 'var(--cat-jobmarket)' },
+    math: { label: 'Math', v: 'var(--cat-math)' },
+    application: { label: 'Application', v: 'var(--cat-application)' },
+    other: { label: 'Other', v: 'var(--cat-other)' }
+  };
+  const catVar = c => (CATS[c] || CATS.other).v;
+  const STATUS = { 'on-track': 'On track', 'at-risk': 'At risk', blocked: 'Blocked', done: 'Done' };
+
+  function toast(msg) {
+    const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  // ---------------------------------------------------------------- crypto + store
+  const SECRET = window.PF_SECRET;
+  const encrypt = s => CryptoJS.AES.encrypt(s, SECRET).toString();
+  const decrypt = s => { try { const t = CryptoJS.AES.decrypt(s, SECRET).toString(CryptoJS.enc.Utf8); return t || s; } catch (e) { return s; } };
+
+  firebase.initializeApp(window.PF_FIREBASE_CONFIG);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const Store = {
+    user: null,
+    col() { return db.collection('users').doc(this.user).collection('goals'); },
+    cacheKey(doc) { return `pf:${this.user}:${doc}`; },
+    // Raw string value (legacy Quill HTML or JSON). Cache-first, then network.
+    async getRaw(doc) {
+      try {
+        const snap = await this.col().doc(doc).get();
+        const v = snap.exists ? decrypt(snap.data().value || '') : null;
+        try { if (v != null) localStorage.setItem(this.cacheKey(doc), v); else localStorage.removeItem(this.cacheKey(doc)); } catch (e) {}
+        return v;
+      } catch (e) {
+        console.warn('offline read', doc, e);
+        try { return localStorage.getItem(this.cacheKey(doc)); } catch (e2) { return null; }
+      }
+    },
+    cached(doc) { try { return localStorage.getItem(this.cacheKey(doc)); } catch (e) { return null; } },
+    async getJSON(doc) { const raw = await this.getRaw(doc); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } },
+    cachedJSON(doc) { const raw = this.cached(doc); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } },
+    _pending: {},
+    setRaw(doc, value) {
+      try { localStorage.setItem(this.cacheKey(doc), value); } catch (e) {}
+      clearTimeout(this._pending[doc]);
+      this._pending[doc] = setTimeout(() => {
+        this.col().doc(doc).set({ value: encrypt(value) }).catch(err => { console.error('save failed', doc, err); toast('Save failed — will retry on next change'); });
+      }, 500);
+    },
+    setJSON(doc, obj) { this.setRaw(doc, JSON.stringify(obj)); },
+    flush() { Object.keys(this._pending).forEach(k => clearTimeout(this._pending[k])); }
+  };
+
+  // ---------------------------------------------------------------- state
+  const DEFAULT_SETTINGS = {
+    theme: 'auto', work: 25, brk: 5, longBrk: 15, autoCycle: true, sound: true, dayStart: 7, dayEnd: 24,
+    mottos: ['끝날 때까지는 끝난 게 아니다.', '길고 짧은 건 대봐야 안다.', 'Try again from a different angle.']
+  };
+  const S = {
+    view: 'today',
+    goals: [],
+    settings: { ...DEFAULT_SETTINGS },
+    dayKey: todayKey(),
+    day: null,          // { focusHours, blocks:[], musts:[], sessions:[] }
+    loaded: false,
+    mottoIdx: 0,
+    notesTab: 'daily',
+    notesDate: todayKey(),
+    zen: false
+  };
+  const emptyDay = () => ({ focusHours: 4, blocks: [], musts: [], sessions: [] });
+  const dayDoc = key => `pf-day-${key}`;
+
+  function saveGoals() { Store.setJSON('pf-goals', { goals: S.goals, updated: Date.now() }); }
+  function saveDay() { Store.setJSON(dayDoc(S.dayKey), S.day); }
+  function saveSettings() { Store.setJSON('pf-settings', S.settings); applyTheme(); }
+  function applyTheme() {
+    const t = S.settings.theme;
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem('pf-theme', t); } catch (e) {}
+  }
+
+  // Template: Jongho's Fall 2026 plan. Only loaded on request (not hard-coded into the UI).
+  function templateGoals() {
+    const ms = (t, date, done) => ({ id: uid(), title: t, date: date || '', done: !!done });
+    return [
+      { id: uid(), title: 'Rent control paper — submit', category: 'research', horizon: 'short', start: '2026-09-01', deadline: '2026-11-01', progress: 40, status: 'on-track', bottleneck: '', next: '', link: '',
+        milestones: [ms('Full draft complete', '2026-10-10'), ms('Polish + robustness', '2026-10-24'), ms('Submit', '2026-11-01')] },
+      { id: uid(), title: 'Bayesian-LLM paper — submit', category: 'research', horizon: 'short', start: '2026-09-01', deadline: '2026-11-01', progress: 30, status: 'on-track', bottleneck: '', next: '', link: '',
+        milestones: [ms('Full draft complete', '2026-10-15'), ms('Polish', '2026-10-27'), ms('Submit', '2026-11-01')] },
+      { id: uid(), title: 'Apply to Anthropic', category: 'application', horizon: 'short', start: '2026-09-19', deadline: '2026-11-01', progress: 0, status: 'on-track', bottleneck: '', next: 'Draft CV + research statement', link: '',
+        milestones: [ms('CV + statement ready', '2026-10-20'), ms('Application submitted', '2026-11-01')] },
+      { id: uid(), title: 'Job market practice talk', category: 'jobmarket', horizon: 'short', start: '2026-09-19', deadline: '2026-10-07', progress: 10, status: 'on-track', bottleneck: '', next: 'Outline slide deck', link: '',
+        milestones: [ms('Slides complete', '2026-09-30'), ms('Practice run 1', '2026-10-02'), ms('Practice run 2', '2026-10-04'), ms('Practice run 3', '2026-10-06'), ms('Talk', '2026-10-07')] },
+      { id: uid(), title: 'Real Analysis', category: 'math', horizon: 'long', start: '2026-09-19', deadline: '2026-12-31', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] },
+      { id: uid(), title: 'Measure-Theoretic Probability', category: 'math', horizon: 'long', start: '2026-09-19', deadline: '2027-02-28', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] },
+      { id: uid(), title: 'Functional Analysis', category: 'math', horizon: 'long', start: '2026-09-19', deadline: '2027-04-30', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] },
+      { id: uid(), title: 'Master modern causal inference', category: 'math', horizon: 'long', start: '2026-09-19', deadline: '2027-01-31', progress: 0, status: 'on-track', bottleneck: '', next: 'Read intro chapter', link: 'https://alejandroschuler.github.io/mci/introduction-to-modern-causal-inference.html', milestones: [] },
+      { id: uid(), title: 'Polish my own papers', category: 'research', horizon: 'long', start: '2026-09-19', deadline: '', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] }
+    ];
+  }
+
+  window.PF = { templateGoals, emptyDay };
+
+  // ---------------------------------------------------------------- boot
+  auth.onAuthStateChanged(async user => {
+    if (!user) { window.location.replace('index.html'); return; }
+    Store.user = (user.email || '').split('@')[0];
+    $('#navUser').textContent = Store.user;
+    // Cache-first paint
+    const cg = Store.cachedJSON('pf-goals'); if (cg && cg.goals) S.goals = cg.goals;
+    const cs = Store.cachedJSON('pf-settings'); if (cs) S.settings = { ...DEFAULT_SETTINGS, ...cs };
+    S.day = Store.cachedJSON(dayDoc(S.dayKey)) || emptyDay();
+    applyTheme();
+    Timer.load();
+    $('#app').hidden = false;
+    route(location.hash.replace('#', '') || 'today');
+    if (Timer.st.running) Timer.loop();
+    // Network refresh
+    const [g, s, d] = await Promise.all([Store.getJSON('pf-goals'), Store.getJSON('pf-settings'), Store.getJSON(dayDoc(S.dayKey))]);
+    if (g && g.goals) S.goals = g.goals;
+    if (s) S.settings = { ...DEFAULT_SETTINGS, ...s };
+    if (d) S.day = { ...emptyDay(), ...d };
+    S.loaded = true;
+    applyTheme();
+    render();
+  });
+
+  // ---------------------------------------------------------------- routing
+  const VIEWS = { today: renderToday, timeline: renderTimeline, goals: renderGoals, focus: renderFocus, notes: renderNotes, settings: renderSettings };
+  function route(v) {
+    if (!VIEWS[v]) v = 'today';
+    S.view = v;
+    if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
+    $$('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+    render();
+  }
+  window.addEventListener('hashchange', () => route(location.hash.replace('#', '')));
+  $$('.nav-item').forEach(b => b.addEventListener('click', () => route(b.dataset.view)));
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea, select, button, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
+    const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes' };
+    if (map[e.key]) route(map[e.key]);
+    if (e.key === ' ' && S.view === 'focus') { e.preventDefault(); Timer.toggle(); }
+    if (e.key === 'Escape') closeModal();
+  });
+
+  function render() {
+    // Keep midnight rollover honest
+    if (S.dayKey !== todayKey() && S.view !== 'notes') switchDay(todayKey());
+    const main = $('#main');
+    if (S.view !== 'notes') destroyQuill();
+    VIEWS[S.view](main);
+    renderNavTimer();
+  }
+  async function switchDay(key) {
+    S.dayKey = key;
+    S.day = Store.cachedJSON(dayDoc(key)) || emptyDay();
+    const d = await Store.getJSON(dayDoc(key));
+    if (d) { S.day = { ...emptyDay(), ...d }; if (S.view === 'today') render(); }
+  }
+
+  // ---------------------------------------------------------------- derived
+  function pace(g) {
+    // Expected progress given elapsed fraction of the plan window.
+    if (!g.deadline || !g.start) return null;
+    const total = Math.max(1, daysUntil(g.deadline) - daysUntil(g.start));
+    const elapsed = clamp(-daysUntil(g.start), 0, total);
+    const expected = Math.round(100 * elapsed / total);
+    return { expected, gap: (g.progress || 0) - expected };
+  }
+  function isBottleneck(g) {
+    if (g.status === 'done') return false;
+    if (g.status === 'blocked' || g.status === 'at-risk') return true;
+    const p = pace(g);
+    return !!(p && p.gap <= -25 && daysUntil(g.deadline) >= 0);
+  }
+  function activeGoals() { return S.goals.filter(g => g.status !== 'done'); }
+  function goalById(id) { return S.goals.find(g => g.id === id); }
+  function focusUsedMins() { return (S.day.sessions || []).reduce((a, s) => a + (s.minutes || 0), 0); }
+  function plannedMins() { return (S.day.blocks || []).reduce((a, b) => a + Math.max(0, hmToMins(b.end) - hmToMins(b.start)), 0); }
+  function dChipClass(n) { return n < 0 ? 'over' : n <= 7 ? 'soon' : ''; }
+
+  // ---------------------------------------------------------------- TODAY
+  function renderToday(main) {
+    const now = new Date();
+    const motto = S.settings.mottos[S.mottoIdx % Math.max(1, S.settings.mottos.length)] || '';
+    const deadlines = activeGoals().filter(g => g.deadline && g.horizon !== 'long').sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 5);
+    const musts = S.day.musts || [];
+    const doneCnt = musts.filter(m => m.done).length;
+    const used = focusUsedMins(), target = Math.round((S.day.focusHours || 0) * 60);
+    const pct = target ? clamp(used / target, 0, 1) : 0;
+    const bns = activeGoals().filter(isBottleneck);
+    const shortG = activeGoals().filter(g => g.horizon !== 'long').sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+    const longG = activeGoals().filter(g => g.horizon === 'long');
+
+    main.innerHTML = `
+      <header class="today-head">
+        <div class="today-date">${WEEKDAYS[now.getDay()]} · ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+        <div class="today-title">Today</div>
+        <div class="motto" data-action="motto" title="Click for the next one">“${esc(motto)}”</div>
+        <div class="countdowns">
+          ${deadlines.map(g => { const n = daysUntil(g.deadline); return `
+            <div class="cd" data-action="open-goal" data-id="${g.id}" style="--cat:${catVar(g.category)}">
+              <span class="cat"></span><span class="d ${dChipClass(n)}">${dLabel(n)}</span><span class="t">${esc(g.title)}</span>
+            </div>`; }).join('')}
+          ${deadlines.length ? '' : '<span class="muted small">No deadlines yet — add goals to see countdowns.</span>'}
+        </div>
+      </header>
+
+      <div class="grid grid-2">
+        <div class="stack">
+          <section class="card">
+            <div class="card-head"><h3>Must do today</h3><span class="muted small mono">${doneCnt}/${musts.length}</span></div>
+            <div class="list">
+              ${musts.map((m, i) => { const g = m.goalId && goalById(m.goalId); return `
+                <div class="item ${m.done ? 'done' : ''}">
+                  <input type="checkbox" data-action="must-toggle" data-id="${m.id}" ${m.done ? 'checked' : ''}>
+                  <span class="must-num">${i + 1}</span>
+                  <span class="txt">${esc(m.text)}</span>
+                  ${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}
+                  <span class="actions">
+                    <button class="btn-icon" data-action="must-focus" data-id="${m.id}" title="Focus on this">▶</button>
+                    <button class="btn-icon" data-action="must-del" data-id="${m.id}" title="Remove">✕</button>
+                  </span>
+                </div>`; }).join('')}
+              ${musts.length ? '' : '<div class="empty">Pick at most three things that would make today a win.</div>'}
+            </div>
+            <form class="inline-add" data-form="must-add">
+              <input type="text" name="text" placeholder="Add a must-do…" required maxlength="140">
+              <select name="goalId"><option value="">No goal</option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
+              <button class="btn btn-sm" type="submit">Add</button>
+            </form>
+          </section>
+
+          <section class="card">
+            <div class="card-head"><h3>Today's timeline</h3><span class="muted small mono">${(plannedMins() / 60).toFixed(1)}h planned</span></div>
+            ${renderDayline()}
+            <div class="list blk-list">
+              ${(S.day.blocks || []).slice().sort((a, b) => a.start.localeCompare(b.start)).map(b => { const g = b.goalId && goalById(b.goalId); return `
+                <div class="item">
+                  <span class="blk-time">${b.start}–${b.end}</span>
+                  <span class="txt">${esc(b.label)}</span>
+                  ${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}
+                  <span class="actions"><button class="btn-icon" data-action="blk-del" data-id="${b.id}" title="Remove">✕</button></span>
+                </div>`; }).join('')}
+            </div>
+            <form class="blk-add" data-form="blk-add">
+              <input type="time" name="start" value="${nextBlockStart()}" required>
+              <input type="time" name="end" value="${addMinsHM(nextBlockStart(), 90)}" required>
+              <input type="text" name="label" placeholder="What will you work on?" required maxlength="80">
+              <select name="goalId"><option value="">No goal</option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
+              <button class="btn btn-sm" type="submit">Add block</button>
+            </form>
+          </section>
+        </div>
+
+        <div class="stack">
+          <section class="card">
+            <div class="card-head"><h3>Focus hours</h3>
+              <span class="stepper"><button data-action="fh" data-d="-0.5" aria-label="less">−</button><span class="val">${(S.day.focusHours || 0).toFixed(1)}h</span><button data-action="fh" data-d="0.5" aria-label="more">+</button></span>
+            </div>
+            <div class="focus-ring">
+              <svg class="ring" viewBox="0 0 96 96"><circle class="track" cx="48" cy="48" r="40"/><circle class="fill" cx="48" cy="48" r="40" stroke-dasharray="${2 * Math.PI * 40}" stroke-dashoffset="${2 * Math.PI * 40 * (1 - pct)}" transform="rotate(-90 48 48)"/><text x="48" y="55" text-anchor="middle">${Math.round(pct * 100)}%</text></svg>
+              <div class="focus-meta">
+                <div class="big">${(used / 60).toFixed(1)}<span>of ${(S.day.focusHours || 0).toFixed(1)}h deep work</span></div>
+                <div class="muted small">${(S.day.sessions || []).length} session${(S.day.sessions || []).length === 1 ? '' : 's'} logged · ${Math.max(0, target - used)} min left</div>
+                <div><button class="btn btn-sm btn-primary" data-action="go-focus">Start a focus session</button></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head"><h3>Bottleneck</h3><span class="muted small">${bns.length ? `${bns.length} flagged` : 'clear'}</span></div>
+            <div class="bn">
+              ${bns.map(g => { const p = pace(g); return `
+                <div class="bn-item ${g.status === 'blocked' ? 'blocked' : ''}" data-action="open-goal" data-id="${g.id}" style="cursor:pointer">
+                  <div class="h"><span>${esc(g.title)}</span><span class="status status-${g.status}">${STATUS[g.status]}</span></div>
+                  ${g.bottleneck ? `<div class="why">${esc(g.bottleneck)}</div>` : ''}
+                  ${p && p.gap <= -25 ? `<div class="pace">Behind pace: ${g.progress || 0}% done, ${p.expected}% expected by now.</div>` : ''}
+                  ${g.next ? `<div class="next"><b>Next</b>${esc(g.next)}</div>` : ''}
+                </div>`; }).join('')}
+              ${bns.length ? '' : '<div class="empty">Nothing is blocked. Mark a goal "at risk" or "blocked" in Goals to surface it here.</div>'}
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head"><h3>Short-term</h3><button class="btn btn-xs btn-ghost" data-action="go-goals">All goals →</button></div>
+            ${shortG.map(goalRow).join('') || '<div class="empty">No short-term goals.</div>'}
+          </section>
+          <section class="card">
+            <div class="card-head"><h3>Long-term</h3></div>
+            ${longG.map(goalRow).join('') || '<div class="empty">No long-term goals.</div>'}
+          </section>
+        </div>
+      </div>`;
+  }
+  function goalRow(g) {
+    const n = g.deadline ? daysUntil(g.deadline) : null;
+    return `<div class="goal-row" data-action="open-goal" data-id="${g.id}" style="--cat:${catVar(g.category)}">
+      <span class="t"><span class="dot"></span><span class="name">${esc(g.title)}</span></span>
+      <span class="r">${n != null ? `<span class="${dChipClass(n)}">${dLabel(n)}</span>` : ''}<span>${g.progress || 0}%</span></span>
+      <span class="bar"><i style="width:${g.progress || 0}%"></i></span>
+    </div>`;
+  }
+  function nextBlockStart() {
+    const blocks = S.day.blocks || [];
+    if (blocks.length) { const last = blocks.slice().sort((a, b) => a.end.localeCompare(b.end)).pop().end; return last; }
+    const now = new Date(); const m = Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30; return minsToHM(Math.min(m, 23 * 60 + 30));
+  }
+  function addMinsHM(hm, n) { return minsToHM(Math.min(hmToMins(hm) + n, 24 * 60 - 1)); }
+  function renderDayline() {
+    const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60, span = e - s;
+    const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
+    const x = m => clamp((m - s) / span * 100, 0, 100);
+    const hours = []; for (let h = S.settings.dayStart; h <= S.settings.dayEnd; h += 2) hours.push(h);
+    return `<div class="dayline">
+      <div class="hours">${hours.map(h => `<span class="hour" style="left:${x(h * 60)}%">${pad(h % 24)}</span>`).join('')}</div>
+      <div class="track"></div>
+      ${(S.day.blocks || []).map(b => { const a = hmToMins(b.start), z = hmToMins(b.end); if (z <= a) return ''; const g = b.goalId && goalById(b.goalId);
+        return `<div class="blk ${z <= nowM ? 'past' : ''}" style="left:${x(a)}%;width:${x(z) - x(a)}%;--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(b.label)} (${b.start}–${b.end})">${esc(b.label)}</div>`; }).join('')}
+      ${nowM >= s && nowM <= e ? `<div class="now" style="left:${x(nowM)}%"></div>` : ''}
+    </div>`;
+  }
+
+  // ---------------------------------------------------------------- TIMELINE
+  function renderTimeline(main) {
+    const goals = S.goals.filter(g => g.deadline || (g.milestones || []).some(m => m.date)).sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+    const today = todayKey();
+    const items = [];
+    S.goals.forEach(g => {
+      if (g.deadline && g.status !== 'done') items.push({ date: g.deadline, title: g.title, sub: 'deadline', type: 'deadline', cat: g.category, id: g.id, done: false });
+      (g.milestones || []).forEach(m => { if (m.date) items.push({ date: m.date, title: m.title, sub: g.title, type: 'milestone', cat: g.category, id: g.id, done: m.done }); });
+    });
+    items.sort((a, b) => a.date.localeCompare(b.date));
+    const col = (title, f) => { const list = items.filter(f); return `<div class="up-col"><h3>${title}</h3>${list.map(it => { const n = daysUntil(it.date); return `
+      <div class="up-item ${it.type} ${it.done ? 'done' : ''}" data-action="open-goal" data-id="${it.id}" style="cursor:pointer">
+        <span class="d"><b>${fmtShort(it.date)}</b>${dLabel(n)}</span>
+        <span class="t">${esc(it.title)}<div class="sub">${esc(it.sub)}</div></span>
+      </div>`; }).join('') || '<div class="empty">Nothing here.</div>'}</div>`; };
+    const wk = daysUntil; // helper
+    main.innerHTML = `
+      <div class="view-head"><div><h1>Timeline</h1><div class="sub">Where each goal sits against the calendar. Bars fill with progress; the red line is today.</div></div>
+        <div class="row"><span class="seg"><button data-action="tl-range" data-r="60" class="${S.tlRange === 60 || !S.tlRange ? 'active' : ''}">10 weeks</button><button data-action="tl-range" data-r="120" class="${S.tlRange === 120 ? 'active' : ''}">4 months</button><button data-action="tl-range" data-r="240" class="${S.tlRange === 240 ? 'active' : ''}">8 months</button></span></div>
+      </div>
+      <section class="card" style="position:relative">
+        <div class="tl-wrap" id="tlWrap">${goals.length ? '' : '<div class="empty">Add goals with deadlines to draw the timeline.</div>'}</div>
+        <div class="tl-legend">${Object.keys(CATS).filter(c => goals.some(g => (g.category || 'other') === c)).map(c => `<span style="--cat:${catVar(c)}"><i></i>${CATS[c].label}</span>`).join('')}
+          <span><i style="background:var(--surface);border:2px solid var(--ink-3);width:8px;height:8px;border-radius:50%"></i>milestone</span><span><i style="background:var(--ink-3);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></i>deadline</span></div>
+      </section>
+      <div style="height:18px"></div>
+      <section class="card"><div class="upcoming">
+        ${col('This week', it => wk(it.date) >= 0 && wk(it.date) <= 7)}
+        ${col('Next 30 days', it => wk(it.date) > 7 && wk(it.date) <= 30)}
+        ${col('Later', it => wk(it.date) > 30)}
+      </div>${items.some(it => wk(it.date) < 0 && !it.done && it.type === 'milestone') ? `<div class="muted small" style="margin-top:12px">Overdue milestones: ${items.filter(it => wk(it.date) < 0 && !it.done && it.type === 'milestone').map(it => esc(it.title)).join(', ')}</div>` : ''}</section>`;
+    if (goals.length) drawGantt($('#tlWrap'), goals, S.tlRange || 60);
+  }
+
+  function truncW(str, units) { let w = 0, out = ''; for (const ch of str) { w += /[\u1100-\u11ff\u3000-\u9fff\uac00-\ud7af]/.test(ch) ? 1.8 : 1; if (w > units) return out + '…'; out += ch; } return out; }
+  function drawGantt(wrap, goals, rangeDays) {
+    const today = todayKey();
+    const from = addDays(today, -7), to = addDays(today, rangeDays);
+    const W = Math.max(wrap.clientWidth || 800, 640), LBL = 210, PAD_R = 24, ROW = 44, TOP = 46;
+    const H = TOP + goals.length * ROW + 12;
+    const dayW = (W - LBL - PAD_R) / (daysUntil(to) - daysUntil(from));
+    const xOf = s => LBL + (daysUntil(s) - daysUntil(from)) * dayW;
+    let svg = `<svg class="tl" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+    // weekends + week ticks + month labels
+    let cur = from; let lastMonth = -1;
+    while (cur <= to) {
+      const d = parseDay(cur); const x = xOf(cur);
+      if (d.getDay() === 6) svg += `<rect class="weekend" x="${x}" y="${TOP - 6}" width="${dayW * 2}" height="${H - TOP}"/>`;
+      if (d.getDay() === 1) { svg += `<line class="week-line" x1="${x}" x2="${x}" y1="${TOP - 6}" y2="${H}"/>`; if (rangeDays <= 120 || d.getDate() <= 7) svg += `<text class="tick" x="${x + 3}" y="${TOP - 10}">${d.getMonth() + 1}/${d.getDate()}</text>`; }
+      if (d.getMonth() !== lastMonth) { lastMonth = d.getMonth(); if (d.getDate() === 1 || cur === from) { svg += `<line class="month-line" x1="${x}" x2="${x}" y1="8" y2="${H}"/><text class="month" x="${x + 4}" y="18">${d.toLocaleDateString('en-US', { month: 'short' })}</text>`; } }
+      cur = addDays(cur, 1);
+    }
+    goals.forEach((g, i) => {
+      const y = TOP + i * ROW; const cat = catVar(g.category);
+      const start = g.start || addDays(g.deadline || today, -30);
+      const end = g.deadline || to;
+      const x1 = clamp(xOf(start), LBL, W - PAD_R), x2 = clamp(xOf(end), LBL, W - PAD_R);
+      const n = g.deadline ? daysUntil(g.deadline) : null;
+      svg += `<g class="row-hit" style="--cat:${cat}" data-action="open-goal" data-id="${g.id}">`;
+      svg += `<text class="row-lbl" x="0" y="${y + 17}">${esc(truncW(g.title, 30))}</text>`;
+      svg += `<text class="row-sub" x="0" y="${y + 31}">${g.progress || 0}%${n != null ? ' · ' + dLabel(n) : ''}${g.status === 'done' ? ' · done' : g.status !== 'on-track' ? ' · ' + STATUS[g.status].toLowerCase() : ''}</text>`;
+      if (x2 > x1) {
+        svg += `<rect class="bar-bg" x="${x1}" y="${y + 10}" width="${x2 - x1}" height="14" rx="4"/>`;
+        svg += `<rect class="bar-fg" x="${x1}" y="${y + 10}" width="${Math.max(0, (x2 - x1) * (g.progress || 0) / 100)}" height="14" rx="4"/>`;
+      }
+      (g.milestones || []).forEach(m => { if (!m.date) return; const mx = xOf(m.date); if (mx < LBL || mx > W - PAD_R) return;
+        svg += `<circle class="ms ${m.done ? 'done' : ''}" cx="${mx}" cy="${y + 17}" r="4.5" data-tip="${esc(m.title)}|${fmtLong(m.date)} · ${dLabel(daysUntil(m.date))}${m.done ? ' · done' : ''}"/>`; });
+      if (g.deadline) { const dx = xOf(g.deadline); if (dx >= LBL && dx <= W - PAD_R) { svg += `<path class="dl" d="M${dx} ${y + 10} l6 7 l-6 7 l-6 -7 z"/>`; if (dx + 40 < W) svg += `<text class="dl-lbl" x="${dx + 10}" y="${y + 21}">${fmtShort(g.deadline)}</text>`; } }
+      svg += `<rect class="bar-hit" x="${LBL}" y="${y}" width="${W - LBL}" height="${ROW}" data-tip="${esc(g.title)}|${g.start ? fmtLong(g.start) + ' → ' : ''}${g.deadline ? fmtLong(g.deadline) + ' (' + dLabel(n) + ')' : 'no deadline'} · ${g.progress || 0}%${g.bottleneck ? ' · ' + esc(g.bottleneck) : ''}"/>`;
+      svg += `</g>`;
+    });
+    const tx = xOf(today);
+    svg += `<line class="today-line" x1="${tx}" x2="${tx}" y1="${TOP - 6}" y2="${H}"/><text class="today-lbl" x="${tx + 4}" y="${H - 2}">today</text>`;
+    svg += `</svg>`;
+    wrap.innerHTML = svg;
+    // tooltip
+    const card = wrap.parentElement; let tip = $('.tl-tip', card); if (!tip) { tip = document.createElement('div'); tip.className = 'tl-tip'; tip.hidden = true; card.appendChild(tip); }
+    wrap.onmousemove = e => { const t = e.target.closest('[data-tip]'); if (!t) { tip.hidden = true; return; } const [b, rest] = t.dataset.tip.split('|'); tip.innerHTML = `<b>${esc(b)}</b>${esc(rest || '')}`; tip.hidden = false; const r = card.getBoundingClientRect(); tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 290) + 'px'; tip.style.top = (e.clientY - r.top + 12) + 'px'; };
+    wrap.onmouseleave = () => { tip.hidden = true; };
+  }
+  window.addEventListener('resize', debounce(() => { if (S.view === 'timeline') render(); }, 200));
+
+  // ---------------------------------------------------------------- GOALS
+  function renderGoals(main) {
+    if (!S.goals.length) {
+      main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Short-term deadlines and long-term mastery, in one place.</div></div></div>
+        <section class="card template-box"><h2>Start with a plan</h2><p>Load the Fall 2026 template (two paper submissions, the Anthropic application, the practice talk, and the math track) and edit from there, or begin empty.</p>
+        <div class="row" style="justify-content:center"><button class="btn btn-primary" data-action="load-template">Load template</button><button class="btn" data-action="goal-new">Start empty</button></div></section>`;
+      return;
+    }
+    const section = (title, list) => `<div class="goals-section"><h3>${title} <span class="cnt">${list.length}</span></h3><div class="goal-cards">${list.map(goalCard).join('')}</div></div>`;
+    const active = activeGoals();
+    const short = active.filter(g => g.horizon !== 'long').sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+    const long = active.filter(g => g.horizon === 'long').sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+    const done = S.goals.filter(g => g.status === 'done');
+    main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Short-term deadlines and long-term mastery, in one place.</div></div>
+      <button class="btn btn-primary" data-action="goal-new">+ New goal</button></div>
+      ${section('Short-term', short)}${section('Long-term', long)}${done.length ? section('Done', done) : ''}`;
+  }
+  function goalCard(g) {
+    const n = g.deadline ? daysUntil(g.deadline) : null; const p = pace(g);
+    const ms = g.milestones || [];
+    return `<section class="card gc ${g.status === 'done' ? 'done' : ''}" style="--cat:${catVar(g.category)}">
+      <div class="gc-top"><div class="gc-title">${esc(g.title)}</div><button class="btn-icon" data-action="open-goal" data-id="${g.id}" title="Edit">✎</button></div>
+      <div class="gc-meta"><span class="chip chip-cat"><span class="dot"></span>${CATS[g.category] ? CATS[g.category].label : 'Other'}</span>
+        ${g.deadline ? `<span class="chip chip-d ${dChipClass(n)}">${dLabel(n)} · ${fmtLong(g.deadline)}</span>` : '<span class="chip">no deadline</span>'}
+        ${g.link ? `<a class="chip" href="${esc(g.link)}" target="_blank" rel="noopener">link ↗</a>` : ''}</div>
+      <div class="gc-prog"><input type="range" min="0" max="100" step="5" value="${g.progress || 0}" data-action="goal-progress" data-id="${g.id}"><span class="pct">${g.progress || 0}%</span></div>
+      ${p && p.gap <= -25 && g.status !== 'done' ? `<div class="pace">Behind pace — ${p.expected}% expected by now.</div>` : ''}
+      ${g.bottleneck && g.status !== 'done' ? `<div class="gc-sec gc-bn ${g.status === 'blocked' ? 'blocked' : ''}"><b>Bottleneck</b>${esc(g.bottleneck)}</div>` : ''}
+      ${g.next ? `<div class="gc-sec"><b>Next action</b>${esc(g.next)}</div>` : ''}
+      ${ms.length ? `<div class="gc-sec"><b>Milestones</b><div class="ms">${ms.map(m => `<label class="${m.done ? 'done' : ''}"><input type="checkbox" data-action="ms-toggle" data-id="${g.id}" data-ms="${m.id}" ${m.done ? 'checked' : ''}><span>${esc(m.title)}</span>${m.date ? `<span class="md">${fmtShort(m.date)}</span>` : ''}</label>`).join('')}</div></div>` : ''}
+      <div class="gc-foot"><select data-action="goal-status" data-id="${g.id}" class="status status-${g.status}">${Object.keys(STATUS).map(s => `<option value="${s}" ${g.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}</select>
+        <span class="muted small">${g.horizon === 'long' ? 'Long-term' : 'Short-term'}</span></div>
+    </section>`;
+  }
+
+  // Goal modal
+  function openGoalModal(id) {
+    const g = id ? goalById(id) : { id: '', title: '', category: 'research', horizon: 'short', start: todayKey(), deadline: '', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] };
+    if (!g) return;
+    const ms = (g.milestones || []).map(m => ({ ...m }));
+    const root = $('#modalRoot');
+    const draw = () => {
+      root.innerHTML = `<div class="modal-bg" data-action="modal-bg"><div class="modal" role="dialog" aria-modal="true">
+        <h2>${g.id ? 'Edit goal' : 'New goal'}</h2>
+        <form class="form" data-form="goal-save">
+          <label class="field"><span>Title</span><input name="title" value="${esc(g.title)}" required maxlength="120" autofocus></label>
+          <div class="form-row">
+            <label class="field"><span>Category</span><select name="category">${Object.keys(CATS).map(c => `<option value="${c}" ${g.category === c ? 'selected' : ''}>${CATS[c].label}</option>`).join('')}</select></label>
+            <label class="field"><span>Horizon</span><select name="horizon"><option value="short" ${g.horizon !== 'long' ? 'selected' : ''}>Short-term</option><option value="long" ${g.horizon === 'long' ? 'selected' : ''}>Long-term</option></select></label>
+          </div>
+          <div class="form-row">
+            <label class="field"><span>Start</span><input type="date" name="start" value="${esc(g.start || '')}"></label>
+            <label class="field"><span>Deadline</span><input type="date" name="deadline" value="${esc(g.deadline || '')}"></label>
+          </div>
+          <div class="form-row">
+            <label class="field"><span>Status</span><select name="status">${Object.keys(STATUS).map(s => `<option value="${s}" ${g.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}</select></label>
+            <label class="field"><span>Progress (${g.progress || 0}%)</span><input type="range" name="progress" min="0" max="100" step="5" value="${g.progress || 0}" oninput="this.parentNode.firstElementChild.textContent='Progress ('+this.value+'%)'"></label>
+          </div>
+          <label class="field"><span>What is the bottleneck right now?</span><textarea name="bottleneck" placeholder="e.g. Waiting on referee data; unclear identification strategy">${esc(g.bottleneck)}</textarea></label>
+          <label class="field"><span>Next action</span><input name="next" value="${esc(g.next || '')}" placeholder="The very next concrete step" maxlength="160"></label>
+          <label class="field"><span>Link</span><input name="link" value="${esc(g.link || '')}" placeholder="https://…"></label>
+          <div class="field"><span>Milestones</span>
+            <div class="ms-list" id="msList">${ms.map((m, i) => `<div class="ms-row"><input type="checkbox" data-ms-done="${i}" ${m.done ? 'checked' : ''}><input type="text" data-ms-title="${i}" value="${esc(m.title)}" placeholder="Milestone"><input type="date" data-ms-date="${i}" value="${esc(m.date || '')}"><button type="button" class="btn-icon" data-ms-del="${i}">✕</button></div>`).join('')}</div>
+            <div><button type="button" class="btn btn-xs" data-ms-add>+ Milestone</button></div>
+          </div>
+          <div class="modal-foot">
+            ${g.id ? `<button type="button" class="btn btn-ghost btn-danger" data-action="goal-del" data-id="${g.id}">Delete</button>` : ''}
+            <span class="right"><button type="button" class="btn" data-action="modal-close">Cancel</button><button type="submit" class="btn btn-primary">Save</button></span>
+          </div>
+        </form></div></div>`;
+      const form = $('form', root);
+      // milestone editing keeps local array in sync
+      form.addEventListener('input', e => { const t = e.target; if (t.dataset.msTitle != null) ms[+t.dataset.msTitle].title = t.value; if (t.dataset.msDate != null) ms[+t.dataset.msDate].date = t.value; });
+      form.addEventListener('change', e => { const t = e.target; if (t.dataset.msDone != null) ms[+t.dataset.msDone].done = t.checked; });
+      form.addEventListener('click', e => {
+        const t = e.target.closest('[data-ms-add],[data-ms-del]'); if (!t) return;
+        if (t.hasAttribute('data-ms-add')) { syncForm(form, g); ms.push({ id: uid(), title: '', date: '', done: false }); draw(); $('[data-ms-title="' + (ms.length - 1) + '"]', root).focus(); }
+        else { syncForm(form, g); ms.splice(+t.dataset.msDel, 1); draw(); }
+      });
+      form.addEventListener('submit', e => {
+        e.preventDefault(); syncForm(form, g);
+        if (!g.title.trim()) return;
+        g.milestones = ms.filter(m => m.title.trim()).map(m => ({ id: m.id || uid(), title: m.title.trim(), date: m.date || '', done: !!m.done }));
+        if (!g.id) { g.id = uid(); S.goals.push(g); }
+        saveGoals(); closeModal(); render(); toast('Saved');
+      });
+      setTimeout(() => { const f = $('input[name=title]', root); if (f && !g.id) f.focus(); }, 0);
+    };
+    draw();
+  }
+  function syncForm(form, g) {
+    const fd = new FormData(form);
+    g.title = fd.get('title') || ''; g.category = fd.get('category'); g.horizon = fd.get('horizon'); g.start = fd.get('start') || ''; g.deadline = fd.get('deadline') || '';
+    g.status = fd.get('status'); g.progress = +fd.get('progress') || 0; g.bottleneck = fd.get('bottleneck') || ''; g.next = fd.get('next') || ''; g.link = fd.get('link') || '';
+  }
+  function closeModal() { $('#modalRoot').innerHTML = ''; }
+
+  // ---------------------------------------------------------------- FOCUS (pomodoro)
+  const Timer = {
+    st: null, // { mode:'work'|'break', total(sec), endAt(ms) | null, remaining(sec), running, taskId, label }
+    load() { try { const s = JSON.parse(localStorage.getItem('pf-timer') || 'null'); if (s) this.st = s; } catch (e) {} if (!this.st) this.reset('work', S.settings.work); },
+    save() { try { localStorage.setItem('pf-timer', JSON.stringify(this.st)); } catch (e) {} },
+    reset(mode, mins, keepTask) { const t = this.st || {}; this.st = { mode: mode || 'work', total: mins * 60, remaining: mins * 60, endAt: null, running: false, taskId: keepTask ? t.taskId : (t.taskId || ''), label: keepTask ? t.label : (t.label || ''), cycles: t.cycles || 0 }; this.save(); this.tick(); },
+    start() { const s = this.st; if (s.running) return; ensureAudio(); s.endAt = Date.now() + s.remaining * 1000; s.running = true; this.save(); this.loop(); },
+    pause() { const s = this.st; if (!s.running) return; s.remaining = Math.max(0, Math.round((s.endAt - Date.now()) / 1000)); s.running = false; s.endAt = null; this.save(); this.tick(); },
+    toggle() { this.st.running ? this.pause() : this.start(); },
+    loop() { clearInterval(this._iv); this._iv = setInterval(() => this.tick(), 250); this.tick(); },
+    remaining() { const s = this.st; return s.running ? Math.max(0, Math.round((s.endAt - Date.now()) / 1000)) : s.remaining; },
+    tick() {
+      const s = this.st; const r = this.remaining();
+      if (s.running && r <= 0) { this.complete(); return; }
+      this.paint(r);
+    },
+    complete() {
+      clearInterval(this._iv);
+      const s = this.st; s.running = false; s.endAt = null; s.remaining = 0;
+      if (s.mode === 'work') {
+        const mins = Math.round(s.total / 60);
+        S.day.sessions = S.day.sessions || []; S.day.sessions.push({ at: Date.now(), minutes: mins, label: s.label || '', taskId: s.taskId || '' });
+        s.cycles = (s.cycles || 0) + 1; saveDay(); beep(2); toast(`Focus session done · +${mins} min`);
+        const long = s.cycles % 4 === 0;
+        this.reset('break', long ? S.settings.longBrk : S.settings.brk, true);
+        if (S.settings.autoCycle) this.start();
+      } else {
+        beep(1); toast('Break over — back to it');
+        this.reset('work', S.settings.work, true);
+        if (S.settings.autoCycle) this.start();
+      }
+      this.save(); this.paint(this.remaining());
+      if (S.view === 'focus') renderFocus($('#main')); else if (S.view === 'today') render();
+    },
+    paint(r) {
+      const s = this.st; const mm = pad(Math.floor(r / 60)), ss = pad(r % 60);
+      document.title = s.running ? `${mm}:${ss} · ${s.mode === 'work' ? 'Focus' : 'Break'} — Pathfinder` : 'Pathfinder';
+      const t = $('#fxTime'); if (t) t.textContent = `${mm}:${ss}`;
+      const c = $('#fxFill'); if (c) { const C = 2 * Math.PI * 46; c.style.strokeDashoffset = C * (1 - (s.total ? r / s.total : 0)); }
+      const b = $('#fxToggle'); if (b) b.textContent = s.running ? 'Pause' : (r === s.total ? 'Start' : 'Resume');
+      renderNavTimer();
+    }
+  };
+  function renderNavTimer() {
+    const el = $('#navTimer'); if (!el || !Timer.st) return;
+    const s = Timer.st; const r = Timer.remaining();
+    el.hidden = !(s.running || r !== s.total);
+    el.innerHTML = `<span>${s.mode === 'work' ? '● Focus' : '○ Break'}</span><span>${pad(Math.floor(r / 60))}:${pad(r % 60)}</span>`;
+    el.onclick = () => route('focus');
+  }
+  let audioCtx;
+  function ensureAudio() { if (!S.settings.sound) return; try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {} }
+  function beep(n) {
+    if (!S.settings.sound) return;
+    try {
+      ensureAudio(); if (!audioCtx) return;
+      for (let i = 0; i < n; i++) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = 'sine'; o.frequency.value = 660; o.connect(g); g.connect(audioCtx.destination); const t0 = audioCtx.currentTime + i * 0.35; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3); o.start(t0); o.stop(t0 + 0.32); }
+    } catch (e) {}
+  }
+  function renderFocus(main) {
+    const s = Timer.st; const r = Timer.remaining(); const C = 2 * Math.PI * 46;
+    const musts = (S.day.musts || []).filter(m => !m.done);
+    const used = focusUsedMins(); const target = Math.round((S.day.focusHours || 0) * 60);
+    const motto = S.settings.mottos[(S.mottoIdx + 1) % Math.max(1, S.settings.mottos.length)] || '';
+    const preset = (m, mode) => `<button class="preset ${mode === 'break' ? 'brk' : ''} ${s.mode === mode && s.total === m * 60 ? 'active' : ''}" data-action="preset" data-m="${m}" data-mode="${mode}">${m}</button>`;
+    main.innerHTML = `<div class="focus-view ${S.zen ? 'zen' : ''}"><div class="focus-inner">
+      <div class="focus-presets">${[25, 15, 10].map(m => preset(m, 'work')).join('')}<span style="width:10px"></span>${[5, 15].map(m => preset(m, 'break')).join('')}<input class="preset" type="number" min="1" max="240" placeholder="min" data-action="preset-input" style="width:72px;text-align:center"></div>
+      <div class="focus-dial ${s.mode === 'break' ? 'break' : ''}">
+        <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/><circle id="fxFill" class="fill" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - (s.total ? r / s.total : 0))}"/></svg>
+        <div class="center"><div class="mode">${s.mode === 'work' ? 'Focus' : 'Break'}</div><div class="time" id="fxTime">${pad(Math.floor(r / 60))}:${pad(r % 60)}</div><div class="task">${esc(s.label || '')}</div></div>
+      </div>
+      <div class="focus-controls"><button class="btn btn-primary" id="fxToggle" data-action="fx-toggle">${s.running ? 'Pause' : (r === s.total ? 'Start' : 'Resume')}</button><button class="btn" data-action="fx-reset">Reset</button><button class="btn btn-ghost" data-action="fx-skip" title="Skip to next phase">Skip</button></div>
+      <div class="focus-opts">
+        <select data-action="fx-task"><option value="">No task</option>${musts.map(m => `<option value="${m.id}" ${s.taskId === m.id ? 'selected' : ''}>${esc(m.text)}</option>`).join('')}</select>
+        <label><input type="checkbox" data-action="fx-auto" ${S.settings.autoCycle ? 'checked' : ''}> auto work ↔ break</label>
+        <label><input type="checkbox" data-action="fx-sound" ${S.settings.sound ? 'checked' : ''}> sound</label>
+        <label><input type="checkbox" data-action="fx-zen" ${S.zen ? 'checked' : ''}> quiet mode</label>
+      </div>
+      <div class="focus-stats"><span>today <b>${(used / 60).toFixed(1)}h</b>${target ? ` / ${(target / 60).toFixed(1)}h` : ''}</span><span>sessions <b>${(S.day.sessions || []).length}</b></span><span>cycle <b>${(s.cycles || 0) % 4 + 1}/4</b></span></div>
+      <div class="focus-motto">“${esc(motto)}”</div>
+    </div></div>`;
+    if (s.running) Timer.loop();
+  }
+
+  // ---------------------------------------------------------------- NOTES (legacy Quill docs)
+  let quill = null;
+  const NOTE_TABS = [
+    { id: 'daily', label: 'Daily', doc: () => { const [y, m, d] = S.notesDate.split('-'); return `day-${y}-${m}-${d}-milestones`; }, dated: true, ph: 'Daily notes, plans, scratch…' },
+    { id: 'progress', label: 'Progress report', doc: () => 'deadlineInput', ph: 'Running progress report across projects.' },
+    { id: 'yearly', label: 'Yearly goals', doc: () => `year-${S.notesDate.slice(0, 4)}-milestones`, ph: 'What this year is for.' },
+    { id: 'achievement', label: 'Achievements', doc: () => `year-${S.notesDate.slice(0, 4)}-achievement`, ph: 'Wins and reflections.' },
+    { id: 'vision', label: 'Vision', doc: () => 'visionInput', ph: 'The long view.' },
+    { id: 'question', label: 'Question', doc: () => `question-${S.qIdx == null ? 'none' : S.qIdx}`, ph: 'Your answer…' }
+  ];
+  function destroyQuill() { quill = null; }
+  function renderNotes(main) {
+    const tab = NOTE_TABS.find(t => t.id === S.notesTab) || NOTE_TABS[0];
+    main.innerHTML = `<div class="view-head"><div><h1>Notes</h1><div class="sub">Your existing journals, unchanged — same storage, new coat of paint.</div></div></div>
+      <div class="notes-tabs">${NOTE_TABS.map(t => `<button class="notes-tab ${t.id === tab.id ? 'active' : ''}" data-action="notes-tab" data-tab="${t.id}">${t.label}</button>`).join('')}</div>
+      <div class="notes-bar">
+        ${tab.dated || tab.id === 'yearly' || tab.id === 'achievement' ? `<input type="date" value="${S.notesDate}" data-action="notes-date"><button class="btn btn-sm" data-action="notes-today">Today</button>` : ''}
+        ${tab.id === 'question' ? `<button class="btn btn-sm" data-action="q-new">New question</button>` : ''}
+        <span class="muted small" id="noteStatus"></span>
+      </div>
+      ${tab.id === 'question' ? `<div class="q-box"><div class="q" id="qText">${S.qIdx == null ? '<span class="muted">Press "New question" for a reflection prompt.</span>' : (window.questions || [])[S.qIdx]}</div></div>` : ''}
+      <div class="note-editor"><div id="noteEditor"></div></div>
+      ${tab.id === 'question' ? `<div class="q-answered" id="qAnswered"></div>` : ''}`;
+    mountQuill(tab);
+    if (tab.id === 'question') loadAnswered();
+  }
+  function mountQuill(tab) {
+    quill = new Quill('#noteEditor', {
+      theme: 'snow', placeholder: tab.ph,
+      modules: { clipboard: { matchVisual: false }, toolbar: [['bold', 'italic', 'underline', 'strike'], [{ list: 'check' }, { list: 'bullet' }], [{ indent: '-1' }, { indent: '+1' }], [{ header: [1, 2, 3, false] }], ['link'], ['clean']] },
+      formats: ['bold', 'italic', 'underline', 'strike', 'list', 'indent', 'header', 'link', 'color', 'background', 'code-block', 'blockquote', 'image', 'video', 'code', 'script', 'align', 'size', 'font']
+    });
+    quill.root.spellcheck = false;
+    const docName = tab.doc();
+    if (tab.id === 'question' && S.qIdx == null) { quill.disable(); return; }
+    const status = $('#noteStatus'); status.textContent = 'loading…';
+    const mine = quill;
+    const cached = Store.cached(docName); if (cached) mine.clipboard.dangerouslyPasteHTML(cached);
+    Store.getRaw(docName).then(html => {
+      if (quill !== mine) return;
+      mine.off('text-change'); mine.disable(); mine.clipboard.dangerouslyPasteHTML(html || ''); mine.enable(); mine.history.clear();
+      status.textContent = '';
+      mine.on('text-change', debounce(() => { const v = mine.getText().trim() === '' ? '' : mine.root.innerHTML; Store.setRaw(docName, v); status.textContent = 'saved'; setTimeout(() => { if (status.textContent === 'saved') status.textContent = ''; }, 1200); }, 400));
+    });
+  }
+  async function loadAnswered() {
+    const box = $('#qAnswered'); if (!box) return;
+    try {
+      const snap = await Store.col().get(); const idx = [];
+      snap.forEach(d => { if (d.id.startsWith('question-')) { const i = parseInt(d.id.split('-')[1]); if (!isNaN(i) && (window.questions || [])[i]) idx.push(i); } });
+      if (!$('#qAnswered')) return;
+      box.innerHTML = idx.length ? `<h3 style="margin:6px 0">Answered</h3>` + idx.map(i => { const q = window.questions[i]; const m = q.match(/<b>(.*?)<\/b>/); return `<div class="item"><span class="txt">${m ? m[1] : q}</span><span class="actions"><button class="btn-xs btn" data-action="q-open" data-i="${i}">Open</button><button class="btn-xs btn btn-danger" data-action="q-del" data-i="${i}">Delete</button></span></div>`; }).join('') : '';
+    } catch (e) { console.warn(e); }
+  }
+
+  // ---------------------------------------------------------------- SETTINGS
+  function renderSettings(main) {
+    const s = S.settings;
+    main.innerHTML = `<div class="view-head"><div><h1>Settings</h1><div class="sub">Signed in as <b>${esc(Store.user)}</b></div></div><button class="btn" data-action="signout">Sign out</button></div>
+      <div class="settings">
+        <section class="card"><div class="card-head"><h3>Appearance</h3></div>
+          <span class="seg">${['auto', 'light', 'dark'].map(t => `<button data-action="theme" data-t="${t}" class="${s.theme === t ? 'active' : ''}">${t}</button>`).join('')}</span></section>
+        <section class="card"><div class="card-head"><h3>Mottos</h3><span class="muted small">shown on Today and Focus</span></div>
+          <div class="mottos">${s.mottos.map((m, i) => `<div class="row"><input value="${esc(m)}" data-action="motto-edit" data-i="${i}" maxlength="120"><button class="btn-icon" data-action="motto-del" data-i="${i}">✕</button></div>`).join('')}</div>
+          <div style="margin-top:8px"><button class="btn btn-xs" data-action="motto-add">+ Add</button></div></section>
+        <section class="card"><div class="card-head"><h3>Focus timer</h3></div>
+          <div class="form-row">
+            <label class="field"><span>Work (min)</span><input type="number" min="1" max="180" value="${s.work}" data-action="set-num" data-k="work"></label>
+            <label class="field"><span>Short break (min)</span><input type="number" min="1" max="60" value="${s.brk}" data-action="set-num" data-k="brk"></label>
+            <label class="field"><span>Long break (min)</span><input type="number" min="1" max="90" value="${s.longBrk}" data-action="set-num" data-k="longBrk"></label>
+          </div></section>
+        <section class="card"><div class="card-head"><h3>Day timeline</h3></div>
+          <div class="form-row">
+            <label class="field"><span>Day starts (hour)</span><input type="number" min="0" max="12" value="${s.dayStart}" data-action="set-num" data-k="dayStart"></label>
+            <label class="field"><span>Day ends (hour)</span><input type="number" min="13" max="24" value="${s.dayEnd}" data-action="set-num" data-k="dayEnd"></label>
+          </div></section>
+        <section class="card"><div class="card-head"><h3>Data</h3></div>
+          <div class="row"><button class="btn btn-sm" data-action="export">Export goals + today (JSON)</button><button class="btn btn-sm" data-action="load-template">Append template goals</button></div>
+          <p class="muted small" style="margin-top:8px">Everything is stored under your account in Firestore, encrypted client-side. Notes from the previous version are read from the same documents.</p></section>
+      </div>`;
+  }
+
+  // ---------------------------------------------------------------- events (delegated)
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-action]'); if (!t) return;
+    if (t.tagName === 'INPUT' || t.tagName === 'SELECT') return; // handled by change
+    const a = t.dataset.action, id = t.dataset.id;
+    switch (a) {
+      case 'motto': S.mottoIdx = (S.mottoIdx + 1) % Math.max(1, S.settings.mottos.length); $('.motto').textContent = `“${S.settings.mottos[S.mottoIdx] || ''}”`; break;
+      case 'open-goal': openGoalModal(id); break;
+      case 'goal-new': openGoalModal(''); break;
+      case 'goal-del': { const g = goalById(id); if (!g) break; if (t.dataset.confirm) { S.goals = S.goals.filter(x => x.id !== id); saveGoals(); closeModal(); render(); toast('Deleted'); } else { t.dataset.confirm = '1'; t.textContent = 'Really delete?'; } break; }
+      case 'modal-bg': if (e.target === t) closeModal(); break;
+      case 'modal-close': closeModal(); break;
+      case 'load-template': S.goals = S.goals.concat(templateGoals()); saveGoals(); render(); toast('Template loaded'); break;
+      case 'go-focus': route('focus'); break;
+      case 'go-goals': route('goals'); break;
+      case 'must-del': S.day.musts = S.day.musts.filter(m => m.id !== id); saveDay(); render(); break;
+      case 'must-focus': { const m = S.day.musts.find(x => x.id === id); if (m) { Timer.st.taskId = m.id; Timer.st.label = m.text; Timer.save(); route('focus'); } break; }
+      case 'blk-del': S.day.blocks = S.day.blocks.filter(b => b.id !== id); saveDay(); render(); break;
+      case 'fh': S.day.focusHours = clamp((S.day.focusHours || 0) + parseFloat(t.dataset.d), 0, 16); saveDay(); render(); break;
+      case 'tl-range': S.tlRange = +t.dataset.r; render(); break;
+      case 'preset': Timer.reset(t.dataset.mode, +t.dataset.m, true); renderFocus($('#main')); break;
+      case 'fx-toggle': Timer.toggle(); break;
+      case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
+      case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', S.settings.brk, true); else Timer.reset('work', S.settings.work, true); renderFocus($('#main')); break; }
+      case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
+      case 'notes-today': S.notesDate = todayKey(); render(); break;
+      case 'q-new': S.qIdx = Math.floor(Math.random() * (window.questions || []).length); render(); break;
+      case 'q-open': S.qIdx = +t.dataset.i; render(); break;
+      case 'q-del': Store.col().doc(`question-${t.dataset.i}`).delete().then(() => { try { localStorage.removeItem(Store.cacheKey(`question-${t.dataset.i}`)); } catch (x) {} if (S.qIdx === +t.dataset.i) S.qIdx = null; render(); }); break;
+      case 'theme': S.settings.theme = t.dataset.t; saveSettings(); render(); break;
+      case 'motto-add': S.settings.mottos.push(''); saveSettings(); render(); $$('[data-action=motto-edit]').pop().focus(); break;
+      case 'motto-del': S.settings.mottos.splice(+t.dataset.i, 1); saveSettings(); render(); break;
+      case 'export': { const blob = new Blob([JSON.stringify({ goals: S.goals, day: S.day, dayKey: S.dayKey, settings: S.settings }, null, 2)], { type: 'application/json' }); const a2 = document.createElement('a'); a2.href = URL.createObjectURL(blob); a2.download = `pathfinder-${todayKey()}.json`; a2.click(); break; }
+      case 'signout': Store.flush(); auth.signOut(); break;
+    }
+  });
+
+  document.addEventListener('change', e => {
+    const t = e.target.closest('[data-action]'); if (!t) return;
+    const a = t.dataset.action, id = t.dataset.id;
+    switch (a) {
+      case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { m.done = t.checked; saveDay(); render(); } break; }
+      case 'goal-progress': { const g = goalById(id); if (g) { g.progress = +t.value; if (g.progress === 100 && g.status !== 'done') g.status = 'done'; saveGoals(); render(); } break; }
+      case 'goal-status': { const g = goalById(id); if (g) { g.status = t.value; saveGoals(); render(); } break; }
+      case 'ms-toggle': { const g = goalById(id); const m = g && (g.milestones || []).find(x => x.id === t.dataset.ms); if (m) { m.done = t.checked; saveGoals(); render(); } break; }
+      case 'fx-task': { const m = (S.day.musts || []).find(x => x.id === t.value); Timer.st.taskId = t.value; Timer.st.label = m ? m.text : ''; Timer.save(); $('.focus-dial .task').textContent = Timer.st.label; break; }
+      case 'preset-input': { const n = parseInt(t.value); if (n > 0 && n <= 240) { Timer.reset('work', n, true); renderFocus($('#main')); } break; }
+      case 'fx-auto': S.settings.autoCycle = t.checked; saveSettings(); break;
+      case 'fx-sound': S.settings.sound = t.checked; saveSettings(); break;
+      case 'fx-zen': S.zen = t.checked; $('.focus-view').classList.toggle('zen', S.zen); break;
+      case 'notes-date': S.notesDate = t.value || todayKey(); render(); break;
+      case 'motto-edit': S.settings.mottos[+t.dataset.i] = t.value; saveSettings(); break;
+      case 'set-num': { const n = +t.value; if (n > 0 || t.dataset.k === 'dayStart') { S.settings[t.dataset.k] = n; saveSettings(); } break; }
+    }
+  });
+  // live progress label while dragging
+  document.addEventListener('input', e => { const t = e.target; if (t.dataset.action === 'goal-progress') { const p = t.parentNode.querySelector('.pct'); if (p) p.textContent = t.value + '%'; } });
+
+  document.addEventListener('submit', e => {
+    const f = e.target.closest('[data-form]'); if (!f) return;
+    e.preventDefault(); const fd = new FormData(f);
+    switch (f.dataset.form) {
+      case 'must-add': { const text = (fd.get('text') || '').trim(); if (!text) return; S.day.musts = S.day.musts || []; S.day.musts.push({ id: uid(), text, done: false, goalId: fd.get('goalId') || '' }); saveDay(); render(); break; }
+      case 'blk-add': { const start = fd.get('start'), end = fd.get('end'); if (!start || !end || end <= start) { toast('End must be after start'); return; } S.day.blocks = S.day.blocks || []; S.day.blocks.push({ id: uid(), start, end, label: (fd.get('label') || '').trim(), goalId: fd.get('goalId') || '' }); saveDay(); render(); break; }
+    }
+  });
+
+  // minute tick for "now" marker on Today
+  setInterval(() => { if (S.view === 'today' && !$('#modalRoot').firstChild && document.activeElement.tagName !== 'INPUT') { const dl = $('.dayline'); if (dl) dl.outerHTML = renderDayline(); } }, 60000);
+
+})();

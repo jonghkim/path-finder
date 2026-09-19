@@ -1,158 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-    
-    h1 {
-      margin-top: 100px;
-    }
-    
-    input[type="text"],
-    input[type="password"] {
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      margin-top: 20px;
-    }
-    
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #4CAF50;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    
-    #passwordContent {
-      display: block;
-    }
-    
-    #mainContent {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-  </style>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pathfinder</title>
+  <link rel="icon" href="favicon.ico">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
-</head>
-
-<body>
-
-  <div id="passwordContent">
-    <h1>Welcome to Pathfinder</h1>
-    <input id="username" type="text" placeholder="Username">
-    <input id="password" type="password" placeholder="Password">
-    <!-- <button onclick="signUp">Sign Up</button>
-    <button onclick="signIn">Sign In</button> -->
-    <button id="signInButton">Sign In</button>  
-    <button id="signUpButton">Sign Up (PW > 6 Characters)</button>
-  </div>
-
-  <iframe id="mainContent" src=""></iframe>
-
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
-  
-  <script type="module">
+  <script src="assets/firebase-config.js"></script>
+</head>
+<body class="login-body">
+  <main class="login">
+    <div class="login-card" id="loginCard" aria-busy="true">
+      <div class="login-brand">
+        <span class="login-mark" aria-hidden="true"></span>
+        <h1>Pathfinder</h1>
+      </div>
+      <p class="login-motto" id="loginMotto">끝날 때까지는 끝난 게 아니다.</p>
 
-    var secretKey = "pathfinder"; // replace with your own secret key
+      <form id="loginForm" autocomplete="on" novalidate>
+        <label class="field">
+          <span>Username</span>
+          <input id="username" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="password" name="password" type="password" autocomplete="current-password" required minlength="6">
+        </label>
+        <p class="login-error" id="loginError" role="alert" hidden></p>
+        <button class="btn btn-primary btn-block" type="submit" id="submitBtn">Sign in</button>
+        <button class="btn btn-ghost btn-block" type="button" id="toggleMode">Create an account</button>
+      </form>
+    </div>
+    <p class="login-foot">Private. Your notes are encrypted before they leave the browser.</p>
+  </main>
 
-    function encryptText(plainText) {
-        return CryptoJS.AES.encrypt(plainText, secretKey).toString();
-    }
+  <script>
+    (function () {
+      firebase.initializeApp(window.PF_FIREBASE_CONFIG);
+      var auth = firebase.auth();
+      var mode = 'signin';
+      var card = document.getElementById('loginCard');
+      var form = document.getElementById('loginForm');
+      var err = document.getElementById('loginError');
+      var submitBtn = document.getElementById('submitBtn');
+      var toggle = document.getElementById('toggleMode');
+      var mottos = ['끝날 때까지는 끝난 게 아니다.', '길고 짧은 건 대봐야 안다.', 'Try again from a different angle.'];
+      document.getElementById('loginMotto').textContent = mottos[Math.floor(Math.random() * mottos.length)];
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGGHtfrqX6fEDFPZnvhWO1NQFNjL0P0Y8",
-      authDomain: "pathfinder-fd96a.firebaseapp.com",
-      projectId: "pathfinder-fd96a",
-      storageBucket: "pathfinder-fd96a.appspot.com",
-      messagingSenderId: "801645100816",
-      appId: "1:801645100816:web:e9118c18d09a3fc79b2f95",
-      measurementId: "G-DPJQ376Q6J"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    
-    function signUp() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      auth.onAuthStateChanged(function (user) {
+        if (user) { window.location.replace('app.html'); return; }
+        card.removeAttribute('aria-busy');
+        document.getElementById('username').focus();
+      });
 
-      // Customizing the sign-up method for username-based authentication
-      auth.createUserWithEmailAndPassword(`${username}@yourdomain.com`, password)
-        .then((userCredential) => {
-          // Signup successful
-          const user = userCredential.user;
-          console.log("Signup successful:", user);
-          // Additional actions or redirects can be performed here
+      function showError(msg) { err.textContent = msg; err.hidden = false; }
+      function busy(b) { submitBtn.disabled = b; submitBtn.textContent = b ? '…' : (mode === 'signin' ? 'Sign in' : 'Create account'); }
 
-          signIn(username, password);
-        })
-        .catch((error) => {
-          // Signup failed
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.error("Signup error:", errorCode, errorMessage);
-          // Handle the error or display an error message to the user
-          window.alert(`Signup error: ${errorMessage}`);
+      toggle.addEventListener('click', function () {
+        mode = mode === 'signin' ? 'signup' : 'signin';
+        err.hidden = true;
+        submitBtn.textContent = mode === 'signin' ? 'Sign in' : 'Create account';
+        toggle.textContent = mode === 'signin' ? 'Create an account' : 'I already have an account';
+        document.getElementById('password').autocomplete = mode === 'signin' ? 'current-password' : 'new-password';
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        err.hidden = true;
+        var u = document.getElementById('username').value.trim();
+        var p = document.getElementById('password').value;
+        if (!u) return showError('Enter a username.');
+        if (p.length < 6) return showError('Password needs at least 6 characters.');
+        var email = u + '@yourdomain.com';
+        busy(true);
+        var op = mode === 'signin' ? auth.signInWithEmailAndPassword(email, p) : auth.createUserWithEmailAndPassword(email, p);
+        op.catch(function (e2) {
+          busy(false);
+          var code = e2 && e2.code || '';
+          var msg = {
+            'auth/wrong-password': 'Wrong password.',
+            'auth/user-not-found': 'No account with that username.',
+            'auth/email-already-in-use': 'That username is taken.',
+            'auth/too-many-requests': 'Too many attempts. Try again in a bit.',
+            'auth/network-request-failed': 'Network error. Check your connection.'
+          }[code] || (e2 && e2.message) || 'Something went wrong.';
+          showError(msg);
         });
-    }
-
-    function signIn() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-
-      auth.signInWithEmailAndPassword(`${username}@yourdomain.com`, password)
-        .then((userCredential) => {
-          // Handle successful sign-in
-          const user = userCredential.user;
-          console.log("Sign-in successful:", user);
-          showMainPage(username); // Show the main page content and pass the username
-        })
-        .catch((error) => {
-          // Handle sign-in errors
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.error("Sign-in error:", errorCode, errorMessage);
-          window.alert(`Signin error: ${errorMessage}`);
-        });
-    }
-
-    function showMainPage(username) {
-
-      const passwordContent = document.getElementById("passwordContent");
-      const mainContent = document.getElementById("mainContent");
-
-      passwordContent.style.display = "none"; // Hide the password page content
-      mainContent.style.display = "block"; // Show the iframe
-
-      // Set the source URL of the iframe with the username query parameter
-      const timestamp = new Date().getTime(); // Get current timestamp
-
-      const encrypt_username = encodeURIComponent(encryptText(username));
-
-      const mainPageURL = `main.html?username=${encrypt_username}&timestamp=${timestamp}`;      
-      mainContent.src = mainPageURL;
-    }
-
-    document.getElementById("signUpButton").addEventListener("click", signUp);
-    document.getElementById("signInButton").addEventListener("click", signIn);
-
-  </script>  
-
+      });
+    })();
+  </script>
 </body>
 </html>
