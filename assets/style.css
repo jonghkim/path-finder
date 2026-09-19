@@ -10,9 +10,9 @@
   --ink: #141412;
   --ink-2: #3d3b36;
   --ink-3: #6b6961;
-  --accent: #2a78d6;
+  --accent: #4d6f95;
   --accent-ink: #ffffff;
-  --accent-soft: #e5effb;
+  --accent-soft: #e6edf5;
   --good: #0ca30c;
   --warn: #c98500;
   --warn-soft: #fff4d6;
@@ -41,8 +41,8 @@
     --ink: #f2f1ea;
     --ink-2: #cfcdc3;
     --ink-3: #9d9b91;
-    --accent: #3987e5;
-    --accent-soft: #1d2b3d;
+    --accent: #7a9cc4;
+    --accent-soft: #232b36;
     --good: #2fb92f;
     --warn: #e4a41c;
     --warn-soft: #33290f;
@@ -65,8 +65,8 @@
   --ink: #f2f1ea;
   --ink-2: #cfcdc3;
   --ink-3: #9d9b91;
-  --accent: #3987e5;
-  --accent-soft: #1d2b3d;
+  --accent: #7a9cc4;
+  --accent-soft: #232b36;
   --good: #2fb92f;
   --warn: #e4a41c;
   --warn-soft: #33290f;
@@ -185,6 +185,20 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
   padding: 18px 12px; border-right: 1px solid var(--line); background: var(--bg);
 }
 .nav-brand { display: flex; align-items: center; gap: 9px; padding: 6px 10px 18px; font-weight: 600; font-size: 16px; }
+.nav-toggle { margin-left: auto; width: 26px; height: 26px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-3); display: grid; place-items: center; padding: 0; }
+.nav-toggle svg { width: 16px; height: 16px; transition: transform .2s; }
+.nav-toggle:hover { background: var(--surface-2); color: var(--ink); }
+.app { transition: grid-template-columns .2s; }
+.nav-item .lbl { white-space: nowrap; }
+/* Collapsed rail */
+.nav-collapsed .app { --nav-w: 60px; }
+.nav-collapsed .nav { padding-left: 8px; padding-right: 8px; }
+.nav-collapsed .nav-brand { padding: 6px 0 14px; flex-direction: column; gap: 10px; }
+.nav-collapsed .nav-brand .lbl, .nav-collapsed .nav-item .lbl, .nav-collapsed .nav-user { display: none; }
+.nav-collapsed .nav-toggle { margin: 0; }
+.nav-collapsed .nav-toggle svg { transform: rotate(180deg); }
+.nav-collapsed .nav-item { justify-content: center; padding: 10px 0; }
+.nav-collapsed .nav-timer { padding: 6px 4px; justify-content: center; font-size: 11px; flex-direction: column; gap: 0; margin: 0 0 8px; }
 .nav-brand .login-mark { width: 12px; height: 12px; }
 .nav-item {
   display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; border: 0;
@@ -449,27 +463,30 @@ input.bn-edit { font-size: 13.5px; }
 .preset { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ink-2); font-weight: 500; font-family: var(--mono); }
 .preset:hover { background: var(--surface-2); color: var(--ink); }
 .preset.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.preset.brk.active { background: var(--good); border-color: var(--good); color: #fff; }
+.preset.brk.active { background: #6f9a7c; border-color: #6f9a7c; color: #fff; }
 .focus-dial { position: relative; width: min(340px, 78vw); aspect-ratio: 1; }
 .focus-dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.focus-dial circle { fill: none; stroke-width: 6; stroke-linecap: round; }
+.focus-dial circle { fill: none; stroke-width: 4; stroke-linecap: round; }
 .focus-dial .track { stroke: var(--surface-2); }
-.focus-dial .fill { stroke: var(--accent); transition: stroke-dashoffset .25s linear; }
-.focus-dial.break .fill { stroke: var(--good); }
+.focus-dial .track { stroke: var(--surface-2); }
+.focus-dial .fill { stroke: var(--ink); opacity: .82; transition: stroke-dashoffset .25s linear; }
+.focus-dial.break .fill { stroke: #6f9a7c; opacity: 1; }
 .focus-dial .center { position: absolute; inset: 0; display: grid; place-content: center; gap: 4px; }
 .focus-dial .time { font-family: var(--mono); font-size: clamp(56px, 14vw, 84px); font-weight: 500; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
 .focus-dial .mode { font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-3); font-weight: 600; }
 .focus-dial .task { font-size: 14px; color: var(--ink-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto; }
 .focus-controls { display: flex; gap: 10px; align-items: center; }
 .focus-controls .btn { padding: 11px 26px; font-size: 15px; border-radius: 999px; }
+.focus-controls .btn-primary { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.focus-controls .btn-primary:hover { background: var(--ink); filter: none; opacity: .9; }
 .focus-task { width: 100%; max-width: 520px; display: grid; gap: 8px; text-align: left; }
 .ft-now { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.ft-k { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); flex: none; }
+.ft-k { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); flex: none; }
 .ft-main { flex: 1; min-width: 0; display: grid; gap: 4px; }
 .ft-title { font-weight: 600; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ft-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
 .ft-bar { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
-.ft-bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.ft-bar i { display: block; height: 100%; background: var(--ink-2); border-radius: 2px; }
 .ft-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .ft-item { display: inline-flex; gap: 8px; align-items: center; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ink-2); font-size: 13px; max-width: 100%; }
 .ft-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
@@ -529,6 +546,9 @@ input.bn-edit { font-size: 13.5px; }
     background: var(--surface); z-index: 30; justify-content: space-around;
   }
   .nav-brand, .nav-spacer, .nav-foot, .nav-item .kbd, .nav-timer { display: none; }
+  .nav-collapsed .app { --nav-w: auto; }
+  .nav-collapsed .nav-item .lbl { display: inline; }
+  .nav-collapsed .nav-item { padding: 6px 4px; }
   .nav-item { flex-direction: column; gap: 3px; font-size: 11px; padding: 6px 4px; width: auto; }
   .nav-item svg { width: 20px; height: 20px; }
   .main { padding: 18px 16px 90px; }

@@ -169,6 +169,7 @@
   }
   window.addEventListener('hashchange', () => route(location.hash.replace('#', '')));
   $$('.nav-item').forEach(b => b.addEventListener('click', () => route(b.dataset.view)));
+  $('#navToggle').addEventListener('click', () => { const c = document.documentElement.classList.toggle('nav-collapsed'); try { localStorage.setItem('pf-nav', c ? 'collapsed' : 'open'); } catch (e) {} if (S.view === 'timeline') setTimeout(render, 220); });
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select, button, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
     const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes' };
@@ -271,7 +272,7 @@
           </section>
 
           <section class="card card-cal">
-            <div class="card-head"><h3>Today's timeline</h3><span class="muted small">${sched.length ? `ends ${minsToHM(Math.max(...sched.map(x => x.end)))}` : ''} · ${fmtDur(focusUsedMins())} focused <button class="btn btn-xs" data-action="go-focus" style="margin-left:8px">Focus</button></span></div>
+            <div class="card-head"><h3>Today's timeline</h3><span class="muted small">${sched.length ? `ends ${minsToHM(Math.max(...sched.map(x => x.end)))} · ` : ''}${fmtDur(focusUsedMins())} focused <button class="btn btn-xs" data-action="go-focus" style="margin-left:8px">Focus</button></span></div>
             ${renderDayline(sched)}
           </section>
       </div>
