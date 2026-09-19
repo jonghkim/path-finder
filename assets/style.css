@@ -205,6 +205,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .grid { display: grid; gap: 18px; }
 .grid > *, .stack > *, .card { min-width: 0; }
 .grid-2 { grid-template-columns: 1.4fr 1fr; }
+.grid-2eq { grid-template-columns: 1fr 1fr; align-items: stretch; }
+.card-cal { display: flex; flex-direction: column; }
+.card-cal .cal { flex: 1; min-height: 300px; max-height: 420px; }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .card {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
@@ -249,7 +252,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .today-head { margin-bottom: 20px; }
 .today-date { font-size: 13px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
 .today-title { font-size: 30px; font-weight: 600; letter-spacing: -.02em; margin-top: 2px; }
-.mottos-block { display: grid; gap: 4px; padding: 12px 16px; border-left: 3px solid var(--line-strong); color: var(--ink); font-size: 15px; font-weight: 500; line-height: 1.55; }
+.mottos-block { display: grid; gap: 4px; padding: 10px 16px; margin-bottom: 18px; border-left: 3px solid var(--line-strong); color: var(--ink); font-size: 15px; font-weight: 500; line-height: 1.55; }
 .mottos-block div::before { content: "— "; color: var(--ink-3); }
 .focus-inner .mottos-block { text-align: left; justify-self: center; margin-top: 4px; }
 .countdowns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
@@ -287,12 +290,18 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .item .when .pin { font-size: 11px; }
 .item .dur { font-size: 12.5px; font-weight: 600; color: var(--ink); background: var(--surface-2); padding: 2px 7px; border-radius: 6px; flex: none; }
 .item.done .when, .item.done .dur { color: var(--ink-3); font-weight: 500; }
-.must-add select[name="minutes"] { flex: 0 0 90px; }
+.must-add input[type="text"] { flex: 1 1 150px; }
+.must-add select.min { flex: 0 0 82px; }
+.must-add select[name="goalId"] { flex: 1 1 110px; max-width: 170px; }
+.item.focusing { background: var(--accent-soft); }
+.tag.live { color: var(--accent); background: transparent; font-weight: 600; }
+.item .dur.live { background: var(--accent); color: #fff; }
+.item .dur .fm { font-weight: 500; opacity: .8; }
 .tag { font-size: 11.5px; color: var(--ink-2); padding: 1px 6px; border-radius: 5px; background: var(--surface-2); white-space: nowrap; max-width: 38%; overflow: hidden; text-overflow: ellipsis; flex: none; }
 .tag .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--cat); margin-right: 4px; vertical-align: 1px; }
 
 /* Day calendar (vertical) */
-.cal { position: relative; max-height: 560px; overflow-y: auto; margin: 6px -8px 0; padding: 0 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.cal { position: relative; max-height: 420px; overflow-y: auto; margin: 6px -8px 0; padding: 0 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); scrollbar-width: thin; }
 .cal-body { position: relative; }
 .cal-hour { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
 .cal-hour span { position: absolute; left: 0; top: -8px; font-size: 11px; color: var(--ink-2); font-family: var(--mono); background: var(--surface); padding-right: 6px; }
@@ -312,6 +321,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .cal-blk .cal-rs::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 28px; height: 3px; margin-left: -14px; border-radius: 2px; background: rgba(255,255,255,.55); opacity: 0; }
 .cal-blk:hover .cal-rs::after { opacity: 1; }
 .cal-blk.past { opacity: .45; }
+.cal-blk.focusing { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
 .cal-blk.pinned { box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 4px var(--cat, var(--accent)); }
 .cal-blk.drag { z-index: 3; box-shadow: var(--shadow); cursor: grabbing; opacity: .95; }
 .cal-now { position: absolute; left: 48px; right: 0; height: 0; border-top: 2px solid var(--crit); z-index: 2; pointer-events: none; }
@@ -442,6 +452,18 @@ input.bn-edit { font-size: 13.5px; }
 .focus-dial .task { font-size: 14px; color: var(--ink-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto; }
 .focus-controls { display: flex; gap: 10px; align-items: center; }
 .focus-controls .btn { padding: 11px 26px; font-size: 15px; border-radius: 999px; }
+.focus-task { width: 100%; max-width: 520px; display: grid; gap: 8px; text-align: left; }
+.ft-now { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.ft-k { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); flex: none; }
+.ft-main { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.ft-title { font-weight: 600; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ft-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
+.ft-bar { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.ft-bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.ft-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.ft-item { display: inline-flex; gap: 8px; align-items: center; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ink-2); font-size: 13px; max-width: 100%; }
+.ft-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.ft-item:hover { background: var(--surface-2); color: var(--ink); }
 .focus-opts { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; align-items: center; font-size: 13.5px; color: var(--ink-2); }
 .focus-opts label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .focus-opts select { padding: 5px 8px; font-size: 13px; max-width: 220px; }
@@ -486,7 +508,7 @@ input.bn-edit { font-size: 13.5px; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
-  .grid-2, .grid-3, .upcoming { grid-template-columns: 1fr; }
+  .grid-2, .grid-2eq, .grid-3, .upcoming { grid-template-columns: 1fr; }
   .main { padding: 22px 20px 90px; }
 }
 @media (max-width: 720px) {

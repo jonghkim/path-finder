@@ -196,6 +196,17 @@
   }
   function activeGoals() { return S.goals.filter(g => g.status !== 'done'); }
   function goalById(id) { return S.goals.find(g => g.id === id); }
+  function taskFocusMins(id) { return (S.day.sessions || []).filter(x => x.taskId === id).reduce((a, x) => a + (x.minutes || 0), 0); }
+  function isFocusing(id) { const t = Timer.st; return !!(t && t.taskId === id && t.mode === 'work' && (t.running || t.remaining !== t.total)); }
+  // The must-do to focus on: the timer's pick if still open, else whatever is scheduled now, else the first open one.
+  function currentFocusTask() {
+    const musts = (S.day.musts || []).filter(m => !m.done); if (!musts.length) return null;
+    const t = Timer.st; const chosen = t && t.taskId && musts.find(m => m.id === t.taskId); if (chosen) return chosen;
+    const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
+    const slot = scheduleMusts().find(x => !x.m.done && x.start <= nowM && x.end > nowM);
+    return slot ? slot.m : musts[0];
+  }
+  function setFocusTask(m) { Timer.st.taskId = m ? m.id : ''; Timer.st.label = m ? m.text : ''; Timer.save(); }
   function focusUsedMins() { return (S.day.sessions || []).reduce((a, s) => a + (s.minutes || 0), 0); }
   function dChipClass(n) { return n < 0 ? 'over' : n <= 7 ? 'soon' : ''; }
 
@@ -225,19 +236,18 @@
         </div>
       </header>
 
-      <div class="grid grid-2">
-        <div class="stack">
-          ${mottoBlock()}
+      ${mottoBlock()}
+      <div class="grid grid-2eq">
           <section class="card">
             <div class="card-head"><h3>Must do today</h3><span class="muted small mono">${doneCnt}/${musts.length} · ${fmtDur(totalMins)} left</span></div>
             <div class="list must-list">
               ${musts.map((m, i) => { const g = m.goalId && goalById(m.goalId); const sl = slotOf(m.id); return `
-                <div class="item must ${m.done ? 'done' : ''}" draggable="true" data-id="${m.id}">
+                <div class="item must ${m.done ? 'done' : ''} ${isFocusing(m.id) ? 'focusing' : ''}" draggable="true" data-id="${m.id}">
                   <span class="grip" title="Drag to reorder">⋮⋮</span>
                   <input type="checkbox" data-action="must-toggle" data-id="${m.id}" ${m.done ? 'checked' : ''}>
-                  <span class="txt">${esc(m.text)}${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}</span>
+                  <span class="txt">${esc(m.text)}${isFocusing(m.id) ? '<span class="tag live">● focusing</span>' : ''}${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}</span>
                   <span class="when mono">${sl ? `${minsToHM(sl.start)}–${minsToHM(sl.end)}` : ''}${m.start != null ? ' <span class="pin" title="Pinned to this time">📌</span>' : ''}</span>
-                  <span class="dur mono">${fmtDur(m.minutes || 0)}</span>
+                  <span class="dur mono ${isFocusing(m.id) ? 'live' : ''}">${taskFocusMins(m.id) ? `<span class="fm">${fmtDur(taskFocusMins(m.id))} /</span> ` : ''}${fmtDur(m.minutes || 0)}</span>
                   <span class="actions">
                     ${m.start != null ? `<button class="btn-icon" data-action="must-unpin" data-id="${m.id}" title="Back to auto placement">↺</button>` : ''}
                     <button class="btn-icon" data-action="must-focus" data-id="${m.id}" title="Focus on this">▶</button>
@@ -248,21 +258,18 @@
             </div>
             <form class="inline-add must-add" data-form="must-add">
               <input type="text" name="text" placeholder="Add a must-do…" required maxlength="140">
-              <select name="minutes" title="How long will it take?">${DUR.map(d => `<option value="${d}" ${d === 45 ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
+              <select name="minutes" class="min" title="How long will it take?">${DUR.map(d => `<option value="${d}" ${d === 45 ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
               <select name="goalId"><option value=""></option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
               <button class="btn btn-sm" type="submit">Add</button>
             </form>
           </section>
 
-          <section class="card">
-            <div class="card-head"><h3>Today's timeline</h3><span class="muted small">Auto-placed from must-dos · drag a block to pin its time</span></div>
+          <section class="card card-cal">
+            <div class="card-head"><h3>Today's timeline</h3><span class="muted small">${sched.length ? `ends ${minsToHM(Math.max(...sched.map(x => x.end)))}` : ''} · ${fmtDur(focusUsedMins())} focused <button class="btn btn-xs" data-action="go-focus" style="margin-left:8px">Focus</button></span></div>
             ${renderDayline(sched)}
-            <div class="row small muted" style="margin-top:6px">${sched.length ? `Ends ${minsToHM(Math.max(...sched.map(x => x.end)))}` : 'Nothing scheduled yet.'} · ${(S.day.sessions || []).length} focus session${(S.day.sessions || []).length === 1 ? '' : 's'} logged (${fmtDur(focusUsedMins())})
-              <button class="btn btn-xs" data-action="go-focus" style="margin-left:auto">Open Focus</button></div>
           </section>
-        </div>
-
-        <div class="stack">
+      </div>
+      <div class="grid grid-3" style="margin-top:18px">
           <section class="card">
             <div class="card-head"><h3>Bottleneck</h3><span class="muted small">${bns.length ? `${bns.length} flagged` : 'clear'}</span></div>
             <div class="bn">
@@ -287,7 +294,6 @@
             <div class="card-head"><h3>Long-term</h3></div>
             ${longG.map(goalRow).join('') || '<div class="empty">No long-term goals.</div>'}
           </section>
-        </div>
       </div>`;
     wireMustDrag(main); wireDayline(main); scrollCalToNow();
   }
@@ -320,7 +326,7 @@
     });
     return out.sort((a, b) => a.start - b.start);
   }
-  const HH = 56; // px per hour in the day calendar
+  const HH = 48; // px per hour in the day calendar
   function renderDayline(sched) {
     const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60;
     const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
@@ -335,7 +341,7 @@
       ${hours.map(h => `<div class="cal-hour" style="top:${y(h * 60)}px"><span>${pad(h)}:00</span></div>`).join('')}
       <div class="cal-blocks">
       ${items.map(({ m, start, end, pinned, lane, cols }) => { const g = m.goalId && goalById(m.goalId); const dur = end - start;
-        return `<div class="cal-blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''} ${dur <= 20 ? 'tiny' : dur <= 40 ? 'short' : ''}" style="top:${y(Math.max(start, s))}px;height:${Math.max(10, y(Math.min(end, e)) - y(Math.max(start, s)) - 2)}px;left:calc(${lane / cols * 100}% + 2px);width:calc(${100 / cols}% - 4px);--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${dur}">
+        return `<div class="cal-blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''} ${isFocusing(m.id) ? 'focusing' : ''} ${dur <= 20 ? 'tiny' : dur <= 40 ? 'short' : ''}" style="top:${y(Math.max(start, s))}px;height:${Math.max(10, y(Math.min(end, e)) - y(Math.max(start, s)) - 2)}px;left:calc(${lane / cols * 100}% + 2px);width:calc(${100 / cols}% - 4px);--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${dur}">
           <span class="cb-t">${esc(m.text)}</span><small>${minsToHM(start)}–${minsToHM(end)}${g ? ' · ' + esc(g.title) : ''}${pinned ? ' 📌' : ''}</small><i class="cal-rs" title="Drag to change duration"></i></div>`; }).join('')}
       </div>
       ${S.dayKey === todayKey() && nowM >= s && nowM <= e ? `<div class="cal-now" style="top:${y(nowM)}px"><span>${minsToHM(nowM)}</span></div>` : ''}
@@ -344,8 +350,7 @@
   function scrollCalToNow() {
     const cal = $('#cal'); if (!cal) return;
     const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes(); const s = S.settings.dayStart * 60;
-    const first = (S.day.musts || []).length ? Math.min(nowM, ...scheduleMusts().map(x => x.start)) : nowM;
-    cal.scrollTop = Math.max(0, (Math.min(first, nowM) - s) / 60 * HH - 40);
+    cal.scrollTop = Math.max(0, (nowM - 45 - s) / 60 * HH);
   }
   // Drag a block vertically to pin it to a time (15-minute snap). Pointer events so touch works too.
   function wireDayline(root) {
@@ -675,6 +680,8 @@
   function renderFocus(main) {
     const s = Timer.st; const r = Timer.remaining(); const C = 2 * Math.PI * 46;
     const musts = (S.day.musts || []).filter(m => !m.done);
+    const cur = currentFocusTask(); if (cur && s.taskId !== cur.id) setFocusTask(cur); else if (!cur && s.taskId) setFocusTask(null);
+    const curG = cur && cur.goalId && goalById(cur.goalId); const slot = cur && scheduleMusts().find(x => x.m.id === cur.id);
     const used = focusUsedMins();
     const preset = (m, mode) => `<button class="preset ${mode === 'break' ? 'brk' : ''} ${s.mode === mode && s.total === m * 60 ? 'active' : ''}" data-action="preset" data-m="${m}" data-mode="${mode}">${m}</button>`;
     main.innerHTML = `<div class="focus-view ${S.zen ? 'zen' : ''}"><div class="focus-inner">
@@ -684,8 +691,17 @@
         <div class="center"><div class="mode">${s.mode === 'work' ? 'Focus' : 'Break'}</div><div class="time" id="fxTime">${pad(Math.floor(r / 60))}:${pad(r % 60)}</div><div class="task">${esc(s.label || '')}</div></div>
       </div>
       <div class="focus-controls"><button class="btn btn-primary" id="fxToggle" data-action="fx-toggle">${s.running ? 'Pause' : (r === s.total ? 'Start' : 'Resume')}</button><button class="btn" data-action="fx-reset">Reset</button><button class="btn btn-ghost" data-action="fx-skip" title="Skip to next phase">Skip</button></div>
+      <div class="focus-task">
+        ${cur ? `
+          <div class="ft-now"><span class="ft-k">Now</span>
+            <div class="ft-main"><div class="ft-title">${esc(cur.text)}</div>
+              <div class="ft-meta">${slot ? `<span class="mono">${minsToHM(slot.start)}–${minsToHM(slot.end)}</span>` : ''}<span class="mono">${fmtDur(taskFocusMins(cur.id))} / ${fmtDur(cur.minutes || 0)}</span>${curG ? `<span class="tag" style="--cat:${catVar(curG.category)}"><span class="dot"></span>${esc(curG.title)}</span>` : ''}</div>
+              <div class="ft-bar"><i style="width:${cur.minutes ? clamp(taskFocusMins(cur.id) / cur.minutes * 100, 0, 100) : 0}%"></i></div></div>
+            <button class="btn btn-sm" data-action="fx-done" data-id="${cur.id}" title="Mark done and move to the next">Done ✓</button></div>
+          ${musts.length > 1 ? `<div class="ft-list">${musts.filter(m => m.id !== cur.id).map(m => `<button class="ft-item" data-action="fx-pick" data-id="${m.id}"><span>${esc(m.text)}</span><span class="mono muted">${fmtDur(m.minutes || 0)}</span></button>`).join('')}</div>` : ''}`
+        : `<div class="empty">No open must-dos. <a href="#today">Add one on Today</a> to link this session.</div>`}
+      </div>
       <div class="focus-opts">
-        <select data-action="fx-task"><option value="">No task</option>${musts.map(m => `<option value="${m.id}" ${s.taskId === m.id ? 'selected' : ''}>${esc(m.text)}</option>`).join('')}</select>
         <label><input type="checkbox" data-action="fx-auto" ${S.settings.autoCycle ? 'checked' : ''}> auto work ↔ break</label>
         <label><input type="checkbox" data-action="fx-sound" ${S.settings.sound ? 'checked' : ''}> sound</label>
         <label><input type="checkbox" data-action="fx-zen" ${S.zen ? 'checked' : ''}> quiet mode</label>
@@ -798,6 +814,8 @@
       case 'tl-range': S.tlRange = +t.dataset.r; render(); break;
       case 'preset': Timer.reset(t.dataset.mode, +t.dataset.m, true); renderFocus($('#main')); break;
       case 'fx-toggle': Timer.toggle(); break;
+      case 'fx-pick': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { setFocusTask(m); renderFocus($('#main')); } break; }
+      case 'fx-done': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { m.done = true; saveDay(); setFocusTask(null); toast('Done'); renderFocus($('#main')); } break; }
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', S.settings.brk, true); else Timer.reset('work', S.settings.work, true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
@@ -822,7 +840,6 @@
       case 'goal-field': { const g = goalById(id); if (g) { g[t.dataset.k] = t.value.trim(); saveGoals(); } break; }
       case 'bn-flag': { const g = goalById(t.value); if (g) { g.status = 'at-risk'; saveGoals(); render(); const ta = $(`.bn-edit[data-id="${g.id}"]`); if (ta) ta.focus(); } break; }
       case 'ms-toggle': { const g = goalById(id); const m = g && (g.milestones || []).find(x => x.id === t.dataset.ms); if (m) { m.done = t.checked; saveGoals(); render(); } break; }
-      case 'fx-task': { const m = (S.day.musts || []).find(x => x.id === t.value); Timer.st.taskId = t.value; Timer.st.label = m ? m.text : ''; Timer.save(); $('.focus-dial .task').textContent = Timer.st.label; break; }
       case 'preset-input': { const n = parseInt(t.value); if (n > 0 && n <= 240) { Timer.reset('work', n, true); renderFocus($('#main')); } break; }
       case 'fx-auto': S.settings.autoCycle = t.checked; saveSettings(); break;
       case 'fx-sound': S.settings.sound = t.checked; saveSettings(); break;
