@@ -244,7 +244,7 @@
                     <button class="btn-icon" data-action="must-del" data-id="${m.id}" title="Remove">✕</button>
                   </span>
                 </div>`; }).join('')}
-              ${musts.length ? '' : '<div class="empty">Pick at most three things that would make today a win, and say how long each takes.</div>'}
+              
             </div>
             <form class="inline-add must-add" data-form="must-add">
               <input type="text" name="text" placeholder="Add a must-do…" required maxlength="140">
