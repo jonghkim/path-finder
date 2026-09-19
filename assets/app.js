@@ -89,7 +89,6 @@
     dayKey: todayKey(),
     day: null,          // { focusHours, blocks:[], musts:[], sessions:[] }
     loaded: false,
-    mottoIdx: 0,
     notesTab: 'daily',
     notesDate: todayKey(),
     zen: false
@@ -210,7 +209,6 @@
   // ---------------------------------------------------------------- TODAY
   function renderToday(main) {
     const now = new Date();
-    const motto = S.settings.mottos[S.mottoIdx % Math.max(1, S.settings.mottos.length)] || '';
     const deadlines = activeGoals().filter(g => g.deadline && g.horizon !== 'long').sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 5);
     const musts = S.day.musts || [];
     const doneCnt = musts.filter(m => m.done).length;
@@ -224,7 +222,6 @@
       <header class="today-head">
         <div class="today-date">${WEEKDAYS[now.getDay()]} · ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
         <div class="today-title">Today</div>
-        <div class="motto" data-action="motto" title="Click for the next one">“${esc(motto)}”</div>
         <div class="countdowns">
           ${deadlines.map(g => { const n = daysUntil(g.deadline); return `
             <div class="cd" data-action="open-goal" data-id="${g.id}" style="--cat:${catVar(g.category)}">
@@ -236,6 +233,7 @@
 
       <div class="grid grid-2">
         <div class="stack">
+          ${mottoBlock()}
           <section class="card">
             <div class="card-head"><h3>Must do today</h3><span class="muted small mono">${doneCnt}/${musts.length}</span></div>
             <div class="list">
@@ -320,6 +318,11 @@
           </section>
         </div>
       </div>`;
+  }
+  function mottoBlock() {
+    const list = (S.settings.mottos || []).filter(m => m && m.trim());
+    if (!list.length) return '';
+    return `<div class="mottos-block">${list.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
   }
   function goalRow(g) {
     const n = g.deadline ? daysUntil(g.deadline) : null;
@@ -591,7 +594,6 @@
     const s = Timer.st; const r = Timer.remaining(); const C = 2 * Math.PI * 46;
     const musts = (S.day.musts || []).filter(m => !m.done);
     const used = focusUsedMins(); const target = Math.round((S.day.focusHours || 0) * 60);
-    const motto = S.settings.mottos[(S.mottoIdx + 1) % Math.max(1, S.settings.mottos.length)] || '';
     const preset = (m, mode) => `<button class="preset ${mode === 'break' ? 'brk' : ''} ${s.mode === mode && s.total === m * 60 ? 'active' : ''}" data-action="preset" data-m="${m}" data-mode="${mode}">${m}</button>`;
     main.innerHTML = `<div class="focus-view ${S.zen ? 'zen' : ''}"><div class="focus-inner">
       <div class="focus-presets">${[25, 15, 10].map(m => preset(m, 'work')).join('')}<span style="width:10px"></span>${[5, 15].map(m => preset(m, 'break')).join('')}<input class="preset" type="number" min="1" max="240" placeholder="min" data-action="preset-input" style="width:72px;text-align:center"></div>
@@ -607,7 +609,7 @@
         <label><input type="checkbox" data-action="fx-zen" ${S.zen ? 'checked' : ''}> quiet mode</label>
       </div>
       <div class="focus-stats"><span>today <b>${(used / 60).toFixed(1)}h</b>${target ? ` / ${(target / 60).toFixed(1)}h` : ''}</span><span>sessions <b>${(S.day.sessions || []).length}</b></span><span>cycle <b>${(s.cycles || 0) % 4 + 1}/4</b></span></div>
-      <div class="focus-motto">“${esc(motto)}”</div>
+      ${mottoBlock()}
     </div></div>`;
     if (s.running) Timer.loop();
   }
@@ -700,7 +702,6 @@
     if (t.tagName === 'INPUT' || t.tagName === 'SELECT') return; // handled by change
     const a = t.dataset.action, id = t.dataset.id;
     switch (a) {
-      case 'motto': S.mottoIdx = (S.mottoIdx + 1) % Math.max(1, S.settings.mottos.length); $('.motto').textContent = `“${S.settings.mottos[S.mottoIdx] || ''}”`; break;
       case 'open-goal': openGoalModal(id); break;
       case 'goal-new': openGoalModal(''); break;
       case 'goal-del': { const g = goalById(id); if (!g) break; if (t.dataset.confirm) { S.goals = S.goals.filter(x => x.id !== id); saveGoals(); closeModal(); render(); toast('Deleted'); } else { t.dataset.confirm = '1'; t.textContent = 'Really delete?'; } break; }

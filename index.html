@@ -19,7 +19,11 @@
         <span class="login-mark" aria-hidden="true"></span>
         <h1>Pathfinder</h1>
       </div>
-      <p class="login-motto" id="loginMotto">끝날 때까지는 끝난 게 아니다.</p>
+      <div class="login-motto">
+        <div>끝날 때까지는 끝난 게 아니다.</div>
+        <div>길고 짧은 건 대봐야 안다.</div>
+        <div>Try again from a different angle.</div>
+      </div>
 
       <form id="loginForm" autocomplete="on" novalidate>
         <label class="field">
@@ -48,8 +52,6 @@
       var err = document.getElementById('loginError');
       var submitBtn = document.getElementById('submitBtn');
       var toggle = document.getElementById('toggleMode');
-      var mottos = ['끝날 때까지는 끝난 게 아니다.', '길고 짧은 건 대봐야 안다.', 'Try again from a different angle.'];
-      document.getElementById('loginMotto').textContent = mottos[Math.floor(Math.random() * mottos.length)];
 
       auth.onAuthStateChanged(function (user) {
         if (user) { window.location.replace('app.html'); return; }
