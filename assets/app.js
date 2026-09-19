@@ -31,6 +31,11 @@
     other: { label: 'Other', v: 'var(--cat-other)' }
   };
   const catVar = c => (CATS[c] || CATS.other).v;
+  // Muted per-goal palette. A goal keeps its color; new goals take the least-used one.
+  const PALETTE = ['#5b7fa6', '#b8735a', '#6f9a7c', '#b39a4a', '#9a6f9a', '#6b8a99', '#8a8f5c', '#a86b7a', '#8c8378', '#6e6fa8'];
+  const hashIdx = str => { let h = 0; for (const ch of String(str)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h % PALETTE.length; };
+  const gColor = g => (g && (g.color || PALETTE[hashIdx(g.id)])) || 'var(--cat-other)';
+  function nextColor() { const used = S.goals.map(g => gColor(g)); const c = PALETTE.find(x => !used.includes(x)); if (c) return c; const cnt = PALETTE.map(x => used.filter(u => u === x).length); return PALETTE[cnt.indexOf(Math.min(...cnt))]; }
   const STATUS = { 'on-track': 'On track', 'at-risk': 'At risk', blocked: 'Blocked', done: 'Done' };
 
   function toast(msg) {
@@ -109,7 +114,7 @@
   // Template: Jongho's Fall 2026 plan. Only loaded on request (not hard-coded into the UI).
   function templateGoals() {
     const ms = (t, date, done) => ({ id: uid(), title: t, date: date || '', done: !!done });
-    return [
+    return withColors([
       { id: uid(), title: 'Rent control paper — submit', category: 'research', horizon: 'short', start: '2026-09-01', deadline: '2026-11-01', progress: 40, status: 'on-track', bottleneck: '', next: '', link: '',
         milestones: [ms('Full draft complete', '2026-10-10'), ms('Polish + robustness', '2026-10-24'), ms('Submit', '2026-11-01')] },
       { id: uid(), title: 'Bayesian-LLM paper — submit', category: 'research', horizon: 'short', start: '2026-09-01', deadline: '2026-11-01', progress: 30, status: 'on-track', bottleneck: '', next: '', link: '',
@@ -123,8 +128,9 @@
       { id: uid(), title: 'Functional Analysis', category: 'math', horizon: 'long', start: '2026-09-19', deadline: '2027-04-30', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] },
       { id: uid(), title: 'Master modern causal inference', category: 'math', horizon: 'long', start: '2026-09-19', deadline: '2027-01-31', progress: 0, status: 'on-track', bottleneck: '', next: 'Read intro chapter', link: 'https://alejandroschuler.github.io/mci/introduction-to-modern-causal-inference.html', milestones: [] },
       { id: uid(), title: 'Polish my own papers', category: 'research', horizon: 'long', start: '2026-09-19', deadline: '', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] }
-    ];
+    ]);
   }
+  function withColors(list) { const used = S.goals.length; return list.map((g, i) => ({ ...g, color: PALETTE[(used + i) % PALETTE.length] })); }
 
   window.PF = { templateGoals, emptyDay };
 
@@ -168,7 +174,7 @@
     const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes' };
     if (map[e.key]) route(map[e.key]);
     if (e.key === ' ' && S.view === 'focus') { e.preventDefault(); Timer.toggle(); }
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') { closeModal(); const f = $('.cal-new'); if (f) f.remove(); }
   });
 
   function render() {
@@ -229,7 +235,7 @@
         <div class="today-title">Today</div>
         <div class="countdowns">
           ${deadlines.map(g => { const n = daysUntil(g.deadline); return `
-            <div class="cd" data-action="open-goal" data-id="${g.id}" style="--cat:${catVar(g.category)}">
+            <div class="cd" data-action="open-goal" data-id="${g.id}" style="--cat:${gColor(g)}">
               <span class="cat"></span><span class="d ${dChipClass(n)}">${dLabel(n)}</span><span class="t">${esc(g.title)}</span>
             </div>`; }).join('')}
           ${deadlines.length ? '' : '<span class="muted small">No deadlines yet — add goals to see countdowns.</span>'}
@@ -245,11 +251,11 @@
                 <div class="item must ${m.done ? 'done' : ''} ${isFocusing(m.id) ? 'focusing' : ''}" draggable="true" data-id="${m.id}">
                   <span class="grip" title="Drag to reorder">⋮⋮</span>
                   <input type="checkbox" data-action="must-toggle" data-id="${m.id}" ${m.done ? 'checked' : ''}>
-                  <span class="txt">${esc(m.text)}${isFocusing(m.id) ? '<span class="tag live">● focusing</span>' : ''}${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}</span>
+                  <span class="txt">${esc(m.text)}${isFocusing(m.id) ? '<span class="tag live">● focusing</span>' : ''}${g ? `<span class="tag" style="--cat:${gColor(g)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}</span>
                   <span class="when mono">${sl ? `${minsToHM(sl.start)}–${minsToHM(sl.end)}` : ''}${m.start != null ? ' <span class="pin" title="Pinned to this time">📌</span>' : ''}</span>
                   <span class="dur mono ${isFocusing(m.id) ? 'live' : ''}">${taskFocusMins(m.id) ? `<span class="fm">${fmtDur(taskFocusMins(m.id))} /</span> ` : ''}${fmtDur(m.minutes || 0)}</span>
                   <span class="actions">
-                    ${m.start != null ? `<button class="btn-icon" data-action="must-unpin" data-id="${m.id}" title="Back to auto placement">↺</button>` : ''}
+                    ${m.start != null ? `<button class="btn btn-xs" data-action="must-unpin" data-id="${m.id}" title="Release the pinned time so it flows automatically again">unpin</button>` : ''}
                     <button class="btn-icon" data-action="must-focus" data-id="${m.id}" title="Focus on this">▶</button>
                     <button class="btn-icon" data-action="must-del" data-id="${m.id}" title="Remove">✕</button>
                   </span>
@@ -305,7 +311,7 @@
   function fmtDur(m) { if (!m) return '0m'; const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}h ${r}m` : `${h}h`) : `${r}m`; }
   function goalRow(g) {
     const n = g.deadline ? daysUntil(g.deadline) : null;
-    return `<div class="goal-row" data-action="open-goal" data-id="${g.id}" style="--cat:${catVar(g.category)}">
+    return `<div class="goal-row" data-action="open-goal" data-id="${g.id}" style="--cat:${gColor(g)}">
       <span class="t"><span class="dot"></span><span class="name">${esc(g.title)}</span>${g.status !== 'on-track' ? `<span class="status status-${g.status}"></span>` : ''}</span>
       ${n != null ? `<span class="r"><span class="dd ${dChipClass(n)}">${dLabel(n)}</span><span class="date">${fmtLong(g.deadline)}</span></span>` : '<span class="r"><span class="date">no date</span></span>'}
     </div>`;
@@ -341,7 +347,7 @@
       ${hours.map(h => `<div class="cal-hour" style="top:${y(h * 60)}px"><span>${pad(h)}:00</span></div>`).join('')}
       <div class="cal-blocks">
       ${items.map(({ m, start, end, pinned, lane, cols }) => { const g = m.goalId && goalById(m.goalId); const dur = end - start;
-        return `<div class="cal-blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''} ${isFocusing(m.id) ? 'focusing' : ''} ${dur <= 20 ? 'tiny' : dur <= 40 ? 'short' : ''}" style="top:${y(Math.max(start, s))}px;height:${Math.max(10, y(Math.min(end, e)) - y(Math.max(start, s)) - 2)}px;left:calc(${lane / cols * 100}% + 2px);width:calc(${100 / cols}% - 4px);--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${dur}">
+        return `<div class="cal-blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''} ${isFocusing(m.id) ? 'focusing' : ''} ${dur <= 20 ? 'tiny' : dur <= 40 ? 'short' : ''}" style="top:${y(Math.max(start, s))}px;height:${Math.max(10, y(Math.min(end, e)) - y(Math.max(start, s)) - 2)}px;left:calc(${lane / cols * 100}% + 2px);width:calc(${100 / cols}% - 4px);--cat:${g ? gColor(g) : 'var(--ink-3)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${dur}">
           <span class="cb-t">${esc(m.text)}</span><small>${minsToHM(start)}–${minsToHM(end)}${g ? ' · ' + esc(g.title) : ''}${pinned ? ' 📌' : ''}</small><i class="cal-rs" title="Drag to change duration"></i></div>`; }).join('')}
       </div>
       ${S.dayKey === todayKey() && nowM >= s && nowM <= e ? `<div class="cal-now" style="top:${y(nowM)}px"><span>${minsToHM(nowM)}</span></div>` : ''}
@@ -355,6 +361,21 @@
   // Drag a block vertically to pin it to a time (15-minute snap). Pointer events so touch works too.
   function wireDayline(root) {
     const cal = $('#cal', root); if (!cal) return;
+    cal.addEventListener('dblclick', e => {
+      if (e.target.closest('.cal-blk, .cal-new')) return;
+      const body = $('.cal-body', cal); const r = body.getBoundingClientRect();
+      const s = S.settings.dayStart * 60;
+      const t = clamp(Math.floor((s + (e.clientY - r.top) / HH * 60) / 30) * 30, s, S.settings.dayEnd * 60 - 15);
+      const old = $('.cal-new', cal); if (old) old.remove();
+      const f = document.createElement('form'); f.className = 'cal-new'; f.dataset.form = 'cal-new'; f.style.top = ((t - s) / 60 * HH) + 'px';
+      f.innerHTML = `<div class="cn-time mono">${minsToHM(t)}</div><input type="hidden" name="start" value="${minsToHM(t)}">
+        <input type="text" name="text" placeholder="What?" required maxlength="140" autocomplete="off">
+        <div class="row"><select name="minutes" class="min">${[15, 30, 45, 60, 90, 120].map(d => `<option value="${d}" ${d === 60 ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
+        <select name="goalId"><option value=""></option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
+        <button class="btn btn-sm btn-primary" type="submit">Add</button><button class="btn btn-sm btn-ghost" type="button" data-action="cal-new-cancel">✕</button></div>`;
+      f.addEventListener('keydown', ev => { if (ev.key === 'Escape') f.remove(); });
+      body.appendChild(f); f.text.focus();
+    });
     cal.addEventListener('pointerdown', e => {
       const blk = e.target.closest('.cal-blk'); if (!blk || e.button) return;
       e.preventDefault(); blk.setPointerCapture(e.pointerId);
@@ -419,8 +440,7 @@
       </div>
       <section class="card" style="position:relative">
         <div class="tl-wrap" id="tlWrap">${goals.length ? '' : '<div class="empty">Add goals with deadlines to draw the timeline.</div>'}</div>
-        <div class="tl-legend">${Object.keys(CATS).filter(c => goals.some(g => (g.category || 'other') === c)).map(c => `<span style="--cat:${catVar(c)}"><i></i>${CATS[c].label}</span>`).join('')}
-          <span><i style="background:var(--surface);border:2px solid var(--ink-3);width:8px;height:8px;border-radius:50%"></i>milestone</span><span><i style="background:var(--ink-3);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></i>deadline</span></div>
+        <div class="tl-legend"><span><i style="background:var(--surface);border:2px solid var(--ink-3);width:8px;height:8px;border-radius:50%"></i>milestone</span><span><i style="background:var(--ink-3);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></i>deadline</span></div>
       </section>
       <div style="height:18px"></div>
       <section class="card"><div class="upcoming">
@@ -450,7 +470,7 @@
       cur = addDays(cur, 1);
     }
     goals.forEach((g, i) => {
-      const y = TOP + i * ROW; const cat = catVar(g.category);
+      const y = TOP + i * ROW; const cat = gColor(g);
       const start = g.start || addDays(g.deadline || today, -30);
       const end = g.deadline || to;
       const x1 = clamp(xOf(start), LBL, W - PAD_R), x2 = clamp(xOf(end), LBL, W - PAD_R);
@@ -533,7 +553,7 @@
   function goalCard(g) {
     const n = g.deadline ? daysUntil(g.deadline) : null;
     const ms = (g.milestones || []).slice().sort((a, b) => (a.date || '9').localeCompare(b.date || '9'));
-    return `<section class="card gc ${g.status === 'done' ? 'done' : ''}" style="--cat:${catVar(g.category)}" draggable="${g.status === 'done' ? 'false' : 'true'}" data-id="${g.id}">
+    return `<section class="card gc ${g.status === 'done' ? 'done' : ''}" style="--cat:${gColor(g)}" draggable="${g.status === 'done' ? 'false' : 'true'}" data-id="${g.id}">
       <div class="gc-top">
         <div class="gc-left">
           <div class="gc-title">${esc(g.title)}</div>
@@ -561,7 +581,7 @@
 
   // Goal modal
   function openGoalModal(id) {
-    const g = id ? goalById(id) : { id: '', title: '', category: 'research', horizon: 'short', start: todayKey(), deadline: '', progress: 0, status: 'on-track', bottleneck: '', next: '', link: '', milestones: [] };
+    const g = id ? goalById(id) : { id: '', title: '', category: 'research', horizon: 'short', start: todayKey(), deadline: '', status: 'on-track', bottleneck: '', next: '', link: '', milestones: [], color: nextColor() };
     if (!g) return;
     const ms = (g.milestones || []).map(m => ({ ...m }));
     const root = $('#modalRoot');
@@ -582,6 +602,7 @@
           <label class="field"><span>What is the bottleneck right now?</span><textarea name="bottleneck" placeholder="e.g. Waiting on referee data; unclear identification strategy">${esc(g.bottleneck)}</textarea></label>
           <label class="field"><span>Next action</span><input name="next" value="${esc(g.next || '')}" placeholder="The very next concrete step" maxlength="160"></label>
           <label class="field"><span>Link</span><input name="link" value="${esc(g.link || '')}" placeholder="https://…"></label>
+          <div class="field"><span>Color</span><div class="swatches">${PALETTE.map(c => `<button type="button" class="sw ${gColor(g) === c ? 'on' : ''}" data-sw="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div><input type="hidden" name="color" value="${esc(gColor(g))}"></div>
           <div class="field"><span>Milestones</span>
             <div class="ms-list" id="msList">${ms.map((m, i) => `<div class="ms-row"><input type="checkbox" data-ms-done="${i}" ${m.done ? 'checked' : ''}><input type="text" data-ms-title="${i}" value="${esc(m.title)}" placeholder="Milestone"><input type="date" data-ms-date="${i}" value="${esc(m.date || '')}"><button type="button" class="btn-icon" data-ms-del="${i}">✕</button></div>`).join('')}</div>
             <div><button type="button" class="btn btn-xs" data-ms-add>+ Milestone</button></div>
@@ -596,6 +617,7 @@
       form.addEventListener('input', e => { const t = e.target; if (t.dataset.msTitle != null) ms[+t.dataset.msTitle].title = t.value; if (t.dataset.msDate != null) ms[+t.dataset.msDate].date = t.value; });
       form.addEventListener('change', e => { const t = e.target; if (t.dataset.msDone != null) ms[+t.dataset.msDone].done = t.checked; });
       form.addEventListener('click', e => {
+        const sw = e.target.closest('[data-sw]'); if (sw) { $$('.sw', form).forEach(b => b.classList.toggle('on', b === sw)); form.color.value = sw.dataset.sw; return; }
         const t = e.target.closest('[data-ms-add],[data-ms-del]'); if (!t) return;
         if (t.hasAttribute('data-ms-add')) { syncForm(form, g); ms.push({ id: uid(), title: '', date: '', done: false }); draw(); $('[data-ms-title="' + (ms.length - 1) + '"]', root).focus(); }
         else { syncForm(form, g); ms.splice(+t.dataset.msDel, 1); draw(); }
@@ -614,7 +636,7 @@
   function syncForm(form, g) {
     const fd = new FormData(form);
     g.title = fd.get('title') || ''; g.category = fd.get('category'); g.horizon = fd.get('horizon'); g.start = fd.get('start') || ''; g.deadline = fd.get('deadline') || '';
-    g.status = fd.get('status'); g.bottleneck = fd.get('bottleneck') || ''; g.next = fd.get('next') || ''; g.link = fd.get('link') || '';
+    g.status = fd.get('status'); g.color = fd.get('color') || g.color; g.bottleneck = fd.get('bottleneck') || ''; g.next = fd.get('next') || ''; g.link = fd.get('link') || '';
   }
   function closeModal() { $('#modalRoot').innerHTML = ''; }
 
@@ -695,7 +717,7 @@
         ${cur ? `
           <div class="ft-now"><span class="ft-k">Now</span>
             <div class="ft-main"><div class="ft-title">${esc(cur.text)}</div>
-              <div class="ft-meta">${slot ? `<span class="mono">${minsToHM(slot.start)}–${minsToHM(slot.end)}</span>` : ''}<span class="mono">${fmtDur(taskFocusMins(cur.id))} / ${fmtDur(cur.minutes || 0)}</span>${curG ? `<span class="tag" style="--cat:${catVar(curG.category)}"><span class="dot"></span>${esc(curG.title)}</span>` : ''}</div>
+              <div class="ft-meta">${slot ? `<span class="mono">${minsToHM(slot.start)}–${minsToHM(slot.end)}</span>` : ''}<span class="mono">${fmtDur(taskFocusMins(cur.id))} / ${fmtDur(cur.minutes || 0)}</span>${curG ? `<span class="tag" style="--cat:${gColor(curG)}"><span class="dot"></span>${esc(curG.title)}</span>` : ''}</div>
               <div class="ft-bar"><i style="width:${cur.minutes ? clamp(taskFocusMins(cur.id) / cur.minutes * 100, 0, 100) : 0}%"></i></div></div>
             <button class="btn btn-sm" data-action="fx-done" data-id="${cur.id}" title="Mark done and move to the next">Done ✓</button></div>
           ${musts.length > 1 ? `<div class="ft-list">${musts.filter(m => m.id !== cur.id).map(m => `<button class="ft-item" data-action="fx-pick" data-id="${m.id}"><span>${esc(m.text)}</span><span class="mono muted">${fmtDur(m.minutes || 0)}</span></button>`).join('')}</div>` : ''}`
@@ -813,6 +835,7 @@
       case 'must-unpin': { const m = S.day.musts.find(x => x.id === id); if (m) { delete m.start; saveDay(); render(); } break; }
       case 'tl-range': S.tlRange = +t.dataset.r; render(); break;
       case 'preset': Timer.reset(t.dataset.mode, +t.dataset.m, true); renderFocus($('#main')); break;
+      case 'cal-new-cancel': { const f = t.closest('.cal-new'); if (f) f.remove(); break; }
       case 'fx-toggle': Timer.toggle(); break;
       case 'fx-pick': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { setFocusTask(m); renderFocus($('#main')); } break; }
       case 'fx-done': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { m.done = true; saveDay(); setFocusTask(null); toast('Done'); renderFocus($('#main')); } break; }
@@ -854,6 +877,7 @@
     const f = e.target.closest('[data-form]'); if (!f) return;
     e.preventDefault(); const fd = new FormData(f);
     switch (f.dataset.form) {
+      case 'cal-new': { const text = (fd.get('text') || '').trim(); if (!text) return; S.day.musts = S.day.musts || []; S.day.musts.push({ id: uid(), text, done: false, goalId: fd.get('goalId') || '', minutes: +fd.get('minutes') || 60, start: fd.get('start') }); saveDay(); render(); break; }
       case 'must-add': { const text = (fd.get('text') || '').trim(); if (!text) return; S.day.musts = S.day.musts || []; S.day.musts.push({ id: uid(), text, done: false, goalId: fd.get('goalId') || '', minutes: +fd.get('minutes') || 30 }); saveDay(); render(); break; }
     }
   });
