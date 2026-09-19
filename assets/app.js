@@ -16,6 +16,7 @@
   const addDays = (s, n) => { const d = parseDay(s); d.setDate(d.getDate() + n); return dateKey(d); };
   const fmtShort = s => { const d = parseDay(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
   const fmtLong = s => parseDay(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const fmtDow = s => parseDay(s).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const dLabel = n => n === 0 ? 'D-Day' : n > 0 ? `D-${n}` : `D+${-n}`;
   const minsToHM = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
@@ -186,19 +187,12 @@
   }
 
   // ---------------------------------------------------------------- derived
-  function pace(g) {
-    // Expected progress given elapsed fraction of the plan window.
-    if (!g.deadline || !g.start) return null;
-    const total = Math.max(1, daysUntil(g.deadline) - daysUntil(g.start));
-    const elapsed = clamp(-daysUntil(g.start), 0, total);
-    const expected = Math.round(100 * elapsed / total);
-    return { expected, gap: (g.progress || 0) - expected };
-  }
-  function isBottleneck(g) {
-    if (g.status === 'done') return false;
-    if (g.status === 'blocked' || g.status === 'at-risk') return true;
-    const p = pace(g);
-    return !!(p && p.gap <= -25 && daysUntil(g.deadline) >= 0);
+  function isBottleneck(g) { return g.status === 'blocked' || g.status === 'at-risk'; }
+  function elapsedFrac(g) {
+    if (!g.deadline) return 0;
+    const start = g.start || addDays(g.deadline, -30);
+    const total = Math.max(1, daysUntil(g.deadline) - daysUntil(start));
+    return clamp(-daysUntil(start) / total, 0, 1);
   }
   function activeGoals() { return S.goals.filter(g => g.status !== 'done'); }
   function goalById(id) { return S.goals.find(g => g.id === id); }
@@ -215,8 +209,8 @@
     const used = focusUsedMins(), target = Math.round((S.day.focusHours || 0) * 60);
     const pct = target ? clamp(used / target, 0, 1) : 0;
     const bns = activeGoals().filter(isBottleneck);
-    const shortG = activeGoals().filter(g => g.horizon !== 'long').sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
-    const longG = activeGoals().filter(g => g.horizon === 'long');
+    const shortG = activeGoals().filter(g => g.horizon !== 'long').sort(byOrder);
+    const longG = activeGoals().filter(g => g.horizon === 'long').sort(byOrder);
 
     main.innerHTML = `
       <header class="today-head">
@@ -297,13 +291,13 @@
           <section class="card">
             <div class="card-head"><h3>Bottleneck</h3><span class="muted small">${bns.length ? `${bns.length} flagged` : 'clear'}</span></div>
             <div class="bn">
-              ${bns.map(g => { const p = pace(g); return `
+              ${bns.map(g => `
                 <div class="bn-item ${g.status === 'blocked' ? 'blocked' : ''}" data-action="open-goal" data-id="${g.id}" style="cursor:pointer">
                   <div class="h"><span>${esc(g.title)}</span><span class="status status-${g.status}">${STATUS[g.status]}</span></div>
+                  ${g.deadline ? `<div class="pace">${dLabel(daysUntil(g.deadline))} · ${fmtDow(g.deadline)}</div>` : ''}
                   ${g.bottleneck ? `<div class="why">${esc(g.bottleneck)}</div>` : ''}
-                  ${p && p.gap <= -25 ? `<div class="pace">Behind pace: ${g.progress || 0}% done, ${p.expected}% expected by now.</div>` : ''}
                   ${g.next ? `<div class="next"><b>Next</b>${esc(g.next)}</div>` : ''}
-                </div>`; }).join('')}
+                </div>`).join('')}
               ${bns.length ? '' : '<div class="empty">Nothing is blocked. Mark a goal "at risk" or "blocked" in Goals to surface it here.</div>'}
             </div>
           </section>
@@ -327,9 +321,8 @@
   function goalRow(g) {
     const n = g.deadline ? daysUntil(g.deadline) : null;
     return `<div class="goal-row" data-action="open-goal" data-id="${g.id}" style="--cat:${catVar(g.category)}">
-      <span class="t"><span class="dot"></span><span class="name">${esc(g.title)}</span></span>
-      <span class="r">${n != null ? `<span class="${dChipClass(n)}">${dLabel(n)}</span>` : ''}<span>${g.progress || 0}%</span></span>
-      <span class="bar"><i style="width:${g.progress || 0}%"></i></span>
+      <span class="t"><span class="dot"></span><span class="name">${esc(g.title)}</span>${g.status !== 'on-track' ? `<span class="status status-${g.status}"></span>` : ''}</span>
+      ${n != null ? `<span class="r"><span class="dd ${dChipClass(n)}">${dLabel(n)}</span><span class="date">${fmtLong(g.deadline)}</span></span>` : '<span class="r"><span class="date">no date</span></span>'}
     </div>`;
   }
   function nextBlockStart() {
@@ -369,7 +362,7 @@
       </div>`; }).join('') || '<div class="empty">Nothing here.</div>'}</div>`; };
     const wk = daysUntil; // helper
     main.innerHTML = `
-      <div class="view-head"><div><h1>Timeline</h1><div class="sub">Where each goal sits against the calendar. Bars fill with progress; the red line is today.</div></div>
+      <div class="view-head"><div><h1>Timeline</h1><div class="sub">Where each goal sits against the calendar. Bars fill as time passes; the red line is today.</div></div>
         <div class="row"><span class="seg"><button data-action="tl-range" data-r="60" class="${S.tlRange === 60 || !S.tlRange ? 'active' : ''}">10 weeks</button><button data-action="tl-range" data-r="120" class="${S.tlRange === 120 ? 'active' : ''}">4 months</button><button data-action="tl-range" data-r="240" class="${S.tlRange === 240 ? 'active' : ''}">8 months</button></span></div>
       </div>
       <section class="card" style="position:relative">
@@ -412,15 +405,15 @@
       const n = g.deadline ? daysUntil(g.deadline) : null;
       svg += `<g class="row-hit" style="--cat:${cat}" data-action="open-goal" data-id="${g.id}">`;
       svg += `<text class="row-lbl" x="0" y="${y + 17}">${esc(truncW(g.title, 30))}</text>`;
-      svg += `<text class="row-sub" x="0" y="${y + 31}">${g.progress || 0}%${n != null ? ' · ' + dLabel(n) : ''}${g.status === 'done' ? ' · done' : g.status !== 'on-track' ? ' · ' + STATUS[g.status].toLowerCase() : ''}</text>`;
+      svg += `<text class="row-sub" x="0" y="${y + 31}">${n != null ? dLabel(n) + ' · ' + fmtLong(g.deadline) : 'no deadline'}${g.status === 'done' ? ' · done' : g.status !== 'on-track' ? ' · ' + STATUS[g.status].toLowerCase() : ''}</text>`;
       if (x2 > x1) {
         svg += `<rect class="bar-bg" x="${x1}" y="${y + 10}" width="${x2 - x1}" height="14" rx="4"/>`;
-        svg += `<rect class="bar-fg" x="${x1}" y="${y + 10}" width="${Math.max(0, (x2 - x1) * (g.progress || 0) / 100)}" height="14" rx="4"/>`;
+        svg += `<rect class="bar-fg" x="${x1}" y="${y + 10}" width="${Math.max(0, (x2 - x1) * (g.status === 'done' ? 1 : elapsedFrac(g)))}" height="14" rx="4"/>`;
       }
       (g.milestones || []).forEach(m => { if (!m.date) return; const mx = xOf(m.date); if (mx < LBL || mx > W - PAD_R) return;
         svg += `<circle class="ms ${m.done ? 'done' : ''}" cx="${mx}" cy="${y + 17}" r="4.5" data-tip="${esc(m.title)}|${fmtLong(m.date)} · ${dLabel(daysUntil(m.date))}${m.done ? ' · done' : ''}"/>`; });
       if (g.deadline) { const dx = xOf(g.deadline); if (dx >= LBL && dx <= W - PAD_R) { svg += `<path class="dl" d="M${dx} ${y + 10} l6 7 l-6 7 l-6 -7 z"/>`; if (dx + 40 < W) svg += `<text class="dl-lbl" x="${dx + 10}" y="${y + 21}">${fmtShort(g.deadline)}</text>`; } }
-      svg += `<rect class="bar-hit" x="${LBL}" y="${y}" width="${W - LBL}" height="${ROW}" data-tip="${esc(g.title)}|${g.start ? fmtLong(g.start) + ' → ' : ''}${g.deadline ? fmtLong(g.deadline) + ' (' + dLabel(n) + ')' : 'no deadline'} · ${g.progress || 0}%${g.bottleneck ? ' · ' + esc(g.bottleneck) : ''}"/>`;
+      svg += `<rect class="bar-hit" x="${LBL}" y="${y}" width="${W - LBL}" height="${ROW}" data-tip="${esc(g.title)}|${g.start ? fmtLong(g.start) + ' → ' : ''}${g.deadline ? fmtLong(g.deadline) + ' (' + dLabel(n) + ')' : 'no deadline'}${g.bottleneck ? ' · ' + esc(g.bottleneck) : ''}"/>`;
       svg += `</g>`;
     });
     const tx = xOf(today);
@@ -435,6 +428,7 @@
   window.addEventListener('resize', debounce(() => { if (S.view === 'timeline') render(); }, 200));
 
   // ---------------------------------------------------------------- GOALS
+  const byOrder = (a, b) => ((a.order ?? 1e9) - (b.order ?? 1e9)) || (a.deadline || '9').localeCompare(b.deadline || '9');
   function renderGoals(main) {
     if (!S.goals.length) {
       main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Short-term deadlines and long-term mastery, in one place.</div></div></div>
@@ -442,30 +436,74 @@
         <div class="row" style="justify-content:center"><button class="btn btn-primary" data-action="load-template">Load template</button><button class="btn" data-action="goal-new">Start empty</button></div></section>`;
       return;
     }
-    const section = (title, list) => `<div class="goals-section"><h3>${title} <span class="cnt">${list.length}</span></h3><div class="goal-cards">${list.map(goalCard).join('')}</div></div>`;
+    const section = (title, list, h) => `<div class="goals-section"><h3>${title} <span class="cnt">${list.length}</span></h3><div class="goal-cards" data-horizon="${h}">${list.map(goalCard).join('') || '<div class="drop-hint">Drop a goal here</div>'}</div></div>`;
     const active = activeGoals();
-    const short = active.filter(g => g.horizon !== 'long').sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
-    const long = active.filter(g => g.horizon === 'long').sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+    const short = active.filter(g => g.horizon !== 'long').sort(byOrder);
+    const long = active.filter(g => g.horizon === 'long').sort(byOrder);
     const done = S.goals.filter(g => g.status === 'done');
     main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Short-term deadlines and long-term mastery, in one place.</div></div>
       <button class="btn btn-primary" data-action="goal-new">+ New goal</button></div>
-      ${section('Short-term', short)}${section('Long-term', long)}${done.length ? section('Done', done) : ''}`;
+      ${section('Short-term', short, 'short')}${section('Long-term', long, 'long')}${done.length ? section('Done', done, 'done') : ''}
+      <p class="muted small" style="margin-top:6px">Drag cards to reorder or to move between Short-term and Long-term.</p>`;
+    wireDrag(main);
+  }
+  function wireDrag(root) {
+    let dragging = null;
+    root.addEventListener('dragstart', e => {
+      const card = e.target.closest('.gc[draggable]'); if (!card) return;
+      dragging = card; card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', card.dataset.id); } catch (x) {}
+    });
+    root.addEventListener('dragover', e => {
+      if (!dragging) return;
+      const zone = e.target.closest('.goal-cards'); if (!zone || zone.dataset.horizon === 'done') return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      const hint = zone.querySelector('.drop-hint'); if (hint) hint.remove();
+      const over = e.target.closest('.gc'); 
+      if (!over || over === dragging) { if (!over) zone.appendChild(dragging); return; }
+      const r = over.getBoundingClientRect();
+      const after = (e.clientX - r.left) / r.width + (e.clientY - r.top) / r.height > 1;
+      zone.insertBefore(dragging, after ? over.nextSibling : over);
+    });
+    root.addEventListener('drop', e => { if (dragging) e.preventDefault(); });
+    root.addEventListener('dragend', () => {
+      if (!dragging) return;
+      dragging.classList.remove('dragging'); dragging = null;
+      let changed = false;
+      $$('.goal-cards', root).forEach(zone => {
+        if (zone.dataset.horizon === 'done') return;
+        $$('.gc', zone).forEach((card, i) => { const g = goalById(card.dataset.id); if (!g) return; if (g.order !== i || g.horizon !== zone.dataset.horizon) changed = true; g.order = i; g.horizon = zone.dataset.horizon; });
+      });
+      if (changed) { saveGoals(); toast('Order saved'); }
+      render();
+    });
   }
   function goalCard(g) {
-    const n = g.deadline ? daysUntil(g.deadline) : null; const p = pace(g);
-    const ms = g.milestones || [];
-    return `<section class="card gc ${g.status === 'done' ? 'done' : ''}" style="--cat:${catVar(g.category)}">
-      <div class="gc-top"><div class="gc-title">${esc(g.title)}</div><button class="btn-icon" data-action="open-goal" data-id="${g.id}" title="Edit">✎</button></div>
-      <div class="gc-meta"><span class="chip chip-cat"><span class="dot"></span>${CATS[g.category] ? CATS[g.category].label : 'Other'}</span>
-        ${g.deadline ? `<span class="chip chip-d ${dChipClass(n)}">${dLabel(n)} · ${fmtLong(g.deadline)}</span>` : '<span class="chip">no deadline</span>'}
-        ${g.link ? `<a class="chip" href="${esc(g.link)}" target="_blank" rel="noopener">link ↗</a>` : ''}</div>
-      <div class="gc-prog"><input type="range" min="0" max="100" step="5" value="${g.progress || 0}" data-action="goal-progress" data-id="${g.id}"><span class="pct">${g.progress || 0}%</span></div>
-      ${p && p.gap <= -25 && g.status !== 'done' ? `<div class="pace">Behind pace — ${p.expected}% expected by now.</div>` : ''}
+    const n = g.deadline ? daysUntil(g.deadline) : null;
+    const ms = (g.milestones || []).slice().sort((a, b) => (a.date || '9').localeCompare(b.date || '9'));
+    return `<section class="card gc ${g.status === 'done' ? 'done' : ''}" style="--cat:${catVar(g.category)}" draggable="${g.status === 'done' ? 'false' : 'true'}" data-id="${g.id}">
+      <div class="gc-top">
+        <div class="gc-left">
+          <div class="gc-title">${esc(g.title)}</div>
+          <div class="gc-meta"><span class="chip chip-cat"><span class="dot"></span>${CATS[g.category] ? CATS[g.category].label : 'Other'}</span>
+            ${g.status !== 'on-track' ? `<span class="status status-${g.status}">${STATUS[g.status]}</span>` : ''}
+            ${g.link ? `<a class="chip" href="${esc(g.link)}" target="_blank" rel="noopener">link ↗</a>` : ''}</div>
+        </div>
+        <div class="gc-dday ${n != null ? dChipClass(n) : ''}">
+          ${n != null ? `<div class="d">${dLabel(n)}</div><div class="date">${fmtDow(g.deadline)}</div>` : '<div class="date">no deadline</div>'}
+        </div>
+      </div>
       ${g.bottleneck && g.status !== 'done' ? `<div class="gc-sec gc-bn ${g.status === 'blocked' ? 'blocked' : ''}"><b>Bottleneck</b>${esc(g.bottleneck)}</div>` : ''}
       ${g.next ? `<div class="gc-sec"><b>Next action</b>${esc(g.next)}</div>` : ''}
-      ${ms.length ? `<div class="gc-sec"><b>Milestones</b><div class="ms">${ms.map(m => `<label class="${m.done ? 'done' : ''}"><input type="checkbox" data-action="ms-toggle" data-id="${g.id}" data-ms="${m.id}" ${m.done ? 'checked' : ''}><span>${esc(m.title)}</span>${m.date ? `<span class="md">${fmtShort(m.date)}</span>` : ''}</label>`).join('')}</div></div>` : ''}
+      ${ms.length ? `<div class="gc-sec"><b>Milestones</b><div class="ms">${ms.map(m => { const mn = m.date ? daysUntil(m.date) : null; return `
+        <label class="${m.done ? 'done' : ''}">
+          <span class="md ${mn != null && !m.done ? dChipClass(mn) : ''}">${m.date ? fmtShort(m.date) : '—'}</span>
+          <span class="mdd">${mn != null && !m.done ? dLabel(mn) : ''}</span>
+          <input type="checkbox" data-action="ms-toggle" data-id="${g.id}" data-ms="${m.id}" ${m.done ? 'checked' : ''}>
+          <span class="mt">${esc(m.title)}</span>
+        </label>`; }).join('')}</div></div>` : ''}
       <div class="gc-foot"><select data-action="goal-status" data-id="${g.id}" class="status status-${g.status}">${Object.keys(STATUS).map(s => `<option value="${s}" ${g.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}</select>
-        <span class="muted small">${g.horizon === 'long' ? 'Long-term' : 'Short-term'}</span></div>
+        <span class="row"><span class="muted small">${g.horizon === 'long' ? 'Long-term' : 'Short-term'}</span><button class="btn btn-xs" data-action="open-goal" data-id="${g.id}">Edit</button></span></div>
     </section>`;
   }
 
@@ -488,10 +526,7 @@
             <label class="field"><span>Start</span><input type="date" name="start" value="${esc(g.start || '')}"></label>
             <label class="field"><span>Deadline</span><input type="date" name="deadline" value="${esc(g.deadline || '')}"></label>
           </div>
-          <div class="form-row">
-            <label class="field"><span>Status</span><select name="status">${Object.keys(STATUS).map(s => `<option value="${s}" ${g.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}</select></label>
-            <label class="field"><span>Progress (${g.progress || 0}%)</span><input type="range" name="progress" min="0" max="100" step="5" value="${g.progress || 0}" oninput="this.parentNode.firstElementChild.textContent='Progress ('+this.value+'%)'"></label>
-          </div>
+          <label class="field"><span>Status</span><select name="status">${Object.keys(STATUS).map(s => `<option value="${s}" ${g.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}</select></label>
           <label class="field"><span>What is the bottleneck right now?</span><textarea name="bottleneck" placeholder="e.g. Waiting on referee data; unclear identification strategy">${esc(g.bottleneck)}</textarea></label>
           <label class="field"><span>Next action</span><input name="next" value="${esc(g.next || '')}" placeholder="The very next concrete step" maxlength="160"></label>
           <label class="field"><span>Link</span><input name="link" value="${esc(g.link || '')}" placeholder="https://…"></label>
@@ -527,7 +562,7 @@
   function syncForm(form, g) {
     const fd = new FormData(form);
     g.title = fd.get('title') || ''; g.category = fd.get('category'); g.horizon = fd.get('horizon'); g.start = fd.get('start') || ''; g.deadline = fd.get('deadline') || '';
-    g.status = fd.get('status'); g.progress = +fd.get('progress') || 0; g.bottleneck = fd.get('bottleneck') || ''; g.next = fd.get('next') || ''; g.link = fd.get('link') || '';
+    g.status = fd.get('status'); g.bottleneck = fd.get('bottleneck') || ''; g.next = fd.get('next') || ''; g.link = fd.get('link') || '';
   }
   function closeModal() { $('#modalRoot').innerHTML = ''; }
 
@@ -737,7 +772,6 @@
     const a = t.dataset.action, id = t.dataset.id;
     switch (a) {
       case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { m.done = t.checked; saveDay(); render(); } break; }
-      case 'goal-progress': { const g = goalById(id); if (g) { g.progress = +t.value; if (g.progress === 100 && g.status !== 'done') g.status = 'done'; saveGoals(); render(); } break; }
       case 'goal-status': { const g = goalById(id); if (g) { g.status = t.value; saveGoals(); render(); } break; }
       case 'ms-toggle': { const g = goalById(id); const m = g && (g.milestones || []).find(x => x.id === t.dataset.ms); if (m) { m.done = t.checked; saveGoals(); render(); } break; }
       case 'fx-task': { const m = (S.day.musts || []).find(x => x.id === t.value); Timer.st.taskId = t.value; Timer.st.label = m ? m.text : ''; Timer.save(); $('.focus-dial .task').textContent = Timer.st.label; break; }
@@ -750,8 +784,6 @@
       case 'set-num': { const n = +t.value; if (n > 0 || t.dataset.k === 'dayStart') { S.settings[t.dataset.k] = n; saveSettings(); } break; }
     }
   });
-  // live progress label while dragging
-  document.addEventListener('input', e => { const t = e.target; if (t.dataset.action === 'goal-progress') { const p = t.parentNode.querySelector('.pct'); if (p) p.textContent = t.value + '%'; } });
 
   document.addEventListener('submit', e => {
     const f = e.target.closest('[data-form]'); if (!f) return;
