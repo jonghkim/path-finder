@@ -88,13 +88,13 @@
     goals: [],
     settings: { ...DEFAULT_SETTINGS },
     dayKey: todayKey(),
-    day: null,          // { focusHours, blocks:[], musts:[], sessions:[] }
+    day: null,          // { musts:[{id,text,done,goalId,minutes,start?}], sessions:[] }
     loaded: false,
     notesTab: 'daily',
     notesDate: todayKey(),
     zen: false
   };
-  const emptyDay = () => ({ focusHours: 4, blocks: [], musts: [], sessions: [] });
+  const emptyDay = () => ({ musts: [], sessions: [] });
   const dayDoc = key => `pf-day-${key}`;
 
   function saveGoals() { Store.setJSON('pf-goals', { goals: S.goals, updated: Date.now() }); }
@@ -197,7 +197,6 @@
   function activeGoals() { return S.goals.filter(g => g.status !== 'done'); }
   function goalById(id) { return S.goals.find(g => g.id === id); }
   function focusUsedMins() { return (S.day.sessions || []).reduce((a, s) => a + (s.minutes || 0), 0); }
-  function plannedMins() { return (S.day.blocks || []).reduce((a, b) => a + Math.max(0, hmToMins(b.end) - hmToMins(b.start)), 0); }
   function dChipClass(n) { return n < 0 ? 'over' : n <= 7 ? 'soon' : ''; }
 
   // ---------------------------------------------------------------- TODAY
@@ -206,11 +205,12 @@
     const deadlines = activeGoals().filter(g => g.deadline && g.horizon !== 'long').sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 5);
     const musts = S.day.musts || [];
     const doneCnt = musts.filter(m => m.done).length;
-    const used = focusUsedMins(), target = Math.round((S.day.focusHours || 0) * 60);
-    const pct = target ? clamp(used / target, 0, 1) : 0;
+    const totalMins = musts.filter(m => !m.done).reduce((a, m) => a + (m.minutes || 0), 0);
     const bns = activeGoals().filter(isBottleneck);
     const shortG = activeGoals().filter(g => g.horizon !== 'long').sort(byOrder);
     const longG = activeGoals().filter(g => g.horizon === 'long').sort(byOrder);
+    const sched = scheduleMusts(); const slotOf = id => sched.find(x => x.m.id === id);
+    const DUR = [15, 25, 30, 45, 60, 90, 120, 180];
 
     main.innerHTML = `
       <header class="today-head">
@@ -229,65 +229,40 @@
         <div class="stack">
           ${mottoBlock()}
           <section class="card">
-            <div class="card-head"><h3>Must do today</h3><span class="muted small mono">${doneCnt}/${musts.length}</span></div>
-            <div class="list">
-              ${musts.map((m, i) => { const g = m.goalId && goalById(m.goalId); return `
-                <div class="item ${m.done ? 'done' : ''}">
+            <div class="card-head"><h3>Must do today</h3><span class="muted small mono">${doneCnt}/${musts.length} · ${fmtDur(totalMins)} left</span></div>
+            <div class="list must-list">
+              ${musts.map((m, i) => { const g = m.goalId && goalById(m.goalId); const sl = slotOf(m.id); return `
+                <div class="item must ${m.done ? 'done' : ''}" draggable="true" data-id="${m.id}">
+                  <span class="grip" title="Drag to reorder">⋮⋮</span>
                   <input type="checkbox" data-action="must-toggle" data-id="${m.id}" ${m.done ? 'checked' : ''}>
-                  <span class="must-num">${i + 1}</span>
-                  <span class="txt">${esc(m.text)}</span>
-                  ${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}
+                  <span class="txt">${esc(m.text)}${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}</span>
+                  <span class="when mono">${sl ? `${minsToHM(sl.start)}–${minsToHM(sl.end)}` : ''}${m.start != null ? ' <span class="pin" title="Pinned to this time">📌</span>' : ''}</span>
+                  <span class="dur mono">${fmtDur(m.minutes || 0)}</span>
                   <span class="actions">
+                    ${m.start != null ? `<button class="btn-icon" data-action="must-unpin" data-id="${m.id}" title="Back to auto placement">↺</button>` : ''}
                     <button class="btn-icon" data-action="must-focus" data-id="${m.id}" title="Focus on this">▶</button>
                     <button class="btn-icon" data-action="must-del" data-id="${m.id}" title="Remove">✕</button>
                   </span>
                 </div>`; }).join('')}
-              ${musts.length ? '' : '<div class="empty">Pick at most three things that would make today a win.</div>'}
+              ${musts.length ? '' : '<div class="empty">Pick at most three things that would make today a win, and say how long each takes.</div>'}
             </div>
-            <form class="inline-add" data-form="must-add">
+            <form class="inline-add must-add" data-form="must-add">
               <input type="text" name="text" placeholder="Add a must-do…" required maxlength="140">
+              <select name="minutes" title="How long will it take?">${DUR.map(d => `<option value="${d}" ${d === 45 ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
               <select name="goalId"><option value="">No goal</option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
               <button class="btn btn-sm" type="submit">Add</button>
             </form>
           </section>
 
           <section class="card">
-            <div class="card-head"><h3>Today's timeline</h3><span class="muted small mono">${(plannedMins() / 60).toFixed(1)}h planned</span></div>
-            ${renderDayline()}
-            <div class="list blk-list">
-              ${(S.day.blocks || []).slice().sort((a, b) => a.start.localeCompare(b.start)).map(b => { const g = b.goalId && goalById(b.goalId); return `
-                <div class="item">
-                  <span class="blk-time">${b.start}–${b.end}</span>
-                  <span class="txt">${esc(b.label)}</span>
-                  ${g ? `<span class="tag" style="--cat:${catVar(g.category)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}
-                  <span class="actions"><button class="btn-icon" data-action="blk-del" data-id="${b.id}" title="Remove">✕</button></span>
-                </div>`; }).join('')}
-            </div>
-            <form class="blk-add" data-form="blk-add">
-              <input type="time" name="start" value="${nextBlockStart()}" required>
-              <input type="time" name="end" value="${addMinsHM(nextBlockStart(), 90)}" required>
-              <input type="text" name="label" placeholder="What will you work on?" required maxlength="80">
-              <select name="goalId"><option value="">No goal</option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
-              <button class="btn btn-sm" type="submit">Add block</button>
-            </form>
+            <div class="card-head"><h3>Today's timeline</h3><span class="muted small">Auto-placed from your must-dos · drag a block to pin it</span></div>
+            ${renderDayline(sched)}
+            <div class="row small muted" style="margin-top:6px">${sched.length ? `Ends ${minsToHM(Math.max(...sched.map(x => x.end)))}` : 'Nothing scheduled yet.'} · ${(S.day.sessions || []).length} focus session${(S.day.sessions || []).length === 1 ? '' : 's'} logged (${fmtDur(focusUsedMins())})
+              <button class="btn btn-xs" data-action="go-focus" style="margin-left:auto">Open Focus</button></div>
           </section>
         </div>
 
         <div class="stack">
-          <section class="card">
-            <div class="card-head"><h3>Focus hours</h3>
-              <span class="stepper"><button data-action="fh" data-d="-0.5" aria-label="less">−</button><span class="val">${(S.day.focusHours || 0).toFixed(1)}h</span><button data-action="fh" data-d="0.5" aria-label="more">+</button></span>
-            </div>
-            <div class="focus-ring">
-              <svg class="ring" viewBox="0 0 96 96"><circle class="track" cx="48" cy="48" r="40"/><circle class="fill" cx="48" cy="48" r="40" stroke-dasharray="${2 * Math.PI * 40}" stroke-dashoffset="${2 * Math.PI * 40 * (1 - pct)}" transform="rotate(-90 48 48)"/><text x="48" y="55" text-anchor="middle">${Math.round(pct * 100)}%</text></svg>
-              <div class="focus-meta">
-                <div class="big">${(used / 60).toFixed(1)}<span>of ${(S.day.focusHours || 0).toFixed(1)}h deep work</span></div>
-                <div class="muted small">${(S.day.sessions || []).length} session${(S.day.sessions || []).length === 1 ? '' : 's'} logged · ${Math.max(0, target - used)} min left</div>
-                <div><button class="btn btn-sm btn-primary" data-action="go-focus">Start a focus session</button></div>
-              </div>
-            </div>
-          </section>
-
           <section class="card">
             <div class="card-head"><h3>Bottleneck</h3><span class="muted small">${bns.length ? `${bns.length} flagged` : 'clear'}</span></div>
             <div class="bn">
@@ -312,12 +287,14 @@
           </section>
         </div>
       </div>`;
+    wireMustDrag(main); wireDayline(main);
   }
   function mottoBlock() {
     const list = (S.settings.mottos || []).filter(m => m && m.trim());
     if (!list.length) return '';
     return `<div class="mottos-block">${list.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
   }
+  function fmtDur(m) { if (!m) return '0m'; const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}h ${r}m` : `${h}h`) : `${r}m`; }
   function goalRow(g) {
     const n = g.deadline ? daysUntil(g.deadline) : null;
     return `<div class="goal-row" data-action="open-goal" data-id="${g.id}" style="--cat:${catVar(g.category)}">
@@ -325,13 +302,23 @@
       ${n != null ? `<span class="r"><span class="dd ${dChipClass(n)}">${dLabel(n)}</span><span class="date">${fmtLong(g.deadline)}</span></span>` : '<span class="r"><span class="date">no date</span></span>'}
     </div>`;
   }
-  function nextBlockStart() {
-    const blocks = S.day.blocks || [];
-    if (blocks.length) { const last = blocks.slice().sort((a, b) => a.end.localeCompare(b.end)).pop().end; return last; }
-    const now = new Date(); const m = Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30; return minsToHM(Math.min(m, 23 * 60 + 30));
+
+  // Place must-dos on the day: pinned ones keep their start; the rest flow in list order from now, around pinned slots.
+  function scheduleMusts() {
+    const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60;
+    const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
+    const musts = S.day.musts || [];
+    const pinned = musts.filter(m => m.start != null && m.start !== '').map(m => ({ m, start: hmToMins(m.start), end: hmToMins(m.start) + (m.minutes || 30), pinned: true }));
+    let cursor = S.dayKey === todayKey() ? Math.max(s, Math.ceil(nowM / 15) * 15) : s;
+    const out = pinned.slice();
+    musts.filter(m => (m.start == null || m.start === '') && !m.done).forEach(m => {
+      const dur = m.minutes || 30; let st = cursor, moved = true, guard = 0;
+      while (moved && guard++ < 50) { moved = false; for (const p of pinned) { if (st < p.end && st + dur > p.start) { st = p.end; moved = true; } } }
+      out.push({ m, start: st, end: st + dur, pinned: false }); cursor = st + dur;
+    });
+    return out.sort((a, b) => a.start - b.start);
   }
-  function addMinsHM(hm, n) { return minsToHM(Math.min(hmToMins(hm) + n, 24 * 60 - 1)); }
-  function renderDayline() {
+  function renderDayline(sched) {
     const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60, span = e - s;
     const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
     const x = m => clamp((m - s) / span * 100, 0, 100);
@@ -339,10 +326,47 @@
     return `<div class="dayline">
       <div class="hours">${hours.map(h => `<span class="hour" style="left:${x(h * 60)}%">${pad(h % 24)}</span>`).join('')}</div>
       <div class="track"></div>
-      ${(S.day.blocks || []).map(b => { const a = hmToMins(b.start), z = hmToMins(b.end); if (z <= a) return ''; const g = b.goalId && goalById(b.goalId);
-        return `<div class="blk ${z <= nowM ? 'past' : ''}" style="left:${x(a)}%;width:${x(z) - x(a)}%;--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(b.label)} (${b.start}–${b.end})">${esc(b.label)}</div>`; }).join('')}
-      ${nowM >= s && nowM <= e ? `<div class="now" style="left:${x(nowM)}%"></div>` : ''}
+      ${sched.map(({ m, start, end, pinned }) => { if (end <= s || start >= e) return ''; const g = m.goalId && goalById(m.goalId);
+        return `<div class="blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''}" style="left:${x(start)}%;width:${x(end) - x(start)}%;--cat:${g ? catVar(g.category) : 'var(--accent)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${end - start}">${esc(m.text)}<small>${minsToHM(start)}–${minsToHM(end)}</small></div>`; }).join('')}
+      ${S.dayKey === todayKey() && nowM >= s && nowM <= e ? `<div class="now" style="left:${x(nowM)}%"></div>` : ''}
     </div>`;
+  }
+  // Drag a block horizontally to pin it to a time (15-minute snap). Pointer events so touch works too.
+  function wireDayline(root) {
+    const dl = $('.dayline', root); if (!dl) return;
+    dl.addEventListener('pointerdown', e => {
+      const blk = e.target.closest('.blk'); if (!blk || e.button) return;
+      e.preventDefault(); blk.setPointerCapture(e.pointerId);
+      const track = $('.track', dl).getBoundingClientRect();
+      const s = S.settings.dayStart * 60, span = S.settings.dayEnd * 60 - s;
+      const dur = +blk.dataset.dur, start0 = +blk.dataset.start, x0 = e.clientX; let st = null;
+      const onMove = ev => {
+        const dx = (ev.clientX - x0) / track.width * span;
+        if (st == null && Math.abs(ev.clientX - x0) < 4) return;
+        st = clamp(Math.round((start0 + dx) / 15) * 15, s, S.settings.dayEnd * 60 - dur);
+        blk.classList.add('drag'); blk.style.left = ((st - s) / span * 100) + '%'; const sm = blk.querySelector('small'); if (sm) sm.textContent = `${minsToHM(st)}–${minsToHM(st + dur)}`;
+      };
+      const onUp = () => {
+        blk.removeEventListener('pointermove', onMove); blk.removeEventListener('pointerup', onUp); blk.removeEventListener('pointercancel', onUp);
+        if (st == null) return;
+        const m = (S.day.musts || []).find(x => x.id === blk.dataset.id); if (m) { m.start = minsToHM(st); saveDay(); }
+        render();
+      };
+      blk.addEventListener('pointermove', onMove); blk.addEventListener('pointerup', onUp); blk.addEventListener('pointercancel', onUp);
+    });
+  }
+  // Reorder must-dos by dragging list rows; auto-placed blocks follow the list order.
+  function wireMustDrag(root) {
+    const list = $('.must-list', root); if (!list) return; let dragging = null;
+    list.addEventListener('dragstart', e => { const it = e.target.closest('.item[draggable]'); if (!it) return; dragging = it; it.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', it.dataset.id); } catch (x) {} });
+    list.addEventListener('dragover', e => { if (!dragging) return; e.preventDefault(); const over = e.target.closest('.item'); if (!over || over === dragging) return; const r = over.getBoundingClientRect(); list.insertBefore(dragging, e.clientY > r.top + r.height / 2 ? over.nextSibling : over); });
+    list.addEventListener('drop', e => { if (dragging) e.preventDefault(); });
+    list.addEventListener('dragend', () => {
+      if (!dragging) return; dragging.classList.remove('dragging'); dragging = null;
+      const ids = $$('.item', list).map(el => el.dataset.id); const byId = {}; (S.day.musts || []).forEach(m => { byId[m.id] = m; });
+      const next = ids.map(id => byId[id]).filter(Boolean); if (next.length === (S.day.musts || []).length) { S.day.musts = next; saveDay(); }
+      render();
+    });
   }
 
   // ---------------------------------------------------------------- TIMELINE
@@ -628,7 +652,7 @@
   function renderFocus(main) {
     const s = Timer.st; const r = Timer.remaining(); const C = 2 * Math.PI * 46;
     const musts = (S.day.musts || []).filter(m => !m.done);
-    const used = focusUsedMins(); const target = Math.round((S.day.focusHours || 0) * 60);
+    const used = focusUsedMins();
     const preset = (m, mode) => `<button class="preset ${mode === 'break' ? 'brk' : ''} ${s.mode === mode && s.total === m * 60 ? 'active' : ''}" data-action="preset" data-m="${m}" data-mode="${mode}">${m}</button>`;
     main.innerHTML = `<div class="focus-view ${S.zen ? 'zen' : ''}"><div class="focus-inner">
       <div class="focus-presets">${[25, 15, 10].map(m => preset(m, 'work')).join('')}<span style="width:10px"></span>${[5, 15].map(m => preset(m, 'break')).join('')}<input class="preset" type="number" min="1" max="240" placeholder="min" data-action="preset-input" style="width:72px;text-align:center"></div>
@@ -643,7 +667,7 @@
         <label><input type="checkbox" data-action="fx-sound" ${S.settings.sound ? 'checked' : ''}> sound</label>
         <label><input type="checkbox" data-action="fx-zen" ${S.zen ? 'checked' : ''}> quiet mode</label>
       </div>
-      <div class="focus-stats"><span>today <b>${(used / 60).toFixed(1)}h</b>${target ? ` / ${(target / 60).toFixed(1)}h` : ''}</span><span>sessions <b>${(S.day.sessions || []).length}</b></span><span>cycle <b>${(s.cycles || 0) % 4 + 1}/4</b></span></div>
+      <div class="focus-stats"><span>today <b>${(used / 60).toFixed(1)}h</b></span><span>sessions <b>${(S.day.sessions || []).length}</b></span><span>cycle <b>${(s.cycles || 0) % 4 + 1}/4</b></span></div>
       ${mottoBlock()}
     </div></div>`;
     if (s.running) Timer.loop();
@@ -747,8 +771,7 @@
       case 'go-goals': route('goals'); break;
       case 'must-del': S.day.musts = S.day.musts.filter(m => m.id !== id); saveDay(); render(); break;
       case 'must-focus': { const m = S.day.musts.find(x => x.id === id); if (m) { Timer.st.taskId = m.id; Timer.st.label = m.text; Timer.save(); route('focus'); } break; }
-      case 'blk-del': S.day.blocks = S.day.blocks.filter(b => b.id !== id); saveDay(); render(); break;
-      case 'fh': S.day.focusHours = clamp((S.day.focusHours || 0) + parseFloat(t.dataset.d), 0, 16); saveDay(); render(); break;
+      case 'must-unpin': { const m = S.day.musts.find(x => x.id === id); if (m) { delete m.start; saveDay(); render(); } break; }
       case 'tl-range': S.tlRange = +t.dataset.r; render(); break;
       case 'preset': Timer.reset(t.dataset.mode, +t.dataset.m, true); renderFocus($('#main')); break;
       case 'fx-toggle': Timer.toggle(); break;
@@ -789,12 +812,11 @@
     const f = e.target.closest('[data-form]'); if (!f) return;
     e.preventDefault(); const fd = new FormData(f);
     switch (f.dataset.form) {
-      case 'must-add': { const text = (fd.get('text') || '').trim(); if (!text) return; S.day.musts = S.day.musts || []; S.day.musts.push({ id: uid(), text, done: false, goalId: fd.get('goalId') || '' }); saveDay(); render(); break; }
-      case 'blk-add': { const start = fd.get('start'), end = fd.get('end'); if (!start || !end || end <= start) { toast('End must be after start'); return; } S.day.blocks = S.day.blocks || []; S.day.blocks.push({ id: uid(), start, end, label: (fd.get('label') || '').trim(), goalId: fd.get('goalId') || '' }); saveDay(); render(); break; }
+      case 'must-add': { const text = (fd.get('text') || '').trim(); if (!text) return; S.day.musts = S.day.musts || []; S.day.musts.push({ id: uid(), text, done: false, goalId: fd.get('goalId') || '', minutes: +fd.get('minutes') || 30 }); saveDay(); render(); break; }
     }
   });
 
   // minute tick for "now" marker on Today
-  setInterval(() => { if (S.view === 'today' && !$('#modalRoot').firstChild && document.activeElement.tagName !== 'INPUT') { const dl = $('.dayline'); if (dl) dl.outerHTML = renderDayline(); } }, 60000);
+  setInterval(() => { if (S.view === 'today' && !$('#modalRoot').firstChild && document.activeElement.tagName !== 'INPUT') { const dl = $('.dayline'); if (dl) { dl.outerHTML = renderDayline(scheduleMusts()); wireDayline($('#main')); } } }, 60000);
 
 })();
