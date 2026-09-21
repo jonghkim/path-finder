@@ -680,7 +680,11 @@
     st: null, // { mode:'work'|'break', total(sec), endAt(ms) | null, remaining(sec), running, taskId, label }
     load() { try { const s = JSON.parse(localStorage.getItem('pf-timer') || 'null'); if (s) this.st = s; } catch (e) {} if (!this.st) this.reset('work', S.settings.work); },
     save() { try { localStorage.setItem('pf-timer', JSON.stringify(this.st)); } catch (e) {} },
-    reset(mode, mins, keepTask) { const t = this.st || {}; this.st = { mode: mode || 'work', total: mins * 60, remaining: mins * 60, endAt: null, running: false, taskId: keepTask ? t.taskId : (t.taskId || ''), label: keepTask ? t.label : (t.label || ''), cycles: t.cycles || 0 }; this.save(); this.tick(); },
+    reset(mode, mins, keepTask) { const t = this.st || {}; this.st = { mode: mode || 'work', total: mins * 60, remaining: mins * 60, endAt: null, running: false, taskId: keepTask ? t.taskId : (t.taskId || ''), label: keepTask ? t.label : (t.label || ''), cycles: t.cycles || 0, workMins: t.workMins, brkMins: t.brkMins }; this.save(); this.tick(); },
+    // Remember the preset the user picked so auto-cycle and Skip come back to it, not to the settings default.
+    pick(mode, mins) { this.reset(mode, mins, true); if (mode === 'work') this.st.workMins = mins; else this.st.brkMins = mins; this.save(); },
+    workLen() { return (this.st && this.st.workMins) || S.settings.work; },
+    brkLen() { return (this.st && this.st.brkMins) || S.settings.brk; },
     start() { const s = this.st; if (s.running) return; ensureAudio(); s.endAt = Date.now() + s.remaining * 1000; s.running = true; this.save(); this.loop(); },
     pause() { const s = this.st; if (!s.running) return; s.remaining = Math.max(0, Math.round((s.endAt - Date.now()) / 1000)); s.running = false; s.endAt = null; this.save(); this.tick(); },
     toggle() { this.st.running ? this.pause() : this.start(); },
@@ -699,11 +703,11 @@
         S.day.sessions = S.day.sessions || []; S.day.sessions.push({ at: Date.now(), minutes: mins, label: s.label || '', taskId: s.taskId || '' });
         s.cycles = (s.cycles || 0) + 1; saveDay(); beep(2); toast(`Focus session done · +${mins} min`);
         const long = s.cycles % 4 === 0;
-        this.reset('break', long ? S.settings.longBrk : S.settings.brk, true);
+        this.reset('break', long ? S.settings.longBrk : this.brkLen(), true);
         if (S.settings.autoCycle) this.start();
       } else {
-        beep(1); toast('Break over — back to it');
-        this.reset('work', S.settings.work, true);
+        beep(3, { base: 1046.5, gap: 0.3 }); toast('Break over — back to it');
+        this.reset('work', this.workLen(), true);
         if (S.settings.autoCycle) this.start();
       }
       this.save(); this.paint(this.remaining());
@@ -727,11 +731,29 @@
   }
   let audioCtx;
   function ensureAudio() { if (!S.settings.sound) return; try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {} }
-  function beep(n) {
+  // Browsers only let audio start from a user gesture. After a reload the timer keeps running with no
+  // context, so unlock one on the first click/keypress anywhere; otherwise the end-of-phase chime is silent.
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, ensureAudio, { capture: true, passive: true }));
+  // Bell-like chime: a fundamental plus inharmonic partials, each with its own decay.
+  function strike(t0, base = 880) {
+    const partials = [[1, 0.55, 1.6], [2.0, 0.25, 1.1], [2.76, 0.14, 0.8], [4.07, 0.07, 0.5]];
+    for (const [ratio, amp, dur] of partials) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = base * ratio;
+      o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(amp, t0 + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.start(t0); o.stop(t0 + dur + 0.05);
+    }
+  }
+  // n strikes, `gap` seconds apart. If the context is still suspended, wait for resume() before scheduling.
+  function beep(n, { base = 880, gap = 0.55 } = {}) {
     if (!S.settings.sound) return;
     try {
       ensureAudio(); if (!audioCtx) return;
-      for (let i = 0; i < n; i++) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = 'sine'; o.frequency.value = 660; o.connect(g); g.connect(audioCtx.destination); const t0 = audioCtx.currentTime + i * 0.35; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3); o.start(t0); o.stop(t0 + 0.32); }
+      const play = () => { for (let i = 0; i < n; i++) strike(audioCtx.currentTime + i * gap, base); };
+      if (audioCtx.state === 'running') play(); else audioCtx.resume().then(play).catch(() => {});
     } catch (e) {}
   }
   function renderFocus(main) {
@@ -874,13 +896,13 @@
       case 'must-focus': { const m = S.day.musts.find(x => x.id === id); if (m) { Timer.st.taskId = m.id; Timer.st.label = m.text; Timer.save(); route('focus'); } break; }
       case 'must-unpin': { const m = S.day.musts.find(x => x.id === id); if (m) { delete m.start; saveDay(); render(); } break; }
       case 'tl-range': S.tlRange = +t.dataset.r; render(); break;
-      case 'preset': Timer.reset(t.dataset.mode, +t.dataset.m, true); renderFocus($('#main')); break;
+      case 'preset': Timer.pick(t.dataset.mode, +t.dataset.m); renderFocus($('#main')); break;
       case 'cal-new-cancel': { const f = t.closest('.cal-new'); if (f) f.remove(); break; }
       case 'fx-toggle': Timer.toggle(); break;
       case 'fx-pick': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { setFocusTask(m); renderFocus($('#main')); } break; }
       case 'fx-done': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { markDone(m); saveDay(); setFocusTask(null); toast('Done'); renderFocus($('#main')); } break; }
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
-      case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', S.settings.brk, true); else Timer.reset('work', S.settings.work, true); renderFocus($('#main')); break; }
+      case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
       case 'notes-today': S.notesDate = todayKey(); render(); break;
       case 'q-new': S.qIdx = Math.floor(Math.random() * (window.questions || []).length); render(); break;
@@ -903,7 +925,7 @@
       case 'goal-field': { const g = goalById(id); if (g) { g[t.dataset.k] = t.value.trim(); saveGoals(); } break; }
       case 'bn-flag': { const g = goalById(t.value); if (g) { g.status = 'at-risk'; saveGoals(); render(); const ta = $(`.bn-edit[data-id="${g.id}"]`); if (ta) ta.focus(); } break; }
       case 'ms-toggle': { const g = goalById(id); const m = g && (g.milestones || []).find(x => x.id === t.dataset.ms); if (m) { m.done = t.checked; saveGoals(); render(); } break; }
-      case 'preset-input': { const n = parseInt(t.value); if (n > 0 && n <= 240) { Timer.reset('work', n, true); renderFocus($('#main')); } break; }
+      case 'preset-input': { const n = parseInt(t.value); if (n > 0 && n <= 240) { Timer.pick('work', n); renderFocus($('#main')); } break; }
       case 'fx-auto': S.settings.autoCycle = t.checked; saveSettings(); break;
       case 'fx-sound': S.settings.sound = t.checked; saveSettings(); break;
       case 'fx-zen': S.zen = t.checked; $('.focus-view').classList.toggle('zen', S.zen); break;
