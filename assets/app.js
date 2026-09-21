@@ -767,12 +767,10 @@
     c.start(t0); c.stop(t0 + 0.12);
   }
   // n strikes, `gap` seconds apart. If the context is still suspended, wait for resume() before scheduling.
-  // `force` plays even with sound off (used by the preview button).
-  function beep(n, { base = 1046.5, gap = 0.6, force = false } = {}) {
-    if (!S.settings.sound && !force) return;
+  function beep(n, { base = 1046.5, gap = 0.6 } = {}) {
+    if (!S.settings.sound) return;
     try {
-      const keep = S.settings.sound; if (force) S.settings.sound = true; ensureAudio(); S.settings.sound = keep;
-      if (!audioCtx) return;
+      ensureAudio(); if (!audioCtx) return;
       const play = () => { for (let i = 0; i < n; i++) strike(audioCtx.currentTime + i * gap, base); };
       if (audioCtx.state === 'running') play(); else audioCtx.resume().then(play).catch(() => {});
     } catch (e) {}
@@ -804,7 +802,7 @@
       </div>
       <div class="focus-opts">
         <label><input type="checkbox" data-action="fx-auto" ${S.settings.autoCycle ? 'checked' : ''}> auto work ↔ break</label>
-        <label><input type="checkbox" data-action="fx-sound" ${S.settings.sound ? 'checked' : ''}> sound</label><button class="preset fx-test" data-action="fx-test" title="Preview the chime">🔔</button>
+        <label><input type="checkbox" data-action="fx-sound" ${S.settings.sound ? 'checked' : ''}> sound</label>
         <label><input type="checkbox" data-action="fx-zen" ${S.zen ? 'checked' : ''}> quiet mode</label>
       </div>
       <div class="focus-stats"><span>today <b>${(used / 60).toFixed(1)}h</b></span><span>sessions <b>${(S.day.sessions || []).length}</b></span><span>cycle <b>${(s.cycles || 0) % 4 + 1}/4</b></span></div>
@@ -923,7 +921,6 @@
       case 'fx-pick': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { setFocusTask(m); renderFocus($('#main')); } break; }
       case 'fx-done': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { markDone(m); saveDay(); setFocusTask(null); toast('Done'); renderFocus($('#main')); } break; }
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
-      case 'fx-test': beep(1, { force: true }); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
       case 'notes-today': S.notesDate = todayKey(); render(); break;
