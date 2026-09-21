@@ -706,7 +706,7 @@
         this.reset('break', long ? S.settings.longBrk : this.brkLen(), true);
         if (S.settings.autoCycle) this.start();
       } else {
-        beep(3, { base: 1046.5, gap: 0.3 }); toast('Break over — back to it');
+        beep(3, { base: 1318.5, gap: 0.35 }); toast('Break over — back to it');
         this.reset('work', this.workLen(), true);
         if (S.settings.autoCycle) this.start();
       }
@@ -734,24 +734,45 @@
   // Browsers only let audio start from a user gesture. After a reload the timer keeps running with no
   // context, so unlock one on the first click/keypress anywhere; otherwise the end-of-phase chime is silent.
   ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, ensureAudio, { capture: true, passive: true }));
-  // Bell-like chime: a fundamental plus inharmonic partials, each with its own decay.
-  function strike(t0, base = 880) {
-    const partials = [[1, 0.55, 1.6], [2.0, 0.25, 1.1], [2.76, 0.14, 0.8], [4.07, 0.07, 0.5]];
-    for (const [ratio, amp, dur] of partials) {
+  // Output chain: partials → compressor → master. The compressor lets the partials sit near full scale
+  // (a loud, clear strike) without clipping when they sum.
+  let audioOut;
+  function outNode() {
+    if (audioOut) return audioOut;
+    const comp = audioCtx.createDynamicsCompressor();
+    comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 6; comp.attack.value = 0.002; comp.release.value = 0.15;
+    const master = audioCtx.createGain(); master.gain.value = 1;
+    comp.connect(master); master.connect(audioCtx.destination);
+    audioOut = comp; return audioOut;
+  }
+  // Bell strike: a strong fundamental with a slightly detuned octave for shimmer, a few upper partials
+  // for brightness, and a short click for the mallet. Each partial decays exponentially at its own rate.
+  function strike(t0, base = 1046.5) {
+    const out = outNode();
+    const partials = [[1, 1.0, 0.9], [2.003, 0.55, 0.55], [3.0, 0.3, 0.32], [4.16, 0.18, 0.22], [5.43, 0.1, 0.14], [6.8, 0.06, 0.09]];
+    for (const [ratio, amp, tau] of partials) {
       const o = audioCtx.createOscillator(), g = audioCtx.createGain();
       o.type = 'sine'; o.frequency.value = base * ratio;
-      o.connect(g); g.connect(audioCtx.destination);
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(amp, t0 + 0.008);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.start(t0); o.stop(t0 + dur + 0.05);
+      o.connect(g); g.connect(out);
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(amp, t0 + 0.004);
+      g.gain.setTargetAtTime(0, t0 + 0.004, tau);
+      o.start(t0); o.stop(t0 + tau * 7 + 0.1);
     }
+    // Mallet click: a very short, bright burst so the onset reads as a hit rather than a fade-in.
+    const c = audioCtx.createOscillator(), cg = audioCtx.createGain();
+    c.type = 'triangle'; c.frequency.value = base * 9.7;
+    c.connect(cg); cg.connect(out);
+    cg.gain.setValueAtTime(0.4, t0); cg.gain.setTargetAtTime(0, t0, 0.012);
+    c.start(t0); c.stop(t0 + 0.12);
   }
   // n strikes, `gap` seconds apart. If the context is still suspended, wait for resume() before scheduling.
-  function beep(n, { base = 880, gap = 0.55 } = {}) {
-    if (!S.settings.sound) return;
+  // `force` plays even with sound off (used by the preview button).
+  function beep(n, { base = 1046.5, gap = 0.6, force = false } = {}) {
+    if (!S.settings.sound && !force) return;
     try {
-      ensureAudio(); if (!audioCtx) return;
+      const keep = S.settings.sound; if (force) S.settings.sound = true; ensureAudio(); S.settings.sound = keep;
+      if (!audioCtx) return;
       const play = () => { for (let i = 0; i < n; i++) strike(audioCtx.currentTime + i * gap, base); };
       if (audioCtx.state === 'running') play(); else audioCtx.resume().then(play).catch(() => {});
     } catch (e) {}
@@ -783,7 +804,7 @@
       </div>
       <div class="focus-opts">
         <label><input type="checkbox" data-action="fx-auto" ${S.settings.autoCycle ? 'checked' : ''}> auto work ↔ break</label>
-        <label><input type="checkbox" data-action="fx-sound" ${S.settings.sound ? 'checked' : ''}> sound</label>
+        <label><input type="checkbox" data-action="fx-sound" ${S.settings.sound ? 'checked' : ''}> sound</label><button class="preset fx-test" data-action="fx-test" title="Preview the chime">🔔</button>
         <label><input type="checkbox" data-action="fx-zen" ${S.zen ? 'checked' : ''}> quiet mode</label>
       </div>
       <div class="focus-stats"><span>today <b>${(used / 60).toFixed(1)}h</b></span><span>sessions <b>${(S.day.sessions || []).length}</b></span><span>cycle <b>${(s.cycles || 0) % 4 + 1}/4</b></span></div>
@@ -902,6 +923,7 @@
       case 'fx-pick': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { setFocusTask(m); renderFocus($('#main')); } break; }
       case 'fx-done': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { markDone(m); saveDay(); setFocusTask(null); toast('Done'); renderFocus($('#main')); } break; }
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
+      case 'fx-test': beep(1, { force: true }); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
       case 'notes-today': S.notesDate = todayKey(); render(); break;

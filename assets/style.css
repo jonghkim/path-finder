@@ -569,3 +569,4 @@ input.bn-edit { font-size: 13.5px; }
   .mobile-settings { display: block; }
 }
 @media (min-width: 721px) { .mobile-only { display: none !important; } }
+.fx-test { padding: 3px 9px; font-size: 13px; line-height: 1; }
