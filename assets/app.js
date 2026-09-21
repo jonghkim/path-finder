@@ -72,15 +72,20 @@
     async getJSON(doc) { const raw = await this.getRaw(doc); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } },
     cachedJSON(doc) { const raw = this.cached(doc); if (!raw) return null; try { return JSON.parse(raw); } catch (e) { return null; } },
     _pending: {},
+    _write(doc, value) {
+      return this.col().doc(doc).set({ value: encrypt(value) }).catch(err => { console.error('save failed', doc, err); toast('Save failed — will retry on next change'); throw err; });
+    },
     setRaw(doc, value) {
       try { localStorage.setItem(this.cacheKey(doc), value); } catch (e) {}
-      clearTimeout(this._pending[doc]);
-      this._pending[doc] = setTimeout(() => {
-        this.col().doc(doc).set({ value: encrypt(value) }).catch(err => { console.error('save failed', doc, err); toast('Save failed — will retry on next change'); });
-      }, 500);
+      const prev = this._pending[doc]; if (prev) clearTimeout(prev.t);
+      this._pending[doc] = { value, t: setTimeout(() => { delete this._pending[doc]; this._write(doc, value); }, 500) };
     },
     setJSON(doc, obj) { this.setRaw(doc, JSON.stringify(obj)); },
-    flush() { Object.keys(this._pending).forEach(k => clearTimeout(this._pending[k])); }
+    // Write every pending change now (Ctrl+S, sign out). Resolves when all writes have landed.
+    flush() {
+      const jobs = Object.keys(this._pending).map(doc => { const p = this._pending[doc]; clearTimeout(p.t); delete this._pending[doc]; return this._write(doc, p.value); });
+      return Promise.all(jobs);
+    }
   };
 
   // ---------------------------------------------------------------- state
@@ -170,6 +175,20 @@
   window.addEventListener('hashchange', () => route(location.hash.replace('#', '')));
   $$('.nav-item').forEach(b => b.addEventListener('click', () => route(b.dataset.view)));
   $('#navToggle').addEventListener('click', () => { const c = document.documentElement.classList.toggle('nav-collapsed'); try { localStorage.setItem('pf-nav', c ? 'collapsed' : 'open'); } catch (e) {} if (S.view === 'timeline') setTimeout(render, 220); });
+  // Ctrl/Cmd+S: commit whatever is being edited and push pending writes to Firestore now
+  document.addEventListener('keydown', e => {
+    if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || (e.code !== 'KeyS' && (e.key || '').toLowerCase() !== 's')) return;
+    e.preventDefault(); saveNow();
+  });
+  function saveNow() {
+    const a = document.activeElement;
+    if (a && a.form && a.form.dataset.form === 'goal-save') { a.form.requestSubmit(); return; }
+    if (a && a.matches('input:not([type]), input[type=text], input[type=number], textarea') && a.value !== a.defaultValue && a.closest('[data-action]')) {
+      a.dispatchEvent(new Event('change', { bubbles: true })); a.defaultValue = a.value;
+    }
+    commitNote();
+    Store.flush().then(() => toast('Saved'), () => {});
+  }
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select, button, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
     const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes' };
@@ -286,7 +305,7 @@
                     <select class="status status-${g.status}" data-action="goal-status" data-id="${g.id}"><option value="at-risk" ${g.status === 'at-risk' ? 'selected' : ''}>At risk</option><option value="blocked" ${g.status === 'blocked' ? 'selected' : ''}>Blocked</option><option value="on-track">Resolved</option></select></div>
                   ${g.deadline ? `<div class="pace">${dLabel(daysUntil(g.deadline))} · ${fmtDow(g.deadline)}</div>` : ''}
                   <textarea class="bn-edit" data-action="goal-field" data-id="${g.id}" data-k="bottleneck" placeholder="What is blocking this?" rows="2">${esc(g.bottleneck || '')}</textarea>
-                  <input class="bn-edit" data-action="goal-field" data-id="${g.id}" data-k="next" value="${esc(g.next || '')}" placeholder="Next action to unblock it">
+                  <input class="bn-edit" autocomplete="off" data-action="goal-field" data-id="${g.id}" data-k="next" value="${esc(g.next || '')}" placeholder="Next action to unblock it">
                 </div>`).join('')}
               ${bns.length ? '' : '<div class="empty">Nothing is blocked.</div>'}
               ${activeGoals().some(g => !isBottleneck(g)) ? `<select class="bn-flag" data-action="bn-flag"><option value="">Flag a goal as at risk…</option>${activeGoals().filter(g => !isBottleneck(g)).map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>` : ''}
@@ -589,7 +608,7 @@
     const draw = () => {
       root.innerHTML = `<div class="modal-bg" data-action="modal-bg"><div class="modal" role="dialog" aria-modal="true">
         <h2>${g.id ? 'Edit goal' : 'New goal'}</h2>
-        <form class="form" data-form="goal-save">
+        <form class="form" data-form="goal-save" autocomplete="off">
           <label class="field"><span>Title</span><input name="title" value="${esc(g.title)}" required maxlength="120" autofocus></label>
           <div class="form-row">
             <label class="field"><span>Category</span><select name="category">${Object.keys(CATS).map(c => `<option value="${c}" ${g.category === c ? 'selected' : ''}>${CATS[c].label}</option>`).join('')}</select></label>
@@ -605,7 +624,7 @@
           <label class="field"><span>Link</span><input name="link" value="${esc(g.link || '')}" placeholder="https://…"></label>
           <div class="field"><span>Color</span><div class="swatches">${PALETTE.map(c => `<button type="button" class="sw ${gColor(g) === c ? 'on' : ''}" data-sw="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div><input type="hidden" name="color" value="${esc(gColor(g))}"></div>
           <div class="field"><span>Milestones</span>
-            <div class="ms-list" id="msList">${ms.map((m, i) => `<div class="ms-row"><input type="checkbox" data-ms-done="${i}" ${m.done ? 'checked' : ''}><input type="text" data-ms-title="${i}" value="${esc(m.title)}" placeholder="Milestone"><input type="date" data-ms-date="${i}" value="${esc(m.date || '')}"><button type="button" class="btn-icon" data-ms-del="${i}">✕</button></div>`).join('')}</div>
+            <div class="ms-list" id="msList">${ms.map((m, i) => `<div class="ms-row"><input type="checkbox" data-ms-done="${i}" ${m.done ? 'checked' : ''}><input type="text" autocomplete="off" data-ms-title="${i}" value="${esc(m.title)}" placeholder="Milestone"><input type="date" data-ms-date="${i}" value="${esc(m.date || '')}"><button type="button" class="btn-icon" data-ms-del="${i}">✕</button></div>`).join('')}</div>
             <div><button type="button" class="btn btn-xs" data-ms-add>+ Milestone</button></div>
           </div>
           <div class="modal-foot">
@@ -745,13 +764,15 @@
     { id: 'vision', label: 'Vision', doc: () => 'visionInput', ph: 'The long view.' },
     { id: 'question', label: 'Question', doc: () => `question-${S.qIdx == null ? 'none' : S.qIdx}`, ph: 'Your answer…' }
   ];
-  function destroyQuill() { quill = null; }
+  function destroyQuill() { commitNote(); quill = null; }
   function renderNotes(main) {
     const tab = NOTE_TABS.find(t => t.id === S.notesTab) || NOTE_TABS[0];
     main.innerHTML = `<div class="view-head"><div><h1>Notes</h1></div></div>
       <div class="notes-tabs">${NOTE_TABS.map(t => `<button class="notes-tab ${t.id === tab.id ? 'active' : ''}" data-action="notes-tab" data-tab="${t.id}">${t.label}</button>`).join('')}</div>
       <div class="notes-bar">
         ${tab.dated || tab.id === 'yearly' || tab.id === 'achievement' ? `<input type="date" value="${S.notesDate}" data-action="notes-date"><button class="btn btn-sm" data-action="notes-today">Today</button>` : ''}
+  let noteCommit = null; // pending notes write, run early by Ctrl+S
+  function commitNote() { if (noteCommit) { const f = noteCommit; noteCommit = null; f(); } }
         ${tab.id === 'question' ? `<button class="btn btn-sm" data-action="q-new">New question</button>` : ''}
         <span class="muted small" id="noteStatus"></span>
       </div>
@@ -777,7 +798,9 @@
       if (quill !== mine) return;
       mine.off('text-change'); mine.disable(); mine.clipboard.dangerouslyPasteHTML(html || ''); mine.enable(); mine.history.clear();
       status.textContent = '';
-      mine.on('text-change', debounce(() => { const v = mine.getText().trim() === '' ? '' : mine.root.innerHTML; Store.setRaw(docName, v); status.textContent = 'saved'; setTimeout(() => { if (status.textContent === 'saved') status.textContent = ''; }, 1200); }, 400));
+      let t;
+      const commit = () => { clearTimeout(t); if (noteCommit === commit) noteCommit = null; const v = mine.getText().trim() === '' ? '' : mine.root.innerHTML; Store.setRaw(docName, v); status.textContent = 'saved'; setTimeout(() => { if (status.textContent === 'saved') status.textContent = ''; }, 1200); };
+      mine.on('text-change', () => { clearTimeout(t); noteCommit = commit; t = setTimeout(commit, 400); });
     });
   }
   async function loadAnswered() {
@@ -798,7 +821,7 @@
         <section class="card"><div class="card-head"><h3>Appearance</h3></div>
           <span class="seg">${['auto', 'light', 'dark'].map(t => `<button data-action="theme" data-t="${t}" class="${s.theme === t ? 'active' : ''}">${t}</button>`).join('')}</span></section>
         <section class="card"><div class="card-head"><h3>Mottos</h3><span class="muted small">shown on Today and Focus</span></div>
-          <div class="mottos">${s.mottos.map((m, i) => `<div class="row"><input value="${esc(m)}" data-action="motto-edit" data-i="${i}" maxlength="120"><button class="btn-icon" data-action="motto-del" data-i="${i}">✕</button></div>`).join('')}</div>
+          <div class="mottos">${s.mottos.map((m, i) => `<div class="row"><input value="${esc(m)}" autocomplete="off" data-action="motto-edit" data-i="${i}" maxlength="120"><button class="btn-icon" data-action="motto-del" data-i="${i}">✕</button></div>`).join('')}</div>
           <div style="margin-top:8px"><button class="btn btn-xs" data-action="motto-add">+ Add</button></div></section>
         <section class="card"><div class="card-head"><h3>Focus timer</h3></div>
           <div class="form-row">
@@ -851,7 +874,7 @@
       case 'motto-add': S.settings.mottos.push(''); saveSettings(); render(); $$('[data-action=motto-edit]').pop().focus(); break;
       case 'motto-del': S.settings.mottos.splice(+t.dataset.i, 1); saveSettings(); render(); break;
       case 'export': { const blob = new Blob([JSON.stringify({ goals: S.goals, day: S.day, dayKey: S.dayKey, settings: S.settings }, null, 2)], { type: 'application/json' }); const a2 = document.createElement('a'); a2.href = URL.createObjectURL(blob); a2.download = `pathfinder-${todayKey()}.json`; a2.click(); break; }
-      case 'signout': Store.flush(); auth.signOut(); break;
+      case 'signout': commitNote(); Store.flush().finally(() => auth.signOut()); break;
     }
   });
 
