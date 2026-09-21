@@ -743,6 +743,7 @@
     const preset = (m, mode) => `<button class="preset ${mode === 'break' ? 'brk' : ''} ${s.mode === mode && s.total === m * 60 ? 'active' : ''}" data-action="preset" data-m="${m}" data-mode="${mode}">${m}</button>`;
     main.innerHTML = `<div class="focus-view ${S.zen ? 'zen' : ''}"><div class="focus-inner">
       <div class="focus-presets">${[25, 15, 10].map(m => preset(m, 'work')).join('')}<span style="width:10px"></span>${[5, 15].map(m => preset(m, 'break')).join('')}<input class="preset" type="number" min="1" max="240" placeholder="min" data-action="preset-input" style="width:72px;text-align:center"></div>
+      <div class="focus-slogan" aria-hidden="true">Just Do It.</div>
       <div class="focus-dial ${s.mode === 'break' ? 'break' : ''}">
         <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/><circle id="fxFill" class="fill" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - (s.total ? r / s.total : 0))}"/></svg>
         <div class="center"><div class="mode">${s.mode === 'work' ? 'Focus' : 'Break'}</div><div class="time" id="fxTime">${pad(Math.floor(r / 60))}:${pad(r % 60)}</div><div class="task">${esc(s.label || '')}</div></div>

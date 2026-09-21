@@ -467,6 +467,7 @@ input.bn-edit { font-size: 13.5px; }
 .preset:hover { background: var(--surface-2); color: var(--ink); }
 .preset.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .preset.brk.active { background: #6f9a7c; border-color: #6f9a7c; color: #fff; }
+.focus-slogan { font-size: clamp(40px, 9vw, 72px); font-weight: 800; letter-spacing: -.045em; line-height: 1; text-transform: uppercase; color: var(--ink); margin: 6px 0 -6px; user-select: none; }
 .focus-dial { position: relative; width: min(340px, 78vw); aspect-ratio: 1; }
 .focus-dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .focus-dial circle { fill: none; stroke-width: 4; stroke-linecap: round; }
