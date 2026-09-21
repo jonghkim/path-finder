@@ -241,8 +241,9 @@
     const now = new Date();
     const deadlines = activeGoals().filter(g => g.deadline && g.horizon !== 'long').sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 5);
     const musts = S.day.musts || [];
-    const doneCnt = musts.filter(m => m.done).length;
-    const totalMins = musts.filter(m => !m.done).reduce((a, m) => a + (m.minutes || 0), 0);
+    const openM = musts.filter(m => !m.done), doneM = musts.filter(m => m.done);
+    const doneCnt = doneM.length;
+    const totalMins = openM.reduce((a, m) => a + (m.minutes || 0), 0);
     const bns = activeGoals().filter(isBottleneck);
     const shortG = activeGoals().filter(g => g.horizon !== 'long').sort(byOrder);
     const longG = activeGoals().filter(g => g.horizon === 'long').sort(byOrder);
@@ -267,8 +268,8 @@
           <section class="card">
             <div class="card-head"><h3>Must do today</h3><span class="muted small mono">${doneCnt}/${musts.length} · ${fmtDur(totalMins)} left</span></div>
             <div class="list must-list">
-              ${musts.map((m, i) => { const g = m.goalId && goalById(m.goalId); const sl = slotOf(m.id); return `
-                <div class="item must ${m.done ? 'done' : ''} ${isFocusing(m.id) ? 'focusing' : ''}" draggable="true" data-id="${m.id}">
+              ${openM.map((m, i) => { const g = m.goalId && goalById(m.goalId); const sl = slotOf(m.id); return `
+                <div class="item must ${isFocusing(m.id) ? 'focusing' : ''}" draggable="true" data-id="${m.id}">
                   <span class="grip" title="Drag to reorder">⋮⋮</span>
                   <input type="checkbox" data-action="must-toggle" data-id="${m.id}" ${m.done ? 'checked' : ''}>
                   <span class="txt">${esc(m.text)}${isFocusing(m.id) ? '<span class="tag live">● focusing</span>' : ''}${g ? `<span class="tag" style="--cat:${gColor(g)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}</span>
@@ -280,14 +281,25 @@
                     <button class="btn-icon" data-action="must-del" data-id="${m.id}" title="Remove">✕</button>
                   </span>
                 </div>`; }).join('')}
-              
+              ${openM.length ? '' : `<div class="empty">${doneM.length ? 'All done for today.' : 'Nothing yet — add what must get done today.'}</div>`}
             </div>
             <form class="inline-add must-add" data-form="must-add">
-              <input type="text" name="text" placeholder="Add a must-do…" required maxlength="140">
+              <input type="text" name="text" placeholder="Add a must-do…" required maxlength="140" autocomplete="off">
               <select name="minutes" class="min" title="How long will it take?">${DUR.map(d => `<option value="${d}" ${d === 45 ? 'selected' : ''}>${fmtDur(d)}</option>`).join('')}</select>
               <select name="goalId"><option value=""></option>${activeGoals().map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>
               <button class="btn btn-sm" type="submit">Add</button>
             </form>
+            ${doneM.length ? `
+            <div class="done-head"><span class="muted small">Done</span><span class="muted small mono">${doneM.length} · ${fmtDur(doneM.reduce((a, m) => a + (m.minutes || 0), 0))}</span></div>
+            <div class="list done-list">
+              ${doneM.map(m => { const g = m.goalId && goalById(m.goalId); return `
+                <div class="item done" data-id="${m.id}">
+                  <input type="checkbox" data-action="must-toggle" data-id="${m.id}" checked title="Move back to Must do today">
+                  <span class="txt">${esc(m.text)}${g ? `<span class="tag" style="--cat:${gColor(g)}"><span class="dot"></span>${esc(g.title)}</span>` : ''}</span>
+                  <span class="dur mono">${taskFocusMins(m.id) ? `<span class="fm">${fmtDur(taskFocusMins(m.id))} /</span> ` : ''}${fmtDur(m.minutes || 0)}</span>
+                  <span class="actions"><button class="btn-icon" data-action="must-del" data-id="${m.id}" title="Remove">✕</button></span>
+                </div>`; }).join('')}
+            </div>` : ''}
           </section>
 
           <section class="card card-cal">
@@ -337,6 +349,8 @@
     </div>`;
   }
 
+  // Finishing a must-do moves it out of the open list (and off the timeline) into the Done section.
+  function markDone(m) { m.done = true; delete m.start; S.day.musts = (S.day.musts || []).filter(x => x !== m).concat(m); }
   // Place must-dos on the day: pinned ones keep their start; the rest flow in list order from now, around pinned slots.
   function scheduleMusts() {
     const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60;
@@ -433,7 +447,8 @@
     list.addEventListener('dragend', () => {
       if (!dragging) return; dragging.classList.remove('dragging'); dragging = null;
       const ids = $$('.item', list).map(el => el.dataset.id); const byId = {}; (S.day.musts || []).forEach(m => { byId[m.id] = m; });
-      const next = ids.map(id => byId[id]).filter(Boolean); if (next.length === (S.day.musts || []).length) { S.day.musts = next; saveDay(); }
+      const open = ids.map(id => byId[id]).filter(m => m && !m.done), done = (S.day.musts || []).filter(m => m.done);
+      if (open.length + done.length === (S.day.musts || []).length) { S.day.musts = open.concat(done); saveDay(); }
       render();
     });
   }
@@ -756,6 +771,8 @@
 
   // ---------------------------------------------------------------- NOTES (legacy Quill docs)
   let quill = null;
+  let noteCommit = null; // pending notes write, run early by Ctrl+S
+  function commitNote() { if (noteCommit) { const f = noteCommit; noteCommit = null; f(); } }
   const NOTE_TABS = [
     { id: 'daily', label: 'Daily', doc: () => { const [y, m, d] = S.notesDate.split('-'); return `day-${y}-${m}-${d}-milestones`; }, dated: true, ph: 'Daily notes, plans, scratch…' },
     { id: 'progress', label: 'Progress report', doc: () => 'deadlineInput', ph: 'Running progress report across projects.' },
@@ -771,8 +788,6 @@
       <div class="notes-tabs">${NOTE_TABS.map(t => `<button class="notes-tab ${t.id === tab.id ? 'active' : ''}" data-action="notes-tab" data-tab="${t.id}">${t.label}</button>`).join('')}</div>
       <div class="notes-bar">
         ${tab.dated || tab.id === 'yearly' || tab.id === 'achievement' ? `<input type="date" value="${S.notesDate}" data-action="notes-date"><button class="btn btn-sm" data-action="notes-today">Today</button>` : ''}
-  let noteCommit = null; // pending notes write, run early by Ctrl+S
-  function commitNote() { if (noteCommit) { const f = noteCommit; noteCommit = null; f(); } }
         ${tab.id === 'question' ? `<button class="btn btn-sm" data-action="q-new">New question</button>` : ''}
         <span class="muted small" id="noteStatus"></span>
       </div>
@@ -862,7 +877,7 @@
       case 'cal-new-cancel': { const f = t.closest('.cal-new'); if (f) f.remove(); break; }
       case 'fx-toggle': Timer.toggle(); break;
       case 'fx-pick': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { setFocusTask(m); renderFocus($('#main')); } break; }
-      case 'fx-done': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { m.done = true; saveDay(); setFocusTask(null); toast('Done'); renderFocus($('#main')); } break; }
+      case 'fx-done': { const m = (S.day.musts || []).find(x => x.id === id); if (m) { markDone(m); saveDay(); setFocusTask(null); toast('Done'); renderFocus($('#main')); } break; }
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', S.settings.brk, true); else Timer.reset('work', S.settings.work, true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
@@ -882,7 +897,7 @@
     const t = e.target.closest('[data-action]'); if (!t) return;
     const a = t.dataset.action, id = t.dataset.id;
     switch (a) {
-      case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { m.done = t.checked; saveDay(); render(); } break; }
+      case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { if (t.checked) markDone(m); else m.done = false; saveDay(); render(); } break; }
       case 'goal-status': { const g = goalById(id); if (g) { g.status = t.value; saveGoals(); render(); } break; }
       case 'goal-field': { const g = goalById(id); if (g) { g[t.dataset.k] = t.value.trim(); saveGoals(); } break; }
       case 'bn-flag': { const g = goalById(t.value); if (g) { g.status = 'at-risk'; saveGoals(); render(); const ta = $(`.bn-edit[data-id="${g.id}"]`); if (ta) ta.focus(); } break; }
