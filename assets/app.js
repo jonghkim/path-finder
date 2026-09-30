@@ -341,7 +341,17 @@
   }
 
   // Finishing a must-do moves it out of the open list (and off the timeline) into the Done section.
-  function markDone(m) { m.done = true; delete m.start; S.day.musts = (S.day.musts || []).filter(x => x !== m).concat(m); }
+  // Done items keep their place on the timeline: a pinned one stays at its pinned time, a flowing one is
+  // placed where it actually happened (its focus sessions, or else the planned length ending at doneAt).
+  function markDone(m) { m.done = true; m.doneAt = Date.now(); S.day.musts = (S.day.musts || []).filter(x => x !== m).concat(m); }
+  const minsOfDay = ts => { const d = new Date(ts); return d.getHours() * 60 + d.getMinutes(); };
+  function doneSlot(m) {
+    const s = S.settings.dayStart * 60;
+    const ss = (S.day.sessions || []).filter(x => x.taskId === m.id && x.minutes);
+    if (ss.length) { const start = Math.min(...ss.map(x => minsOfDay(x.at - x.minutes * 60000))), end = Math.max(...ss.map(x => minsOfDay(x.at))); if (end > start) return { start: Math.max(s, start), end }; }
+    if (!m.doneAt) return null;
+    const end = minsOfDay(m.doneAt); return { start: Math.max(s, end - (m.minutes || 30)), end };
+  }
   // Place must-dos on the day: pinned ones keep their start; the rest flow in list order from now, around pinned slots.
   function scheduleMusts() {
     const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60;
@@ -350,6 +360,7 @@
     const pinned = musts.filter(m => m.start != null && m.start !== '').map(m => ({ m, start: hmToMins(m.start), end: hmToMins(m.start) + (m.minutes || 30), pinned: true }));
     let cursor = S.dayKey === todayKey() ? Math.max(s, Math.ceil(nowM / 15) * 15) : s;
     const out = pinned.slice();
+    musts.filter(m => (m.start == null || m.start === '') && m.done).forEach(m => { const sl = doneSlot(m); if (sl) out.push({ m, start: sl.start, end: sl.end, pinned: false }); });
     musts.filter(m => (m.start == null || m.start === '') && !m.done).forEach(m => {
       const dur = m.minutes || 30; let st = cursor, moved = true, guard = 0;
       while (moved && guard++ < 50) { moved = false; for (const p of pinned) { if (st < p.end && st + dur > p.start) { st = p.end; moved = true; } } }
@@ -373,7 +384,7 @@
       <div class="cal-blocks">
       ${items.map(({ m, start, end, pinned, lane, cols }) => { const g = m.goalId && goalById(m.goalId); const dur = end - start;
         return `<div class="cal-blk ${m.done ? 'past' : ''} ${pinned ? 'pinned' : ''} ${isFocusing(m.id) ? 'focusing' : ''} ${dur <= 20 ? 'tiny' : dur <= 40 ? 'short' : ''}" style="top:${y(Math.max(start, s))}px;height:${Math.max(10, y(Math.min(end, e)) - y(Math.max(start, s)) - 2)}px;left:calc(${lane / cols * 100}% + 2px);width:calc(${100 / cols}% - 4px);--cat:${g ? gColor(g) : 'var(--ink-3)'}" title="${esc(m.text)} · ${minsToHM(start)}–${minsToHM(end)}${pinned ? ' (pinned)' : ''}" data-id="${m.id}" data-start="${start}" data-dur="${dur}">
-          <span class="cb-t">${esc(m.text)}</span><small>${minsToHM(start)}–${minsToHM(end)}${g ? ' · ' + esc(g.title) : ''}${pinned ? ' 📌' : ''}</small><i class="cal-rs" title="Drag to change duration"></i></div>`; }).join('')}
+          <span class="cb-t">${m.done ? '✓ ' : ''}${esc(m.text)}</span><small>${minsToHM(start)}–${minsToHM(end)}${g ? ' · ' + esc(g.title) : ''}${pinned ? ' 📌' : ''}</small><i class="cal-rs" title="Drag to change duration"></i></div>`; }).join('')}
       </div>
       ${S.dayKey === todayKey() && nowM >= s && nowM <= e ? `<div class="cal-now" style="top:${y(nowM)}px"><span>${minsToHM(nowM)}</span></div>` : ''}
     </div></div>`;
@@ -402,7 +413,7 @@
       body.appendChild(f); f.text.focus();
     });
     cal.addEventListener('pointerdown', e => {
-      const blk = e.target.closest('.cal-blk'); if (!blk || e.button) return;
+      const blk = e.target.closest('.cal-blk'); if (!blk || e.button || blk.classList.contains('past')) return; // done blocks are a record, not draggable
       e.preventDefault(); blk.setPointerCapture(e.pointerId);
       const resizing = e.target.classList.contains('cal-rs');
       const s = S.settings.dayStart * 60, dur0 = +blk.dataset.dur, start0 = +blk.dataset.start, y0 = e.clientY; let st = null, dur = dur0;
@@ -937,7 +948,7 @@
     const t = e.target.closest('[data-action]'); if (!t) return;
     const a = t.dataset.action, id = t.dataset.id;
     switch (a) {
-      case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { if (t.checked) markDone(m); else m.done = false; saveDay(); render(); } break; }
+      case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { if (t.checked) markDone(m); else { m.done = false; delete m.doneAt; } saveDay(); render(); } break; }
       case 'goal-status': { const g = goalById(id); if (g) { g.status = t.value; saveGoals(); render(); } break; }
       case 'goal-field': { const g = goalById(id); if (g) { g[t.dataset.k] = t.value.trim(); saveGoals(); } break; }
       case 'ms-toggle': { const g = goalById(id); const m = g && (g.milestones || []).find(x => x.id === t.dataset.ms); if (m) { m.done = t.checked; saveGoals(); render(); } break; }
