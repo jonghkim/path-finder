@@ -310,7 +310,7 @@
           </section>
       </div>
       <div class="grid grid-3" style="margin-top:18px">
-          <section class="card">
+          <section class="card card-bn">
             <div class="card-head"><h3>Bottleneck</h3><span class="muted small">what is in the way</span></div>
             <textarea class="free-text" data-action="bn-text" rows="7">${esc(S.settings.bottleneck || '')}</textarea>
           </section>
