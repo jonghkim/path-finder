@@ -355,19 +355,11 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .cal-now::before { content: ""; position: absolute; left: -5px; top: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--crit); }
 .cal-now span { position: absolute; right: 0; top: -18px; font-size: 10.5px; font-family: var(--mono); color: var(--crit); font-weight: 600; }
 
-/* Bottleneck */
-.bn { display: grid; gap: 10px; }
-.bn-item { padding: 12px 14px; border-radius: 12px; border-left: 3px solid var(--warn); background: var(--warn-soft); }
-.bn-item.blocked { border-left-color: var(--crit); background: var(--crit-soft); }
-.bn-item .h { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-weight: 600; }
-.bn-item .h select { padding: 2px 6px; font-size: 12.5px; background: transparent; border-color: transparent; }
-.bn-item .h select:hover { border-color: var(--line-strong); }
-.bn-edit { display: block; width: 100%; margin-top: 8px; background: transparent; border-color: transparent; padding: 4px 6px; font-size: 14px; color: var(--ink); }
-.bn-edit:hover { border-color: var(--line-strong); }
-.bn-edit:focus { background: var(--surface); }
-textarea.bn-edit { min-height: 0; resize: none; }
-input.bn-edit { font-size: 13.5px; }
-.bn-flag { width: 100%; font-size: 13px; color: var(--ink-2); padding: 6px 8px; }
+/* Free-text boxes: Bottleneck, Today's goal */
+.free-text { display: block; width: 100%; background: transparent; border-color: transparent; padding: 6px 8px; font-size: 14.5px; line-height: 1.5; color: var(--ink); resize: vertical; }
+.free-text:hover { border-color: var(--line-strong); }
+.free-text:focus { background: var(--surface); }
+.card-goal { margin-bottom: 18px; }
 .pace { font-size: 12px; color: var(--ink-3); }
 
 /* Goal compact rows */

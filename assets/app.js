@@ -104,7 +104,7 @@
     notesDate: todayKey(),
     zen: false
   };
-  const emptyDay = () => ({ musts: [], sessions: [] });
+  const emptyDay = () => ({ musts: [], sessions: [], goal: '' });
   const dayDoc = key => `pf-day-${key}`;
 
   function saveGoals() { Store.setJSON('pf-goals', { goals: S.goals, updated: Date.now() }); }
@@ -213,7 +213,6 @@
   }
 
   // ---------------------------------------------------------------- derived
-  function isBottleneck(g) { return g.status === 'blocked' || g.status === 'at-risk'; }
   function elapsedFrac(g) {
     if (!g.deadline) return 0;
     const start = g.start || addDays(g.deadline, -30);
@@ -244,7 +243,6 @@
     const openM = musts.filter(m => !m.done), doneM = musts.filter(m => m.done);
     const doneCnt = doneM.length;
     const totalMins = openM.reduce((a, m) => a + (m.minutes || 0), 0);
-    const bns = activeGoals().filter(isBottleneck);
     const shortG = activeGoals().filter(g => g.horizon !== 'long').sort(byOrder);
     const longG = activeGoals().filter(g => g.horizon === 'long').sort(byOrder);
     const sched = scheduleMusts(); const slotOf = id => sched.find(x => x.m.id === id);
@@ -264,6 +262,10 @@
       </header>
 
       ${mottoBlock()}
+      <section class="card card-goal">
+        <div class="card-head"><h3>Today's goal</h3><span class="muted small">one line or a paragraph</span></div>
+        <textarea class="free-text" data-action="day-goal" rows="3" placeholder="What would make today a win?">${esc(S.day.goal || '')}</textarea>
+      </section>
       <div class="grid grid-2eq">
           <section class="card">
             <div class="card-head"><h3>Must do today</h3><span class="muted small mono">${doneCnt}/${musts.length} · ${fmtDur(totalMins)} left</span></div>
@@ -309,19 +311,8 @@
       </div>
       <div class="grid grid-3" style="margin-top:18px">
           <section class="card">
-            <div class="card-head"><h3>Bottleneck</h3><span class="muted small">${bns.length ? `${bns.length} flagged` : 'clear'}</span></div>
-            <div class="bn">
-              ${bns.map(g => `
-                <div class="bn-item ${g.status === 'blocked' ? 'blocked' : ''}">
-                  <div class="h"><span data-action="open-goal" data-id="${g.id}" style="cursor:pointer">${esc(g.title)}</span>
-                    <select class="status status-${g.status}" data-action="goal-status" data-id="${g.id}"><option value="at-risk" ${g.status === 'at-risk' ? 'selected' : ''}>At risk</option><option value="blocked" ${g.status === 'blocked' ? 'selected' : ''}>Blocked</option><option value="on-track">Resolved</option></select></div>
-                  ${g.deadline ? `<div class="pace">${dLabel(daysUntil(g.deadline))} · ${fmtDow(g.deadline)}</div>` : ''}
-                  <textarea class="bn-edit" data-action="goal-field" data-id="${g.id}" data-k="bottleneck" placeholder="What is blocking this?" rows="2">${esc(g.bottleneck || '')}</textarea>
-                  <input class="bn-edit" autocomplete="off" data-action="goal-field" data-id="${g.id}" data-k="next" value="${esc(g.next || '')}" placeholder="Next action to unblock it">
-                </div>`).join('')}
-              ${bns.length ? '' : '<div class="empty">Nothing is blocked.</div>'}
-              ${activeGoals().some(g => !isBottleneck(g)) ? `<select class="bn-flag" data-action="bn-flag"><option value="">Flag a goal as at risk…</option>${activeGoals().filter(g => !isBottleneck(g)).map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('')}</select>` : ''}
-            </div>
+            <div class="card-head"><h3>Bottleneck</h3><span class="muted small">what is in the way</span></div>
+            <textarea class="free-text" data-action="bn-text" rows="7" placeholder="What is blocking you right now, and what would unblock it? Free-form.">${esc(S.settings.bottleneck || '')}</textarea>
           </section>
 
           <section class="card">
@@ -935,6 +926,13 @@
     }
   });
 
+  // Free-text boxes save as you type; Store.setRaw coalesces the writes.
+  document.addEventListener('input', e => {
+    const t = e.target; if (!t || !t.dataset) return;
+    if (t.dataset.action === 'bn-text') { S.settings.bottleneck = t.value; saveSettings(); }
+    else if (t.dataset.action === 'day-goal') { S.day.goal = t.value; saveDay(); }
+  });
+
   document.addEventListener('change', e => {
     const t = e.target.closest('[data-action]'); if (!t) return;
     const a = t.dataset.action, id = t.dataset.id;
@@ -942,7 +940,6 @@
       case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { if (t.checked) markDone(m); else m.done = false; saveDay(); render(); } break; }
       case 'goal-status': { const g = goalById(id); if (g) { g.status = t.value; saveGoals(); render(); } break; }
       case 'goal-field': { const g = goalById(id); if (g) { g[t.dataset.k] = t.value.trim(); saveGoals(); } break; }
-      case 'bn-flag': { const g = goalById(t.value); if (g) { g.status = 'at-risk'; saveGoals(); render(); const ta = $(`.bn-edit[data-id="${g.id}"]`); if (ta) ta.focus(); } break; }
       case 'ms-toggle': { const g = goalById(id); const m = g && (g.milestones || []).find(x => x.id === t.dataset.ms); if (m) { m.done = t.checked; saveGoals(); render(); } break; }
       case 'preset-input': { const n = parseInt(t.value); if (n > 0 && n <= 240) { Timer.pick('work', n); renderFocus($('#main')); } break; }
       case 'fx-auto': S.settings.autoCycle = t.checked; saveSettings(); break;
