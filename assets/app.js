@@ -264,7 +264,7 @@
       ${mottoBlock()}
       <section class="card card-goal">
         <div class="card-head"><h3>Today's goal</h3><span class="muted small">one line or a paragraph</span></div>
-        <textarea class="free-text" data-action="day-goal" rows="3" placeholder="What would make today a win?">${esc(S.day.goal || '')}</textarea>
+        <textarea class="free-text" data-action="day-goal" rows="7" placeholder="What would make today a win?">${esc(S.day.goal || '')}</textarea>
       </section>
       <div class="grid grid-2eq">
           <section class="card">
@@ -312,7 +312,7 @@
       <div class="grid grid-3" style="margin-top:18px">
           <section class="card">
             <div class="card-head"><h3>Bottleneck</h3><span class="muted small">what is in the way</span></div>
-            <textarea class="free-text" data-action="bn-text" rows="7" placeholder="What is blocking you right now, and what would unblock it? Free-form.">${esc(S.settings.bottleneck || '')}</textarea>
+            <textarea class="free-text" data-action="bn-text" rows="7">${esc(S.settings.bottleneck || '')}</textarea>
           </section>
 
           <section class="card">
