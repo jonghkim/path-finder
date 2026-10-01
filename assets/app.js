@@ -91,7 +91,7 @@
   // ---------------------------------------------------------------- state
   const DEFAULT_SETTINGS = {
     theme: 'auto', work: 25, brk: 5, longBrk: 15, autoCycle: true, sound: true, dayStart: 7, dayEnd: 24,
-    mottos: ['Stay exposed to good factors — a good attitude, belief in yourself. Luck washes out; the factor compounds.', '끝날 때까지는 끝난 게 아니다. 길고 짧은 건 대봐야 안다. Try again from a different angle.']
+    mottos: ['Stay exposed to good factors — a good attitude, belief in yourself. Luck washes out; the factor compounds.', '끝날 때까지는 끝난 게 아니다. 길고 짧은 건 대봐야 안다. Try again from a different angle.', 'Mantra: 나는 할 수 있다.']
   };
   const S = {
     view: 'today',
@@ -159,8 +159,8 @@
     if (s) S.settings = { ...DEFAULT_SETTINGS, ...s };
     if (d) S.day = { ...emptyDay(), ...d };
     S.loaded = true;
-    // One-time (rev 5): reset the motto list to the current defaults; saved lists win in the merge, so do it here.
-    if (!S.settings.mottoRev || S.settings.mottoRev < 5) { S.settings.mottos = DEFAULT_SETTINGS.mottos.slice(); S.settings.mottoRev = 5; saveSettings(); }
+    // One-time (rev 6): reset the motto list to the current defaults; saved lists win in the merge, so do it here.
+    if (!S.settings.mottoRev || S.settings.mottoRev < 6) { S.settings.mottos = DEFAULT_SETTINGS.mottos.slice(); S.settings.mottoRev = 6; saveSettings(); }
     applyTheme();
     render();
   });
