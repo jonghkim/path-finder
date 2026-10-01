@@ -91,7 +91,7 @@
   // ---------------------------------------------------------------- state
   const DEFAULT_SETTINGS = {
     theme: 'auto', work: 25, brk: 5, longBrk: 15, autoCycle: true, sound: true, dayStart: 7, dayEnd: 24,
-    mottos: ['끝날 때까지는 끝난 게 아니다.', '길고 짧은 건 대봐야 안다.', 'Try again from a different angle.']
+    mottos: ['끝날 때까지는 끝난 게 아니다.', '길고 짧은 건 대봐야 안다.', 'Try again from a different angle.', 'Stay exposed to good factors — a good attitude, belief in yourself. Luck washes out; the factor compounds.']
   };
   const S = {
     view: 'today',
@@ -159,6 +159,8 @@
     if (s) S.settings = { ...DEFAULT_SETTINGS, ...s };
     if (d) S.day = { ...emptyDay(), ...d };
     S.loaded = true;
+    // One-time: mottos added to the defaults after a user already saved their own list (saved lists win in the merge).
+    if (!S.settings.mottoRev || S.settings.mottoRev < 2) { S.settings.mottos = S.settings.mottos || []; DEFAULT_SETTINGS.mottos.slice(3).forEach(m => { if (!S.settings.mottos.includes(m)) S.settings.mottos.push(m); }); S.settings.mottoRev = 2; saveSettings(); }
     applyTheme();
     render();
   });
