@@ -548,7 +548,9 @@
         <div class="row" style="justify-content:center"><button class="btn btn-primary" data-action="load-template">Load template</button><button class="btn" data-action="goal-new">Start empty</button></div></section>`;
       return;
     }
-    const section = (title, list, h) => `<div class="goals-section"><h3>${title} <span class="cnt">${list.length}</span></h3><div class="goal-cards" data-horizon="${h}">${list.map(goalCard).join('') || '<div class="drop-hint">Drop a goal here</div>'}</div></div>`;
+    // Done is collapsible (collapsed by default); the choice is remembered per browser.
+    const doneOpen = (() => { try { return localStorage.getItem('pf-goals-done') === 'open'; } catch (e) { return false; } })();
+    const section = (title, list, h) => { const col = h === 'done'; const closed = col && !doneOpen; return `<div class="goals-section ${closed ? 'collapsed' : ''}"><h3 ${col ? 'class="toggle" data-action="goals-done-toggle" title="Show or hide done goals"' : ''}>${col ? '<span class="chev">›</span>' : ''}${title} <span class="cnt">${list.length}</span></h3><div class="goal-cards" data-horizon="${h}">${list.map(goalCard).join('') || '<div class="drop-hint">Drop a goal here</div>'}</div></div>`; };
     const active = activeGoals();
     const short = active.filter(g => g.horizon !== 'long').sort(byOrder);
     const long = active.filter(g => g.horizon === 'long').sort(byOrder);
@@ -1019,6 +1021,7 @@
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
+      case 'goals-done-toggle': { const sec = t.closest('.goals-section'); const open = sec.classList.toggle('collapsed') ? 'closed' : 'open'; try { localStorage.setItem('pf-goals-done', open); } catch (e) {} break; }
       case 'compass-tab': S.compassTab = t.dataset.tab; S.visionEdit = false; render(); break;
       case 'vision-edit': S.visionEdit = true; render(); break;
       case 'vision-done': S.visionEdit = false; render(); break;
