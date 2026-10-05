@@ -713,7 +713,7 @@
         this.reset('break', long ? S.settings.longBrk : this.brkLen(), true);
         if (S.settings.autoCycle) this.start();
       } else {
-        beep(3, { base: 1318.5, gap: 0.35 }); toast('Break over — back to it');
+        beep(3, { base: 523.25, gap: 1.8 }); toast('Break over — back to it');
         this.reset('work', this.workLen(), true);
         if (S.settings.autoCycle) this.start();
       }
@@ -752,29 +752,31 @@
     comp.connect(master); master.connect(audioCtx.destination);
     audioOut = comp; return audioOut;
   }
-  // Bell strike: a strong fundamental with a slightly detuned octave for shimmer, a few upper partials
-  // for brightness, and a short click for the mallet. Each partial decays exponentially at its own rate.
-  function strike(t0, base = 1046.5) {
+  // Singing-bowl strike. A bowl's modes are inharmonic (≈1 : 2.71 : 4.99 : 7.9 : 11.3) and each comes as a
+  // pair of nearly equal frequencies, which is what gives the slow "wah-wah" shimmer. Soft felt attack, long decay.
+  function strike(t0, base = 392) {
     const out = outNode();
-    const partials = [[1, 1.0, 0.9], [2.003, 0.55, 0.55], [3.0, 0.3, 0.32], [4.16, 0.18, 0.22], [5.43, 0.1, 0.14], [6.8, 0.06, 0.09]];
-    for (const [ratio, amp, tau] of partials) {
-      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-      o.type = 'sine'; o.frequency.value = base * ratio;
-      o.connect(g); g.connect(out);
-      g.gain.setValueAtTime(0, t0);
-      g.gain.linearRampToValueAtTime(amp, t0 + 0.004);
-      g.gain.setTargetAtTime(0, t0 + 0.004, tau);
-      o.start(t0); o.stop(t0 + tau * 7 + 0.1);
+    const modes = [[1, 1.0, 2.8, 1.1], [2.71, 0.42, 1.5, 1.8], [4.99, 0.2, 0.85, 2.6], [7.9, 0.09, 0.45, 3.4], [11.3, 0.04, 0.28, 4.2]];
+    for (const [ratio, amp, tau, beat] of modes) {
+      for (const sign of [-1, 1]) {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.value = base * ratio + sign * beat / 2;
+        o.connect(g); g.connect(out);
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(amp / 2, t0 + 0.035);
+        g.gain.setTargetAtTime(0, t0 + 0.035, tau);
+        o.start(t0); o.stop(t0 + tau * 6 + 0.1);
+      }
     }
-    // Mallet click: a very short, bright burst so the onset reads as a hit rather than a fade-in.
-    const c = audioCtx.createOscillator(), cg = audioCtx.createGain();
-    c.type = 'triangle'; c.frequency.value = base * 9.7;
-    c.connect(cg); cg.connect(out);
-    cg.gain.setValueAtTime(0.4, t0); cg.gain.setTargetAtTime(0, t0, 0.012);
-    c.start(t0); c.stop(t0 + 0.12);
+    // Felt mallet: a brief, soft low thump under the onset.
+    const m = audioCtx.createOscillator(), mg = audioCtx.createGain();
+    m.type = 'triangle'; m.frequency.value = base * 0.5;
+    m.connect(mg); mg.connect(out);
+    mg.gain.setValueAtTime(0, t0); mg.gain.linearRampToValueAtTime(0.25, t0 + 0.01); mg.gain.setTargetAtTime(0, t0 + 0.01, 0.05);
+    m.start(t0); m.stop(t0 + 0.4);
   }
   // n strikes, `gap` seconds apart. If the context is still suspended, wait for resume() before scheduling.
-  function beep(n, { base = 1046.5, gap = 0.6 } = {}) {
+  function beep(n, { base = 392, gap = 2.4 } = {}) {
     if (!S.settings.sound) return;
     try {
       ensureAudio(); if (!audioCtx) return;
