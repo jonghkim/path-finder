@@ -102,6 +102,7 @@
     loaded: false,
     notesTab: 'daily',
     notesDate: todayKey(),
+    compassTab: 'tactics', visionEdit: false,
     zen: false
   };
   const emptyDay = () => ({ musts: [], sessions: [], goal: '' });
@@ -166,7 +167,7 @@
   });
 
   // ---------------------------------------------------------------- routing
-  const VIEWS = { today: renderToday, timeline: renderTimeline, goals: renderGoals, focus: renderFocus, notes: renderNotes, settings: renderSettings };
+  const VIEWS = { today: renderToday, timeline: renderTimeline, goals: renderGoals, focus: renderFocus, notes: renderNotes, compass: renderCompass, settings: renderSettings };
   function route(v) {
     if (!VIEWS[v]) v = 'today';
     S.view = v;
@@ -193,7 +194,7 @@
   }
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select, button, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
-    const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes' };
+    const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes', '6': 'compass' };
     if (map[e.key]) route(map[e.key]);
     if (e.key === ' ' && S.view === 'focus') { e.preventDefault(); Timer.toggle(); }
     if (e.key === 'Escape') { closeModal(); const f = $('.cal-new'); if (f) f.remove(); }
@@ -203,7 +204,7 @@
     // Keep midnight rollover honest
     if (S.dayKey !== todayKey() && S.view !== 'notes') switchDay(todayKey());
     const main = $('#main');
-    if (S.view !== 'notes') destroyQuill();
+    if (S.view !== 'notes' && S.view !== 'compass') destroyQuill();
     VIEWS[S.view](main);
     renderNavTimer();
   }
@@ -874,6 +875,97 @@
     } catch (e) { console.warn(e); }
   }
 
+
+  // ---------------------------------------------------------------- COMPASS (tactics + vision)
+  // Tactics: a condensed read of docs/PhD Time Management Tactics.docx (SC Johnson time-management panel, 2026-05-08).
+  const TACTICS = [
+    { t: 'Work with your natural schedule', items: ['Follow the hours when your energy is highest; everyone\'s optimum is different.', 'Productivity comes from consistency, not from the clock.', 'Hours in and quality out are what count. When they happen does not.'] },
+    { t: 'Build a writing habit', items: ['Write regularly and without judging. Volume builds skill.', 'Protect focus: Do Not Disturb, scheduled writing blocks.', 'Break a paper into small sections so it never feels overwhelming.', 'Reassess every hour so you do not stay stuck.', 'Read strong papers from the last five years to stay sharp.'] },
+    { t: 'Run several projects', items: ['Keep projects at different stages (revision, analysis, brainstorming) so nothing bottlenecks.', 'Note where you left off, the pain point, and the next step.', 'Each semester, decide which project gets priority.', 'The project closest to submission always comes first.', 'Delegate what you can before diving into deep work.'] },
+    { t: 'Track it in one place', items: ['One weekly overview of every project: to-dos, ownership, A/B/C priorities.', 'Assign tasks to specific days and times, not just to a list.'] },
+    { t: 'Prioritize', items: ['Health and family come first. Creativity needs mental capacity.', 'Eisenhower matrix: urgent versus important.', 'Broad bracketing: allot time to research, coursework and personal life.', 'Keep interests outside academia to stay grounded.', 'Favor tasks that move a project toward submission.'] },
+    { t: 'Look after yourself', items: ['Sports, exercise, time with family and friends.', 'Choose activities with tangible, immediate feedback to restore motivation.', 'Read non-academic books.', 'No doom-scrolling at night. Protect sleep.', 'Step outside the academic bubble regularly.'] },
+    { t: 'When everything is urgent', items: ['One full day per project to cut switching costs.', 'Sleep at least seven hours.', 'Change work locations to re-energize.', 'Accept uncertainty. Research is unpredictable, and pausing can be productive.', 'Bandwidth grows with experience.'] },
+    { t: 'Advisors and collaborators', items: ['Send an agenda before meetings.', 'Redirect the conversation when time is short.'] }
+  ];
+  // Vision: the essence of the long Vision note, for unsettled days. Seeded once; editable in place, stored like any note.
+  const VISION_DOC = 'compassVision';
+  const VISION_DEFAULT = `
+<h2>마음</h2>
+<ul>
+<li>두려움과 회의는 늘 있다. 자연스러운 감정이고, 자책은 시간 낭비다. — 허준이</li>
+<li>두려워할수록 문제는 커진다. 두려워하지 않으면 쉬운 문제가 된다.</li>
+<li>If I am super clear, I have nothing to be afraid of.</li>
+<li>해 뜨기 전이 가장 어둡다. 더는 아래가 없다는 건 위로 올라갈 일만 남았다는 뜻이다.</li>
+<li>나는 살아 있다. 그러면 무엇이든 할 수 있다.</li>
+</ul>
+<h2>일하는 법</h2>
+<ul>
+<li>Divide and conquer. 아는 것과 모르는 것을 계속 구분하면 어떤 문제도 이해할 수 있다. 한 번에 하나만, end to end.</li>
+<li>질문을 아주 명확히 하면 문제는 반쯤 풀린 것이다. 어떤 문제도 무한한 질문 앞에서는 녹아내린다.</li>
+<li>작게 쪼개서, step by step, 서두르지 말고. 보일 수 있는 가장 간단한 것부터 채운다.</li>
+<li>Minds with hands. 실행력 &gt;&gt;&gt;&gt; 생각.</li>
+<li>Absolute block time. Micro goals, then rewards.</li>
+</ul>
+<h2>연구자로서</h2>
+<ul>
+<li>Do original work. 남의 연구를 섞는 얄팍한 연구가 아니라 홀로 깊게 생각한 연구. 확신이 생기면 남의 말은 중요하지 않다.</li>
+<li>Do what you love. 재밌는 주제만. 가장 어려운 문제를 좇는다.</li>
+<li>Delivery is more important than research. 많이 연습하라.</li>
+<li>Make knowledge compound.</li>
+</ul>
+<h2>태도</h2>
+<ul>
+<li>Stay exposed to good factors. Luck washes out; the factor compounds. 시행을 많이 하는 것이 운이 좋아지는 방법이다.</li>
+<li>인생은 정면승부. 도망쳐서 도달한 곳에 낙원은 없다.</li>
+<li>Always take the initiative. The price of not communicating is huge.</li>
+<li>평가는 대개 attitude에 기반한다. 보여줄 수 있는 곳에서는 최대한 보여라.</li>
+<li>즉흥적으로 결정하지 말 것. "생각해보고 알려주겠다."</li>
+<li>Be honest. Be yourself. I control my life, no one else.</li>
+<li>닮고 싶은 사람과 일하고, 부정적인 사람과는 엮이지 말 것. 반대로 생각하기: 성공할 이유가 아니라 반드시 실패할 이유를. — Munger</li>
+</ul>
+<h2>몸</h2>
+<ul>
+<li>수면 &gt;&gt;&gt;&gt;&gt; 모든 것. 집중이 안 되면 차라리 자라. 7시간 이상.</li>
+<li>규칙적 운동 1시간, 아침 햇빛과 산책, 건강한 음식, 야식 금지, 핸드폰 줄이기.</li>
+<li>대운을 회복하는 방법: 필요한 휴식을 잘 취하고, 건강한 마음으로 하루를 온전히 집중해서 보내는 것.</li>
+</ul>
+<h2>왜</h2>
+<ul>
+<li>결국 내가 어떤 연구자, 어떤 사람이 되었는가가 중요하다. Pub 개수, flyout 개수는 필요 없다. 우리는 각자 하나의 job만 필요하다.</li>
+<li>나만의 도메인에서 최고가 되는 것. You are my hero. I should be a hero of my family.</li>
+<li>사람이 할 수 있는 일은 다 하고, 나머지는 하늘에 맡긴다. 하늘을 바라보되 발은 땅에.</li>
+<li>하루를 온전히 살 것. 내가 하는 일에 순수한 사랑을 얼마나 오래 지속할 수 있는가. — 허준이</li>
+<li>There is always hope. 포기하지 않으면 반드시 기회가 생긴다.</li>
+<li>아무리 어려워도, 아무리 힘들어도, 해야지.</li>
+</ul>`;
+  function renderCompass(main) {
+    const tab = S.compassTab === 'vision' ? 'vision' : 'tactics';
+    const tabs = `<div class="notes-tabs">${[['tactics', 'Tactics'], ['vision', 'Vision']].map(([id, l]) => `<button class="notes-tab ${id === tab ? 'active' : ''}" data-action="compass-tab" data-tab="${id}">${l}</button>`).join('')}</div>`;
+    if (tab === 'tactics') {
+      destroyQuill();
+      main.innerHTML = `<div class="view-head"><div><h1>Compass</h1><div class="sub">How to work, and why. Read when the day feels tangled.</div></div></div>${tabs}
+        <div class="tactics">${TACTICS.map(c => `<section class="card tac"><h3>${esc(c.t)}</h3><ul>${c.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></section>`).join('')}</div>
+        <div class="muted small" style="margin-top:14px">Condensed from the SC Johnson College of Business time-management panel, May 8, 2026 (Garbinsky, Hildreth, Shu, Wiernsperger, Qi). Full notes in docs/.</div>`;
+      return;
+    }
+    if (S.visionEdit) {
+      main.innerHTML = `<div class="view-head"><div><h1>Compass</h1><div class="sub">Editing the vision. Saves as you type.</div></div><button class="btn btn-sm" data-action="vision-done">Done</button></div>${tabs}
+        <div class="notes-bar"><span class="muted small" id="noteStatus"></span></div>
+        <div class="note-editor"><div id="noteEditor"></div></div>`;
+      mountQuill({ id: 'vision', doc: () => VISION_DOC, ph: 'The essence.' });
+      // A brand-new doc starts from the seed so there is something to edit.
+      const seedIfEmpty = () => { if (quill && quill.getText().trim() === '' && !Store.cached(VISION_DOC)) quill.clipboard.dangerouslyPasteHTML(VISION_DEFAULT); };
+      Store.getRaw(VISION_DOC).then(h => { if (!h) setTimeout(seedIfEmpty, 150); });
+      return;
+    }
+    destroyQuill();
+    const show = html => { const el = $('#visionRead'); if (el) el.innerHTML = html || VISION_DEFAULT; };
+    main.innerHTML = `<div class="view-head"><div><h1>Compass</h1><div class="sub">The essence. Read slowly.</div></div><button class="btn btn-sm btn-ghost" data-action="vision-edit">Edit</button></div>${tabs}
+      <article class="vision-read" id="visionRead"></article>`;
+    show(Store.cached(VISION_DOC));
+    Store.getRaw(VISION_DOC).then(h => { if (S.view === 'compass' && S.compassTab === 'vision' && !S.visionEdit) show(h); });
+  }
   // ---------------------------------------------------------------- SETTINGS
   function renderSettings(main) {
     const s = S.settings;
@@ -927,6 +1019,9 @@
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
+      case 'compass-tab': S.compassTab = t.dataset.tab; S.visionEdit = false; render(); break;
+      case 'vision-edit': S.visionEdit = true; render(); break;
+      case 'vision-done': S.visionEdit = false; render(); break;
       case 'notes-today': S.notesDate = todayKey(); render(); break;
       case 'q-new': S.qIdx = Math.floor(Math.random() * (window.questions || []).length); render(); break;
       case 'q-open': S.qIdx = +t.dataset.i; render(); break;

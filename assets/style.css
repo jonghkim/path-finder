@@ -565,3 +565,18 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
   .mobile-settings { display: block; }
 }
 @media (min-width: 721px) { .mobile-only { display: none !important; } }
+
+/* Compass */
+.tactics { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.tac h3 { margin: 0 0 8px; font-size: 15px; }
+.tac ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.tac li::marker { color: var(--ink-3); }
+.vision-read { max-width: 720px; margin: 6px auto 40px; padding: 28px 32px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); font-size: 16px; line-height: 1.75; }
+.vision-read h1, .vision-read h2, .vision-read h3 { margin: 26px 0 8px; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.vision-read h1:first-child, .vision-read h2:first-child, .vision-read h3:first-child { margin-top: 0; }
+.vision-read ul, .vision-read ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; }
+.vision-read li { padding-left: 18px; position: relative; }
+.vision-read li::before { content: "—"; position: absolute; left: 0; color: var(--ink-3); }
+.vision-read p { margin: 0 0 8px; }
+.vision-read blockquote { margin: 8px 0; padding: 4px 14px; border-left: 3px solid var(--line-strong); color: var(--ink-2); }
+@media (max-width: 720px) { .vision-read { padding: 20px 18px; font-size: 15px; } }
