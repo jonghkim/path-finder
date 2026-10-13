@@ -925,6 +925,7 @@
 <p>Stay exposed to good factors — a good attitude, belief in yourself. Luck washes out; the factor compounds.</p>
 <p>Try again from a different angle.</p>
 <p>자기 확언 - 나는 내가 오늘 하려는 일을 다 할 수 있다</p>
+<p>Brave attempts are the ones that pay off the most.</p>
 <p>두려워할수록 문제는 커진다. 두려워하지 않으면 쉬운 문제가 된다.</p>
 <p>더는 아래가 없다는 건... 반대로 위로 올라갈 일만 남았다는 뜻이지.</p>
 <p>Be honest person</p>
