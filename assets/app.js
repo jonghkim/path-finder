@@ -102,7 +102,7 @@
     loaded: false,
     notesTab: 'daily',
     notesDate: todayKey(),
-    compassTab: 'tactics', visionEdit: false,
+    anchorTab: 'vision', visionEdit: false,
     zen: false
   };
   const emptyDay = () => ({ musts: [], sessions: [], goal: '' });
@@ -167,7 +167,7 @@
   });
 
   // ---------------------------------------------------------------- routing
-  const VIEWS = { today: renderToday, timeline: renderTimeline, goals: renderGoals, focus: renderFocus, notes: renderNotes, compass: renderCompass, settings: renderSettings };
+  const VIEWS = { today: renderToday, timeline: renderTimeline, goals: renderGoals, focus: renderFocus, notes: renderNotes, anchor: renderAnchor, settings: renderSettings };
   function route(v) {
     if (!VIEWS[v]) v = 'today';
     S.view = v;
@@ -194,7 +194,7 @@
   }
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select, button, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
-    const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes', '6': 'compass' };
+    const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes', '6': 'anchor' };
     if (map[e.key]) route(map[e.key]);
     if (e.key === ' ' && S.view === 'focus') { e.preventDefault(); Timer.toggle(); }
     if (e.key === 'Escape') { closeModal(); const f = $('.cal-new'); if (f) f.remove(); }
@@ -204,7 +204,7 @@
     // Keep midnight rollover honest
     if (S.dayKey !== todayKey() && S.view !== 'notes') switchDay(todayKey());
     const main = $('#main');
-    if (S.view !== 'notes' && S.view !== 'compass') destroyQuill();
+    if (S.view !== 'notes' && S.view !== 'anchor') destroyQuill();
     VIEWS[S.view](main);
     renderNavTimer();
   }
@@ -880,7 +880,7 @@
   }
 
 
-  // ---------------------------------------------------------------- COMPASS (tactics + vision)
+  // ---------------------------------------------------------------- ANCHOR (vision + tactics)
   // Tactics: a condensed read of docs/PhD Time Management Tactics.docx (SC Johnson time-management panel, 2026-05-08).
   const TACTICS = [
     { t: 'Work with your natural schedule', items: ['Follow the hours when your energy is highest; everyone\'s optimum is different.', 'Productivity comes from consistency, not from the clock.', 'Hours in and quality out are what count. When they happen does not.'] },
@@ -894,7 +894,30 @@
   ];
   // Vision: the essence of the long Vision note, for unsettled days. Seeded once; editable in place, stored like any note.
   const VISION_DOC = 'compassVision';
-  const VISION_DEFAULT = `
+  const VISION_BONGSHIN = `
+<h2>Bongshin Lee</h2>
+<ul>
+<li>Keep Calm and Carry On</li>
+<li>Do the Right Thing</li>
+<li>As Simple As Possible</li>
+<li>Progress not Perfection</li>
+<li>Listen to Your Heart</li>
+</ul>
+<h2>Listen to Your Heart</h2>
+<blockquote>When the world is so confusing</blockquote>
+<blockquote>you just don't know what to do,</blockquote>
+<blockquote>It may help to stop and listen</blockquote>
+<blockquote>to the voice inside of you,</blockquote>
+<blockquote>For it speaks the words of wisdom</blockquote>
+<blockquote>that, somehow, you've always known,</blockquote>
+<blockquote>And it guides your feet along the path</blockquote>
+<blockquote>that's meant for you alone.</blockquote>
+<blockquote>It may be just a whisper</blockquote>
+<blockquote>that you hear within your heart,</blockquote>
+<blockquote>But it gives you courage, strength, and hope</blockquote>
+<blockquote>to make another start.</blockquote>
+`;
+  const VISION_DEFAULT = VISION_BONGSHIN + `
 <h2>마음</h2>
 <ul>
 <li>두려움과 회의는 늘 있다. 자연스러운 감정이고, 자책은 시간 낭비다. — 허준이</li>
@@ -943,18 +966,18 @@
 <li>There is always hope. 포기하지 않으면 반드시 기회가 생긴다.</li>
 <li>아무리 어려워도, 아무리 힘들어도, 해야지.</li>
 </ul>`;
-  function renderCompass(main) {
-    const tab = S.compassTab === 'vision' ? 'vision' : 'tactics';
-    const tabs = `<div class="notes-tabs">${[['tactics', 'Tactics'], ['vision', 'Vision']].map(([id, l]) => `<button class="notes-tab ${id === tab ? 'active' : ''}" data-action="compass-tab" data-tab="${id}">${l}</button>`).join('')}</div>`;
+  function renderAnchor(main) {
+    const tab = S.anchorTab === 'tactics' ? 'tactics' : 'vision';
+    const tabs = `<div class="notes-tabs">${[['vision', 'Vision'], ['tactics', 'Tactics']].map(([id, l]) => `<button class="notes-tab ${id === tab ? 'active' : ''}" data-action="anchor-tab" data-tab="${id}">${l}</button>`).join('')}</div>`;
     if (tab === 'tactics') {
       destroyQuill();
-      main.innerHTML = `<div class="view-head"><div><h1>Compass</h1><div class="sub">How to work, and why. Read when the day feels tangled.</div></div></div>${tabs}
+      main.innerHTML = `<div class="view-head"><div><h1>Anchor</h1><div class="sub">How to work, and why. Read when the day feels tangled.</div></div></div>${tabs}
         <div class="tactics">${TACTICS.map(c => `<section class="card tac"><h3>${esc(c.t)}</h3><ul>${c.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></section>`).join('')}</div>
         <div class="muted small" style="margin-top:14px">Condensed from the SC Johnson College of Business time-management panel, May 8, 2026 (Garbinsky, Hildreth, Shu, Wiernsperger, Qi). Full notes in docs/.</div>`;
       return;
     }
     if (S.visionEdit) {
-      main.innerHTML = `<div class="view-head"><div><h1>Compass</h1><div class="sub">Editing the vision. Saves as you type.</div></div><button class="btn btn-sm" data-action="vision-done">Done</button></div>${tabs}
+      main.innerHTML = `<div class="view-head"><div><h1>Anchor</h1><div class="sub">Editing the vision. Saves as you type.</div></div><button class="btn btn-sm" data-action="vision-done">Done</button></div>${tabs}
         <div class="notes-bar"><span class="muted small" id="noteStatus"></span></div>
         <div class="note-editor"><div id="noteEditor"></div></div>`;
       mountQuill({ id: 'vision', doc: () => VISION_DOC, ph: 'The essence.' });
@@ -964,11 +987,13 @@
       return;
     }
     destroyQuill();
-    const show = html => { const el = $('#visionRead'); if (el) el.innerHTML = html || VISION_DEFAULT; };
-    main.innerHTML = `<div class="view-head"><div><h1>Compass</h1><div class="sub">The essence. Read slowly.</div></div><button class="btn btn-sm btn-ghost" data-action="vision-edit">Edit</button></div>${tabs}
+    // Added 2026-10-13: if the vision was already edited before the Bongshin Lee block existed, put it at the top once.
+    const withBongshin = html => { if (html && !/Bongshin Lee/.test(html) && !S.settings.visionBongshin) { html = VISION_BONGSHIN + html; Store.setRaw(VISION_DOC, html); S.settings.visionBongshin = true; saveSettings(); } return html; };
+    const show = html => { const el = $('#visionRead'); if (el) el.innerHTML = withBongshin(html) || VISION_DEFAULT; };
+    main.innerHTML = `<div class="view-head"><div><h1>Anchor</h1><div class="sub">The essence. Read slowly.</div></div><button class="btn btn-sm btn-ghost" data-action="vision-edit">Edit</button></div>${tabs}
       <article class="vision-read" id="visionRead"></article>`;
     show(Store.cached(VISION_DOC));
-    Store.getRaw(VISION_DOC).then(h => { if (S.view === 'compass' && S.compassTab === 'vision' && !S.visionEdit) show(h); });
+    Store.getRaw(VISION_DOC).then(h => { if (S.view === 'anchor' && S.anchorTab === 'vision' && !S.visionEdit) show(h); });
   }
   // ---------------------------------------------------------------- SETTINGS
   function renderSettings(main) {
@@ -1024,7 +1049,7 @@
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
       case 'goals-done-toggle': { const sec = t.closest('.goals-section'); const open = sec.classList.toggle('collapsed') ? 'closed' : 'open'; try { localStorage.setItem('pf-goals-done', open); } catch (e) {} break; }
-      case 'compass-tab': S.compassTab = t.dataset.tab; S.visionEdit = false; render(); break;
+      case 'anchor-tab': S.anchorTab = t.dataset.tab; S.visionEdit = false; render(); break;
       case 'vision-edit': S.visionEdit = true; render(); break;
       case 'vision-done': S.visionEdit = false; render(); break;
       case 'notes-today': S.notesDate = todayKey(); render(); break;

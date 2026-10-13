@@ -571,7 +571,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 }
 @media (min-width: 721px) { .mobile-only { display: none !important; } }
 
-/* Compass */
+/* Anchor (vision + tactics) */
 .tactics { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
 .tac h3 { margin: 0 0 8px; font-size: 15px; }
 .tac ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
@@ -583,5 +583,6 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .vision-read li { padding-left: 18px; position: relative; }
 .vision-read li::before { content: "—"; position: absolute; left: 0; color: var(--ink-3); }
 .vision-read p { margin: 0 0 8px; }
-.vision-read blockquote { margin: 8px 0; padding: 4px 14px; border-left: 3px solid var(--line-strong); color: var(--ink-2); }
+.vision-read blockquote { margin: 0; padding: 1px 14px; border-left: 3px solid var(--line-strong); color: var(--ink-2); font-style: italic; }
+.vision-read blockquote + :not(blockquote) { margin-top: 10px; }
 @media (max-width: 720px) { .vision-read { padding: 20px 18px; font-size: 15px; } }
