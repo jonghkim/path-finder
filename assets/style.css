@@ -582,7 +582,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .vision-read ul, .vision-read ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; }
 .vision-read li { padding-left: 18px; position: relative; }
 .vision-read li::before { content: "—"; position: absolute; left: 0; color: var(--ink-3); }
-.vision-read p { margin: 0 0 8px; }
+.vision-read p { margin: 0 0 9px; }
+.vision-read a { color: var(--accent); }
 .vision-read blockquote { margin: 0; padding: 1px 14px; border-left: 3px solid var(--line-strong); color: var(--ink-2); font-style: italic; }
 .vision-read blockquote + :not(blockquote) { margin-top: 10px; }
 @media (max-width: 720px) { .vision-read { padding: 20px 18px; font-size: 15px; } }

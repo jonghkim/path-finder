@@ -917,55 +917,138 @@
 <blockquote>But it gives you courage, strength, and hope</blockquote>
 <blockquote>to make another start.</blockquote>
 `;
+  // The Vision note itself, in the user's own words (light typo fixes only). Kept out of here: a block naming
+  // colleagues, and a family member's name, since this file is public. Add those privately via Edit.
   const VISION_DEFAULT = VISION_BONGSHIN + `
-<h2>마음</h2>
+<h2>Divide and conquer</h2>
+<p>Certainty of death. Small chance of success. What are we waiting for? — Gimli (Lord of the Rings)</p>
+<p>Stay exposed to good factors — a good attitude, belief in yourself. Luck washes out; the factor compounds.</p>
+<p>Try again from a different angle.</p>
+<p>자기 확언 - 나는 내가 오늘 하려는 일을 다 할 수 있다</p>
+<p>두려워할수록 문제는 커진다. 두려워하지 않으면 쉬운 문제가 된다.</p>
+<p>더는 아래가 없다는 건... 반대로 위로 올라갈 일만 남았다는 뜻이지.</p>
+<p>Be honest person</p>
+<p>I control my life, no one else.</p>
+<p>Treat yourself as best as you can</p>
+<p>나는 살아 있구나. 그러면 무엇이든 할 수 있다.</p>
+<p>나이는 중요하지 않다. 특히나 결혼을 했기 때문에.</p>
+<p>결국 내가 어떤 연구자 / 어떤 사람이 되었는가? 가 더 중요. 누가 Pub이 몇개 있고, 누가 Flyout을 많이 받고 다 필요 없음 - 결국 우리는 각자 하나의 Job만 필요하다</p>
+<p>If you identified the question with extra clarity, you half solved the problem.</p>
+<p>Absolute block time</p>
+<p>Be yourself</p>
+<p>If I am super clear, I have nothing to be afraid of</p>
+<p>There is always hope. 포기하지 않으면 반드시 기회가 생긴다</p>
+<h2>발버둥</h2>
+<p>내가 부딪혀 죽을줄 안다면 - 가능한 가장 강력한 방식으로 부딪혀 보자</p>
+<h2>Darkness</h2>
+<p>해 뜨기 전이 가장 어둡다</p>
+<p>무언가를 새로 시작하려거든 바닥에서부터 시작해라</p>
+<h2>Relationship</h2>
+<p>If you don't remove the lemon early that will snowball</p>
+<h2>소심소고</h2>
+<p>사람이 할수 있는 일은 다하고, 나머지는 하늘에 맡겨야한다</p>
+<p>내가 지금 최선을 하지 않으면 지금의 시간이 아무 의미가 없다</p>
+<h2>몰입하기 위한 조건</h2>
 <ul>
-<li>두려움과 회의는 늘 있다. 자연스러운 감정이고, 자책은 시간 낭비다. — 허준이</li>
-<li>두려워할수록 문제는 커진다. 두려워하지 않으면 쉬운 문제가 된다.</li>
-<li>If I am super clear, I have nothing to be afraid of.</li>
-<li>해 뜨기 전이 가장 어둡다. 더는 아래가 없다는 건 위로 올라갈 일만 남았다는 뜻이다.</li>
-<li>나는 살아 있다. 그러면 무엇이든 할 수 있다.</li>
+<li>Micro Goals</li>
+<li>Rewards</li>
 </ul>
-<h2>일하는 법</h2>
+<h2>Divide and Conquer</h2>
+<p>아무리 어려운 문제도, 계속해서 아는것과 모르는 것을 구분해서 파헤치면 이해할 수 있다.</p>
+<p>한번에 하나의 과목만 End to End로 공부하면 됨</p>
+<p>아무리 어려워도, 아무리 힘들어도, 해야지</p>
+<h2>Minimize Wish and Pray</h2>
+<p>하늘을 바라보되 발은 땅에</p>
+<h2>Do what you love, love what you do</h2>
+<p>연구는 반드시 나에게 재밌는 주제를 해야한다</p>
+<p>Make knowledge to be compounded</p>
+<p>인생은 앞이 뒤가 되고, 뒤가 앞이 되는 일이 빈번하게 일어난다</p>
+<h2>Charlie Munger</h2>
+<p>기회를 놓친 사람의 의무는 건설적인 방법으로 끔찍한 충격을 활용할 방법을 찾는 사람</p>
+<p>반대로 생각하기. 성공할 이유가 아니라, 반드시 실패할 이유를 생각</p>
+<p>닮고 싶은 사람과 일해라, 부정적인 사람을 피해라</p>
+<h2>허준이 교수님</h2>
+<p>멘탈 관리</p>
+<p>믿을지는 모르겠지만 지금도 그리고 늘 두려움과 회의를 느낌. 하지만 내가 뭔가 잘못 하고 있다는 듯한 부정적인 감정, 자책은 시간 낭비</p>
+<p>이는 아주 자연스러운 감정이며, 이런 감정이 사실은 더 건강한 감정일 수 있다.</p>
+<p>매일 조금씩, 내가 고수할수 있는 루틴을 오늘 하루도 지켜냈나.</p>
+<p>내 긍정적인 잠재력을 이끌어 낼 수 있는 맑은 정신으로 하루를 보냈나</p>
+<p>건강한 마음으로 즐겁게 공부하시길 바랍니다</p>
+<p>가장 중요한 성공 요소: 내가 하는 일에 순수한 사랑을 얼마나 오래 지속 할 수 있는가?</p>
+<p>Random Walk + 운이 좋아지는 방법: 시행을 많이 하는 것. 그때 그때의 마음을 차분하게 정리하고, 직관을 잘 이용하는 것. 하루를 온전히 사는 것</p>
+<blockquote>“취업 준비, 결혼 준비, 육아 교육 승진 은퇴 노후 준비를 거쳐 어디 병원 그럴듯한 1인실에서 사망하기 위한 준비에 정신 팔리지 않기를 바랍니다.”</blockquote>
+<blockquote>“무례와 혐오와 경쟁과 분열과 비교와 나태와 허무의 달콤함에 길들지 마시길, 하루하루를 온전히 경험하시길 (빈다)”</blockquote>
+<blockquote>“그 끝에서 오래 기다리고 있는 낯선 나를 반갑게 맞이하길 바란다”</blockquote>
+<h2>인생은 정면승부</h2>
+<p>도망쳐서 도달한 곳에 낙원은 없다</p>
+<p>꼭 해야하는 일을 회피해버리면 더 먼 길을 돌아가고, 결국엔 더 많이 해야되게 되어있음</p>
+<p>The price of "not communicating" is huge</p>
+<p>남에게 받는 평가의 기준은 많은 경우에 Attitude에 기반함. 반대로 Attitude를 보여줄 수 있는 곳에서는 최대한의 Attitude를 보여라</p>
+<h2>내가 바라는 미래</h2>
+<p>나만의 도메인에서 최고가 되는 것</p>
+<p>모든 일을 정상 궤도로 돌려놓자</p>
+<p>가족을 행복하게 하려면? You are my hero, I should be a hero of my family</p>
+<h2>후버만 루틴</h2>
 <ul>
-<li>Divide and conquer. 아는 것과 모르는 것을 계속 구분하면 어떤 문제도 이해할 수 있다. 한 번에 하나만, end to end.</li>
-<li>질문을 아주 명확히 하면 문제는 반쯤 풀린 것이다. 어떤 문제도 무한한 질문 앞에서는 녹아내린다.</li>
-<li>작게 쪼개서, step by step, 서두르지 말고. 보일 수 있는 가장 간단한 것부터 채운다.</li>
-<li>Minds with hands. 실행력 &gt;&gt;&gt;&gt; 생각.</li>
-<li>Absolute block time. Micro goals, then rewards.</li>
+<li>규칙적인 수면</li>
+<li>찬물 샤워</li>
+<li>아침에 햇빛</li>
+<li>아침 산책</li>
+<li>아침에 소금과 물</li>
+<li>단백질 위주의 식단</li>
+<li>야식 금지</li>
+<li>핸드폰 사용 줄이기</li>
 </ul>
-<h2>연구자로서</h2>
+<h2>명상</h2>
+<p>내 미래를 상상하는 연습</p>
+<p><a href="https://www.youtube.com/watch?v=qO4RMNKKOc4" target="_blank" rel="noopener">Positive Relaxation (YouTube)</a></p>
+<h2>박사 과정이 힘든 이유</h2>
+<p>퀘스트를 완료해도 Reward가 없거나 굉장히 늦게 찾아온다</p>
+<p>대부분 Gamification이 적절히 안됨</p>
+<p>If I disagree with others' evaluation, prove by results. I did not show any empirical evidence</p>
+<p>This task was appointed to you. And if you do not find a way, no one will. I should know that it is a really demanding timeline.</p>
+<p>뭐든 즉흥적으로 결정하지 말것. 생각해보고 알려주겠다고 해야함</p>
+<p>Always take the initiative</p>
+<h2>지도교수가 하자는 연구를 하면 안됨</h2>
+<p>그다지 인정 받지 못하고, 밖에서도 욕먹고, 동시에 나도 하기 싫은 연구를 할수도 있다</p>
+<p>그럴바에는 내가 하고싶은 연구를 해라</p>
+<p>지도교수라고 꼭 감이 좋은 것도 아님</p>
+<h2>Delivery is more important than research</h2>
+<p>Practice delivery a lot</p>
+<p>Pursue the most challenging problem</p>
+<h2>Minds with hands</h2>
+<p>실행력 &gt;&gt;&gt;&gt; 생각</p>
+<p>Divide and Conquer</p>
+<h2>Keep questioning</h2>
+<p>어떤 문제도 무한한 질문 앞에서는 서서히 녹아 내린다.</p>
+<p>Do Exciting Work</p>
+<h2>Do Original Work</h2>
+<p>Original 한 연구자</p>
+<p>다른 연구를 섞어서 연구하는 얄팍한 연구가 아니라, 정말로 Original한 연구를 하자.</p>
+<p>다른 연구를 찾기전에, 내가 스스로 깊게 홀로 생각해보자.</p>
+<p>내가 독자적인 길로 왔고, 스스로 확신이 생기면 남이 뭐라하는건 그다지 중요하지 않다.</p>
+<h2>건강한 정신</h2>
+<p>부정적인 사람과 일하면, 내 건강한 정신에 해악을 끼친다. 그러니 부정적으로 생각하는 사람과는 엮이지 말도록</p>
+<h2>생산적인 하루</h2>
+<p>불가능한 일을 한번에 하려고 하지 말고, 할 수 있는 일을 쪼개서 달성하자.</p>
+<p>나선형적인 일 처리. 첫 단추를 확실히 정하는게 편함.</p>
+<p>Step-by-Step. Do not hurry. Divide and Conquer.</p>
+<p>내가 보일 수 있는 가장 간단한 것들을 우선 채워넣어라</p>
+<p>문제를 한번에 풀지말고, 작은 단위로 나누자.</p>
+<h2>좋은 Coauthor, 다른 사람의 시간을 존중하는 방법</h2>
+<p>내가 얼만큼의 시간이 필요한지, 그리고 상대방은 언제가 시간이 괜찮은지 확인하면서 연구</p>
+<h2>온전히 집중하기 위한 Precondition</h2>
+<p>뇌과학 기반 조언</p>
 <ul>
-<li>Do original work. 남의 연구를 섞는 얄팍한 연구가 아니라 홀로 깊게 생각한 연구. 확신이 생기면 남의 말은 중요하지 않다.</li>
-<li>Do what you love. 재밌는 주제만. 가장 어려운 문제를 좇는다.</li>
-<li>Delivery is more important than research. 많이 연습하라.</li>
-<li>Make knowledge compound.</li>
+<li>깊은 수면. 일이 너무 안되고 집중이 안되면 차라리 잠을 자야함. 수면 &gt;&gt;&gt;&gt;&gt; 게임, 소설</li>
+<li>규칙적 운동, 심박수 (1시간)</li>
+<li>빛, 조명</li>
+<li>건강한 음식</li>
+<li>인간관계</li>
 </ul>
-<h2>태도</h2>
-<ul>
-<li>Stay exposed to good factors. Luck washes out; the factor compounds. 시행을 많이 하는 것이 운이 좋아지는 방법이다.</li>
-<li>인생은 정면승부. 도망쳐서 도달한 곳에 낙원은 없다.</li>
-<li>Always take the initiative. The price of not communicating is huge.</li>
-<li>평가는 대개 attitude에 기반한다. 보여줄 수 있는 곳에서는 최대한 보여라.</li>
-<li>즉흥적으로 결정하지 말 것. "생각해보고 알려주겠다."</li>
-<li>Be honest. Be yourself. I control my life, no one else.</li>
-<li>닮고 싶은 사람과 일하고, 부정적인 사람과는 엮이지 말 것. 반대로 생각하기: 성공할 이유가 아니라 반드시 실패할 이유를. — Munger</li>
-</ul>
-<h2>몸</h2>
-<ul>
-<li>수면 &gt;&gt;&gt;&gt;&gt; 모든 것. 집중이 안 되면 차라리 자라. 7시간 이상.</li>
-<li>규칙적 운동 1시간, 아침 햇빛과 산책, 건강한 음식, 야식 금지, 핸드폰 줄이기.</li>
-<li>대운을 회복하는 방법: 필요한 휴식을 잘 취하고, 건강한 마음으로 하루를 온전히 집중해서 보내는 것.</li>
-</ul>
-<h2>왜</h2>
-<ul>
-<li>결국 내가 어떤 연구자, 어떤 사람이 되었는가가 중요하다. Pub 개수, flyout 개수는 필요 없다. 우리는 각자 하나의 job만 필요하다.</li>
-<li>나만의 도메인에서 최고가 되는 것. You are my hero. I should be a hero of my family.</li>
-<li>사람이 할 수 있는 일은 다 하고, 나머지는 하늘에 맡긴다. 하늘을 바라보되 발은 땅에.</li>
-<li>하루를 온전히 살 것. 내가 하는 일에 순수한 사랑을 얼마나 오래 지속할 수 있는가. — 허준이</li>
-<li>There is always hope. 포기하지 않으면 반드시 기회가 생긴다.</li>
-<li>아무리 어려워도, 아무리 힘들어도, 해야지.</li>
-</ul>`;
+<h2>대운을 회복하는 방법</h2>
+<p>필요한 휴식을 잘 취하고, 건강한 마음으로 하루를 온전히 집중해서 보내는 것</p>
+`;
   function renderAnchor(main) {
     const tab = S.anchorTab === 'tactics' ? 'tactics' : 'vision';
     const tabs = `<div class="notes-tabs">${[['vision', 'Vision'], ['tactics', 'Tactics']].map(([id, l]) => `<button class="notes-tab ${id === tab ? 'active' : ''}" data-action="anchor-tab" data-tab="${id}">${l}</button>`).join('')}</div>`;
@@ -977,7 +1060,7 @@
       return;
     }
     if (S.visionEdit) {
-      main.innerHTML = `<div class="view-head"><div><h1>Anchor</h1><div class="sub">Editing the vision. Saves as you type.</div></div><button class="btn btn-sm" data-action="vision-done">Done</button></div>${tabs}
+      main.innerHTML = `<div class="view-head"><div><h1>Anchor</h1><div class="sub">Editing the vision. Saves as you type.</div></div><div class="row"><button class="btn btn-sm btn-ghost" data-action="vision-reset" title="Replace the text with the built-in version">Reset to seed</button><button class="btn btn-sm" data-action="vision-done">Done</button></div></div>${tabs}
         <div class="notes-bar"><span class="muted small" id="noteStatus"></span></div>
         <div class="note-editor"><div id="noteEditor"></div></div>`;
       mountQuill({ id: 'vision', doc: () => VISION_DOC, ph: 'The essence.' });
@@ -1052,6 +1135,7 @@
       case 'anchor-tab': S.anchorTab = t.dataset.tab; S.visionEdit = false; render(); break;
       case 'vision-edit': S.visionEdit = true; render(); break;
       case 'vision-done': S.visionEdit = false; render(); break;
+      case 'vision-reset': if (quill && confirm('Replace the vision text with the built-in version? Your edits will be lost.')) { quill.setText(''); quill.clipboard.dangerouslyPasteHTML(VISION_DEFAULT); } break;
       case 'notes-today': S.notesDate = todayKey(); render(); break;
       case 'q-new': S.qIdx = Math.floor(Math.random() * (window.questions || []).length); render(); break;
       case 'q-open': S.qIdx = +t.dataset.i; render(); break;
