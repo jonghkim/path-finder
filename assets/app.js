@@ -91,7 +91,7 @@
   // ---------------------------------------------------------------- state
   const DEFAULT_SETTINGS = {
     theme: 'auto', work: 25, brk: 5, longBrk: 15, autoCycle: true, sound: true, dayStart: 7, dayEnd: 24,
-    mottos: ['두려워할수록 문제는 커진다. 두려워하지 않으면 쉬운 문제가 된다.', '더는 아래가 없다는 건… 반대로 위로 올라갈 일만 남았다는 뜻이지. — 루카', '9AM–6PM은 온전히 일에만 몰입한다. 연락·메일·잡다한 일은 미루고, 외부 간섭을 최소화한다.', '새 길을 닦으려면 새 계획을 세워야 하지요. 나는 어제 일어난 일은 생각 안 합니다. 내일 일어날 일을 자문하지도 않아요. 내게 중요한 것은 오늘, 이 순간에 일어나는 일입니다. — 조르바']
+    mottos: ['두려워할수록 문제는 커진다. 두려워하지 않으면 쉬운 문제가 된다.', '더는 아래가 없다는 건… 반대로 위로 올라갈 일만 남았다는 뜻이지. — 루카', '9AM–6PM은 온전히 일에만 몰입한다. 하루에 한 가지 일에만 집중. 연락·메일·잡다한 일은 미루고, 외부 간섭을 최소화한다.', '새 길을 닦으려면 새 계획을 세워야 하지요. 나는 어제 일어난 일은 생각 안 합니다. 내일 일어날 일을 자문하지도 않아요. 내게 중요한 것은 오늘, 이 순간에 일어나는 일입니다. — 조르바']
   };
   const S = {
     view: 'today',
@@ -160,8 +160,8 @@
     if (s) S.settings = { ...DEFAULT_SETTINGS, ...s };
     if (d) S.day = { ...emptyDay(), ...d };
     S.loaded = true;
-    // One-time (rev 12): reset the motto list to the current defaults; saved lists win in the merge, so do it here.
-    if (!S.settings.mottoRev || S.settings.mottoRev < 12) { S.settings.mottos = DEFAULT_SETTINGS.mottos.slice(); S.settings.mottoRev = 12; saveSettings(); }
+    // One-time (rev 13): reset the motto list to the current defaults; saved lists win in the merge, so do it here.
+    if (!S.settings.mottoRev || S.settings.mottoRev < 13) { S.settings.mottos = DEFAULT_SETTINGS.mottos.slice(); S.settings.mottoRev = 13; saveSettings(); }
     applyTheme();
     render();
   });
