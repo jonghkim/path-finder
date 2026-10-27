@@ -332,7 +332,7 @@
   function mottoBlock() {
     const list = (S.settings.mottos || []).filter(m => m && m.trim());
     if (!list.length) return '';
-    let open = true; try { open = localStorage.getItem('pf-mottos') !== 'closed'; } catch (e) {}
+    let open = false; try { open = localStorage.getItem('pf-mottos') === 'open'; } catch (e) {}
     return `<div class="mottos-block ${open ? '' : 'collapsed'}">
       <button class="mottos-bar" data-action="mottos-toggle" title="${open ? 'Hide' : 'Show'} mottos" aria-expanded="${open}"></button>
       <div class="mottos-list">${list.map(m => `<div>${esc(m)}</div>`).join('')}</div>
