@@ -332,7 +332,11 @@
   function mottoBlock() {
     const list = (S.settings.mottos || []).filter(m => m && m.trim());
     if (!list.length) return '';
-    return `<div class="mottos-block">${list.map(m => `<div>${esc(m)}</div>`).join('')}</div>`;
+    let open = true; try { open = localStorage.getItem('pf-mottos') !== 'closed'; } catch (e) {}
+    return `<div class="mottos-block ${open ? '' : 'collapsed'}">
+      <button class="mottos-toggle" data-action="mottos-toggle" title="${open ? 'Hide' : 'Show'} mottos" aria-expanded="${open}"><span class="chev">›</span></button>
+      <div class="mottos-list">${list.map(m => `<div>${esc(m)}</div>`).join('')}</div>
+    </div>`;
   }
   function fmtDur(m) { if (!m) return '0m'; const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}h ${r}m` : `${h}h`) : `${r}m`; }
   function goalRow(g) {
@@ -1132,6 +1136,7 @@
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
+      case 'mottos-toggle': { const blk = t.closest('.mottos-block'); const open = !blk.classList.toggle('collapsed'); t.setAttribute('aria-expanded', open); t.title = (open ? 'Hide' : 'Show') + ' mottos'; try { localStorage.setItem('pf-mottos', open ? 'open' : 'closed'); } catch (e) {} break; }
       case 'goals-done-toggle': { const sec = t.closest('.goals-section'); const open = sec.classList.toggle('collapsed') ? 'closed' : 'open'; try { localStorage.setItem('pf-goals-done', open); } catch (e) {} break; }
       case 'anchor-tab': S.anchorTab = t.dataset.tab; S.visionEdit = false; render(); break;
       case 'vision-edit': S.visionEdit = true; render(); break;
