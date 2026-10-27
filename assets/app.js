@@ -359,7 +359,7 @@
     if (ss.length) { const start = Math.min(...ss.map(x => minsOfDay(x.at - x.minutes * 60000))), end = Math.max(...ss.map(x => minsOfDay(x.at))); if (end > start) return { start: Math.max(s, start), end }; }
     if (!m.doneAt) return null;
     const end = minsOfDay(m.doneAt);
-    if (m.startedAt && dateKey(new Date(m.startedAt)) === S.dayKey && minsOfDay(m.startedAt) < end) return { start: Math.max(s, minsOfDay(m.startedAt)), end };
+    if (m.startedAt && dateKey(new Date(m.startedAt)) === S.dayKey && minsOfDay(m.startedAt) < end) { const st = minsOfDay(m.startedAt); return { start: Math.max(s, st), end: Math.max(st + 5, Math.min(end, st + (m.minutes || 30))) }; }
     return { start: Math.max(s, end - (m.minutes || 30)), end };
   }
   // A task the user has actually started (focus timer on it today, or a logged session) stays anchored where work began
@@ -382,7 +382,14 @@
     const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
     const musts = S.day.musts || [];
     const pinned = musts.filter(m => m.start != null && m.start !== '').map(m => ({ m, start: hmToMins(m.start), end: hmToMins(m.start) + (m.minutes || 30), pinned: true }));
-    let cursor = S.dayKey === todayKey() ? Math.max(s, Math.ceil(nowM / 15) * 15) : s;
+    const today = S.dayKey === todayKey(); let changed = false;
+    let cursor = today ? Math.max(s, Math.ceil(nowM / 15) * 15) : s;
+    // A flowing task whose planned start has arrived keeps that slot (as if started) instead of sliding on with the clock.
+    if (today) musts.forEach(m => {
+      if ((m.start == null || m.start === '') && !m.done && !m.startedAt && m.plannedStart != null && m.plannedStart <= nowM) {
+        const d = new Date(); d.setHours(0, 0, 0, 0); m.startedAt = d.getTime() + m.plannedStart * 60000; delete m.plannedStart; changed = true;
+      }
+    });
     const out = pinned.slice();
     musts.filter(m => (m.start == null || m.start === '') && m.done).forEach(m => { const sl = doneSlot(m); if (sl) out.push({ m, start: sl.start, end: sl.end, pinned: false }); });
     const rest = [];
@@ -394,7 +401,9 @@
       const dur = m.minutes || 30; let st = cursor, moved = true, guard = 0;
       while (moved && guard++ < 50) { moved = false; for (const p of pinned) { if (st < p.end && st + dur > p.start) { st = p.end; moved = true; } } }
       out.push({ m, start: st, end: st + dur, pinned: false }); cursor = st + dur;
+      if (today && m.plannedStart !== st) { m.plannedStart = st; changed = true; }
     });
+    if (changed) saveDay();
     return out.sort((a, b) => a.start - b.start);
   }
   const HH = 48; // px per hour in the day calendar
