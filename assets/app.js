@@ -358,9 +358,25 @@
     const ss = (S.day.sessions || []).filter(x => x.taskId === m.id && x.minutes);
     if (ss.length) { const start = Math.min(...ss.map(x => minsOfDay(x.at - x.minutes * 60000))), end = Math.max(...ss.map(x => minsOfDay(x.at))); if (end > start) return { start: Math.max(s, start), end }; }
     if (!m.doneAt) return null;
-    const end = minsOfDay(m.doneAt); return { start: Math.max(s, end - (m.minutes || 30)), end };
+    const end = minsOfDay(m.doneAt);
+    if (m.startedAt && dateKey(new Date(m.startedAt)) === S.dayKey && minsOfDay(m.startedAt) < end) return { start: Math.max(s, minsOfDay(m.startedAt)), end };
+    return { start: Math.max(s, end - (m.minutes || 30)), end };
   }
-  // Place must-dos on the day: pinned ones keep their start; the rest flow in list order from now, around pinned slots.
+  // A task the user has actually started (focus timer on it today, or a logged session) stays anchored where work began
+  // instead of sliding along with "now"; it grows while the timer keeps running.
+  function startedSlot(m) {
+    const s = S.settings.dayStart * 60;
+    const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
+    const ss = (S.day.sessions || []).filter(x => x.taskId === m.id && x.minutes);
+    let start = null, end = 0;
+    if (ss.length) { start = Math.min(...ss.map(x => minsOfDay(x.at - x.minutes * 60000))); end = Math.max(...ss.map(x => minsOfDay(x.at))); }
+    if (m.startedAt && dateKey(new Date(m.startedAt)) === S.dayKey) { const st = minsOfDay(m.startedAt); start = start == null ? st : Math.min(start, st); }
+    if (start == null) return null;
+    start = Math.max(s, start);
+    end = Math.max(end, start + (m.minutes || 30), isFocusing(m.id) && S.dayKey === todayKey() ? nowM : 0);
+    return { start, end };
+  }
+  // Place must-dos on the day: pinned ones keep their start; started ones stay put; the rest flow in list order from now, around pinned slots.
   function scheduleMusts() {
     const s = S.settings.dayStart * 60, e = S.settings.dayEnd * 60;
     const now = new Date(); const nowM = now.getHours() * 60 + now.getMinutes();
@@ -369,7 +385,12 @@
     let cursor = S.dayKey === todayKey() ? Math.max(s, Math.ceil(nowM / 15) * 15) : s;
     const out = pinned.slice();
     musts.filter(m => (m.start == null || m.start === '') && m.done).forEach(m => { const sl = doneSlot(m); if (sl) out.push({ m, start: sl.start, end: sl.end, pinned: false }); });
+    const rest = [];
     musts.filter(m => (m.start == null || m.start === '') && !m.done).forEach(m => {
+      const sl = startedSlot(m);
+      if (sl) { out.push({ m, start: sl.start, end: sl.end, pinned: false }); cursor = Math.max(cursor, sl.end); } else rest.push(m);
+    });
+    rest.forEach(m => {
       const dur = m.minutes || 30; let st = cursor, moved = true, guard = 0;
       while (moved && guard++ < 50) { moved = false; for (const p of pinned) { if (st < p.end && st + dur > p.start) { st = p.end; moved = true; } } }
       out.push({ m, start: st, end: st + dur, pinned: false }); cursor = st + dur;
@@ -697,7 +718,10 @@
     pick(mode, mins) { this.reset(mode, mins, true); if (mode === 'work') this.st.workMins = mins; else this.st.brkMins = mins; this.save(); },
     workLen() { return (this.st && this.st.workMins) || S.settings.work; },
     brkLen() { return (this.st && this.st.brkMins) || S.settings.brk; },
-    start() { const s = this.st; if (s.running) return; ensureAudio(); s.endAt = Date.now() + s.remaining * 1000; s.running = true; this.save(); this.loop(); },
+    start() {
+      const s = this.st; if (s.running) return; ensureAudio(); s.endAt = Date.now() + s.remaining * 1000; s.running = true; this.save(); this.loop();
+      if (s.mode === 'work' && s.taskId && S.dayKey === todayKey()) { const m = (S.day.musts || []).find(x => x.id === s.taskId); if (m && !m.done && !m.startedAt) { m.startedAt = Date.now(); saveDay(); } }
+    },
     pause() { const s = this.st; if (!s.running) return; s.remaining = Math.max(0, Math.round((s.endAt - Date.now()) / 1000)); s.running = false; s.endAt = null; this.save(); this.tick(); },
     toggle() { this.st.running ? this.pause() : this.start(); },
     loop() { clearInterval(this._iv); this._iv = setInterval(() => this.tick(), 250); this.tick(); },
