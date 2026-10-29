@@ -495,11 +495,12 @@
 
   // ---------------------------------------------------------------- TIMELINE
   function renderTimeline(main) {
-    const goals = S.goals.filter(g => g.deadline || (g.milestones || []).some(m => m.date)).sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+    // Done goals live in the Goals page's Done section; the timeline only shows what is still in play.
+    const goals = activeGoals().filter(g => g.deadline || (g.milestones || []).some(m => m.date)).sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
     const today = todayKey();
     const items = [];
-    S.goals.forEach(g => {
-      if (g.deadline && g.status !== 'done') items.push({ date: g.deadline, title: g.title, sub: 'deadline', type: 'deadline', cat: g.category, id: g.id, done: false });
+    activeGoals().forEach(g => {
+      if (g.deadline) items.push({ date: g.deadline, title: g.title, sub: 'deadline', type: 'deadline', cat: g.category, id: g.id, done: false });
       (g.milestones || []).forEach(m => { if (m.date) items.push({ date: m.date, title: m.title, sub: g.title, type: 'milestone', cat: g.category, id: g.id, done: m.done }); });
     });
     items.sort((a, b) => a.date.localeCompare(b.date));
