@@ -531,13 +531,15 @@
   function truncW(str, units) { let w = 0, out = ''; for (const ch of str) { w += /[\u1100-\u11ff\u3000-\u9fff\uac00-\ud7af]/.test(ch) ? 1.8 : 1; if (w > units) return out + '…'; out += ch; } return out; }
   function drawGantt(wrap, goals, rangeDays) {
     const today = todayKey();
-    const from = addDays(today, -7), to = addDays(today, rangeDays);
-    const LBL = 210, PAD_R = 24, ROW = 44, TOP = 46, MIN_DAY_W = 7;
+    const from = addDays(today, -7), toRange = addDays(today, rangeDays);
+    // The chosen range fills the view; the chart extends (and scrolls sideways) only when a goal reaches past it.
+    const farthest = goals.reduce((mx, g) => [g.deadline, ...(g.milestones || []).map(m => m.date)].filter(Boolean).reduce((a, b) => b > a ? b : a, mx), toRange);
+    const to = farthest > toRange ? addDays(farthest, 14) : toRange;
+    const LBL = 210, PAD_R = 24, ROW = 44, TOP = 46;
     const H = TOP + goals.length * ROW + 12;
-    // Labels sit in a sticky column; the chart is its own svg that scrolls sideways once a day would get narrower than MIN_DAY_W.
-    const days = daysUntil(to) - daysUntil(from);
     const avail = Math.max((wrap.clientWidth || 800) - LBL, 400) - PAD_R;
-    const dayW = Math.max(avail / days, MIN_DAY_W);
+    const dayW = avail / rangeDays;
+    const days = daysUntil(to) - daysUntil(from);
     const W = Math.round(days * dayW) + PAD_R;
     const xOf = s => (daysUntil(s) - daysUntil(from)) * dayW;
     let lbl = `<svg class="tl tl-labels" width="${LBL}" height="${H}" viewBox="0 0 ${LBL} ${H}">`;
