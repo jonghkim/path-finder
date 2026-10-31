@@ -241,7 +241,11 @@
   // ---------------------------------------------------------------- TODAY
   function renderToday(main) {
     const now = new Date();
-    const deadlines = activeGoals().filter(g => g.deadline && g.horizon !== 'long').sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 5);
+    // Countdowns: the nearest events plus the next milestone, so the long game stays in view too.
+    const byDl = (a, b) => a.deadline.localeCompare(b.deadline);
+    const events = activeGoals().filter(g => g.deadline && g.horizon !== 'long').sort(byDl).slice(0, 5);
+    const nextMs = activeGoals().filter(g => g.deadline && g.horizon === 'long').sort(byDl)[0];
+    const deadlines = events.concat(nextMs ? [nextMs] : []).sort(byDl);
     const musts = S.day.musts || [];
     const openM = musts.filter(m => !m.done), doneM = musts.filter(m => m.done);
     const doneCnt = doneM.length;
@@ -257,8 +261,8 @@
         <div class="today-title">Today</div>
         <div class="countdowns">
           ${deadlines.map(g => { const n = daysUntil(g.deadline); return `
-            <div class="cd" data-action="open-goal" data-id="${g.id}" style="--cat:${gColor(g)}">
-              <span class="cat"></span><span class="d ${dChipClass(n)}">${dLabel(n)}</span><span class="t">${esc(g.title)}</span>
+            <div class="cd ${g.horizon === 'long' ? 'ms' : ''}" data-action="open-goal" data-id="${g.id}" style="--cat:${gColor(g)}">
+              <span class="cat"></span><span class="d ${dChipClass(n)}">${dLabel(n)}</span><span class="t">${esc(g.title)}${g.horizon === 'long' ? ' <small class="muted">milestone</small>' : ''}</span>
             </div>`; }).join('')}
           ${deadlines.length ? '' : '<span class="muted small">No deadlines yet — add goals to see countdowns.</span>'}
         </div>
