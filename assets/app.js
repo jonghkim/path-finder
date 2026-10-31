@@ -319,12 +319,12 @@
           </section>
 
           <section class="card">
-            <div class="card-head"><h3>Short-term</h3><button class="btn btn-xs btn-ghost" data-action="go-goals">All goals →</button></div>
-            ${shortG.map(goalRow).join('') || '<div class="empty">No short-term goals.</div>'}
+            <div class="card-head"><h3>Events</h3><button class="btn btn-xs btn-ghost" data-action="go-goals">All goals →</button></div>
+            ${shortG.map(goalRow).join('') || '<div class="empty">No events.</div>'}
           </section>
           <section class="card">
-            <div class="card-head"><h3>Long-term</h3></div>
-            ${longG.map(goalRow).join('') || '<div class="empty">No long-term goals.</div>'}
+            <div class="card-head"><h3>Milestones</h3></div>
+            ${longG.map(goalRow).join('') || '<div class="empty">No milestones.</div>'}
           </section>
       </div>`;
     wireMustDrag(main); wireDayline(main); scrollCalToNow();
@@ -496,7 +496,7 @@
   // ---------------------------------------------------------------- TIMELINE
   function renderTimeline(main) {
     // Done goals live in the Goals page's Done section; the timeline only shows what is still in play.
-    const goals = activeGoals().filter(g => g.deadline || (g.milestones || []).some(m => m.date)).sort((a, b) => (a.deadline || '9').localeCompare(b.deadline || '9'));
+    const goals = activeGoals().filter(g => g.deadline || (g.milestones || []).some(m => m.date)).sort((a, b) => ((b.horizon === 'long') - (a.horizon === 'long')) || (a.deadline || '9').localeCompare(b.deadline || '9')); // milestones first, then events
     const today = todayKey();
     const items = [];
     activeGoals().forEach(g => {
@@ -516,14 +516,14 @@
       </div>
       <section class="card" style="position:relative">
         <div class="tl-wrap" id="tlWrap">${goals.length ? '' : '<div class="empty">Add goals with deadlines to draw the timeline.</div>'}</div>
-        <div class="tl-legend"><span><i style="background:var(--surface);border:2px solid var(--ink-3);width:8px;height:8px;border-radius:50%"></i>milestone</span><span><i style="background:var(--ink-3);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></i>deadline</span></div>
+        <div class="tl-legend"><span><i style="background:var(--surface);border:2px solid var(--ink-3);width:8px;height:8px;border-radius:50%"></i>checkpoint</span><span><i style="background:var(--ink-3);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></i>deadline</span></div>
       </section>
       <div style="height:18px"></div>
       <section class="card"><div class="upcoming">
         ${col('This week', it => wk(it.date) >= 0 && wk(it.date) <= 7)}
         ${col('Next 30 days', it => wk(it.date) > 7 && wk(it.date) <= 30)}
         ${col('Later', it => wk(it.date) > 30)}
-      </div>${items.some(it => wk(it.date) < 0 && !it.done && it.type === 'milestone') ? `<div class="muted small" style="margin-top:12px">Overdue milestones: ${items.filter(it => wk(it.date) < 0 && !it.done && it.type === 'milestone').map(it => esc(it.title)).join(', ')}</div>` : ''}</section>`;
+      </div>${items.some(it => wk(it.date) < 0 && !it.done && it.type === 'milestone') ? `<div class="muted small" style="margin-top:12px">Overdue checkpoints: ${items.filter(it => wk(it.date) < 0 && !it.done && it.type === 'milestone').map(it => esc(it.title)).join(', ')}</div>` : ''}</section>`;
     if (goals.length) drawGantt($('#tlWrap'), goals, S.tlRange || 60);
   }
 
@@ -579,7 +579,7 @@
   const byOrder = (a, b) => ((a.order ?? 1e9) - (b.order ?? 1e9)) || (a.deadline || '9').localeCompare(b.deadline || '9');
   function renderGoals(main) {
     if (!S.goals.length) {
-      main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Short-term deadlines and long-term mastery, in one place.</div></div></div>
+      main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Milestones to grow toward and events to hit, in one place.</div></div></div>
         <section class="card template-box"><h2>Start with a plan</h2><p>Load the Fall 2026 template (two paper submissions, the Anthropic application, the practice talk, and the math track) and edit from there, or begin empty.</p>
         <div class="row" style="justify-content:center"><button class="btn btn-primary" data-action="load-template">Load template</button><button class="btn" data-action="goal-new">Start empty</button></div></section>`;
       return;
@@ -591,10 +591,10 @@
     const short = active.filter(g => g.horizon !== 'long').sort(byOrder);
     const long = active.filter(g => g.horizon === 'long').sort(byOrder);
     const done = S.goals.filter(g => g.status === 'done');
-    main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Short-term deadlines and long-term mastery, in one place.</div></div>
+    main.innerHTML = `<div class="view-head"><div><h1>Goals</h1><div class="sub">Milestones to grow toward and events to hit, in one place.</div></div>
       <button class="btn btn-primary" data-action="goal-new">+ New goal</button></div>
-      ${section('Short-term', short, 'short')}${section('Long-term', long, 'long')}${done.length ? section('Done', done, 'done') : ''}
-      <p class="muted small" style="margin-top:6px">Drag cards to reorder or to move between Short-term and Long-term.</p>`;
+      ${section('Milestones', long, 'long')}${section('Events', short, 'short')}${done.length ? section('Done', done, 'done') : ''}
+      <p class="muted small" style="margin-top:6px">Drag cards to reorder or to move between Milestones and Events.</p>`;
     wireDrag(main);
   }
   function wireDrag(root) {
@@ -645,7 +645,7 @@
       </div>
       ${g.bottleneck && g.status !== 'done' ? `<div class="gc-sec gc-bn ${g.status === 'blocked' ? 'blocked' : ''}"><b>Bottleneck</b>${esc(g.bottleneck)}</div>` : ''}
       ${g.next ? `<div class="gc-sec"><b>Next action</b>${esc(g.next)}</div>` : ''}
-      ${ms.length ? `<div class="gc-sec"><b>Milestones</b><div class="ms">${ms.map(m => { const mn = m.date ? daysUntil(m.date) : null; return `
+      ${ms.length ? `<div class="gc-sec"><b>Checkpoints</b><div class="ms">${ms.map(m => { const mn = m.date ? daysUntil(m.date) : null; return `
         <label class="${m.done ? 'done' : ''}">
           <span class="md ${mn != null && !m.done ? dChipClass(mn) : ''}">${m.date ? fmtShort(m.date) : '—'}</span>
           <span class="mdd">${mn != null && !m.done ? dLabel(mn) : ''}</span>
@@ -653,7 +653,7 @@
           <span class="mt">${esc(m.title)}</span>
         </label>`; }).join('')}</div></div>` : ''}
       <div class="gc-foot"><select data-action="goal-status" data-id="${g.id}" class="status status-${g.status}">${Object.keys(STATUS).map(s => `<option value="${s}" ${g.status === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}</select>
-        <span class="row"><span class="muted small">${g.horizon === 'long' ? 'Long-term' : 'Short-term'}</span><button class="btn btn-xs" data-action="open-goal" data-id="${g.id}">Edit</button></span></div>
+        <span class="row"><span class="muted small">${g.horizon === 'long' ? 'Milestone' : 'Event'}</span><button class="btn btn-xs" data-action="open-goal" data-id="${g.id}">Edit</button></span></div>
     </section>`;
   }
 
@@ -670,7 +670,7 @@
           <label class="field"><span>Title</span><input name="title" value="${esc(g.title)}" required maxlength="120" autofocus></label>
           <div class="form-row">
             <label class="field"><span>Category</span><select name="category">${Object.keys(CATS).map(c => `<option value="${c}" ${g.category === c ? 'selected' : ''}>${CATS[c].label}</option>`).join('')}</select></label>
-            <label class="field"><span>Horizon</span><select name="horizon"><option value="short" ${g.horizon !== 'long' ? 'selected' : ''}>Short-term</option><option value="long" ${g.horizon === 'long' ? 'selected' : ''}>Long-term</option></select></label>
+            <label class="field"><span>Type</span><select name="horizon"><option value="short" ${g.horizon !== 'long' ? 'selected' : ''}>Event · near-term, dated</option><option value="long" ${g.horizon === 'long' ? 'selected' : ''}>Milestone · long-term</option></select></label>
           </div>
           <div class="form-row">
             <label class="field"><span>Start</span><input type="date" name="start" value="${esc(g.start || '')}"></label>
@@ -681,9 +681,9 @@
           <label class="field"><span>Next action</span><input name="next" value="${esc(g.next || '')}" placeholder="The very next concrete step" maxlength="160"></label>
           <label class="field"><span>Link</span><input name="link" value="${esc(g.link || '')}" placeholder="https://…"></label>
           <div class="field"><span>Color</span><div class="swatches">${PALETTE.map(c => `<button type="button" class="sw ${gColor(g) === c ? 'on' : ''}" data-sw="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div><input type="hidden" name="color" value="${esc(gColor(g))}"></div>
-          <div class="field"><span>Milestones</span>
+          <div class="field"><span>Checkpoints</span>
             <div class="ms-list" id="msList">${ms.map((m, i) => `<div class="ms-row"><input type="checkbox" data-ms-done="${i}" ${m.done ? 'checked' : ''}><input type="text" autocomplete="off" data-ms-title="${i}" value="${esc(m.title)}" placeholder="Milestone"><input type="date" data-ms-date="${i}" value="${esc(m.date || '')}"><button type="button" class="btn-icon" data-ms-del="${i}">✕</button></div>`).join('')}</div>
-            <div><button type="button" class="btn btn-xs" data-ms-add>+ Milestone</button></div>
+            <div><button type="button" class="btn btn-xs" data-ms-add>+ Checkpoint</button></div>
           </div>
           <div class="modal-foot">
             ${g.id ? `<button type="button" class="btn btn-ghost btn-danger" data-action="goal-del" data-id="${g.id}">Delete</button>` : ''}
