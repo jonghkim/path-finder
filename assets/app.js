@@ -102,7 +102,7 @@
     loaded: false,
     notesTab: 'daily',
     notesDate: todayKey(),
-    anchorTab: 'vision', visionEdit: false,
+    anchorTab: 'vision', visionEdit: false, pledgeEdit: false,
     zen: false
   };
   const emptyDay = () => ({ musts: [], sessions: [], goal: '' });
@@ -268,6 +268,7 @@
         </div>
       </header>
 
+      ${pledgeBlock()}
       ${mottoBlock()}
       <section class="card card-goal">
         <div class="card-head"><h3>Today's goal</h3><span class="muted small">one line or a paragraph</span></div>
@@ -332,6 +333,24 @@
           </section>
       </div>`;
     wireMustDrag(main); wireDayline(main); scrollCalToNow();
+  }
+  // A private, collapsible reminder block above the mottos. Text lives in settings (encrypted), so nothing personal sits in the public repo.
+  // First line "# Title" names the block; "- " lines are bullets, indented "- " lines are sub-bullets.
+  function pledgeBlock() {
+    const txt = S.settings.pledge || '';
+    let open = false; try { open = localStorage.getItem('pf-pledge') === 'open'; } catch (e) {}
+    const lines = txt.split('\n');
+    let title = 'Reminders', body = lines;
+    if (lines[0] && /^#\s+/.test(lines[0])) { title = lines[0].replace(/^#\s+/, '').trim() || title; body = lines.slice(1); }
+    const html = body.filter(l => l.trim()).map(l => { const m = l.match(/^(\s*)-\s+(.*)$/); return m ? `<div class="li ${m[1].length >= 2 ? 'sub' : ''}">${esc(m[2])}</div>` : `<div>${esc(l)}</div>`; }).join('');
+    return `<div class="mottos-block pledge ${open ? '' : 'collapsed'}" data-key="pf-pledge">
+      <button class="mottos-bar" data-action="mottos-toggle" title="${open ? 'Hide' : 'Show'}" aria-expanded="${open}"></button>
+      <div class="mottos-list">
+        <div class="pledge-head"><b>${esc(title)}</b><button class="btn btn-xs btn-ghost" data-action="pledge-edit">${S.pledgeEdit ? 'Done' : 'Edit'}</button></div>
+        ${S.pledgeEdit ? `<textarea class="free-text" data-action="pledge-text" rows="7" placeholder="# Title&#10;- a line&#10;    - a sub-line">${esc(txt)}</textarea>` : (html || '<div class="muted small">Nothing here yet. Press Edit to add.</div>')}
+      </div>
+      <div class="mottos-hint" data-action="mottos-toggle">${esc(title)}</div>
+    </div>`;
   }
   function mottoBlock() {
     const list = (S.settings.mottos || []).filter(m => m && m.trim());
@@ -868,6 +887,7 @@
         <label><input type="checkbox" data-action="fx-zen" ${S.zen ? 'checked' : ''}> quiet mode</label>
       </div>
       <div class="focus-stats"><span>today <b>${(used / 60).toFixed(1)}h</b></span><span>sessions <b>${(S.day.sessions || []).length}</b></span><span>cycle <b>${(s.cycles || 0) % 4 + 1}/4</b></span></div>
+      ${pledgeBlock()}
       ${mottoBlock()}
     </div></div>`;
     if (s.running) Timer.loop();
@@ -1185,7 +1205,8 @@
       case 'fx-reset': Timer.reset(Timer.st.mode, Timer.st.total / 60, true); break;
       case 'fx-skip': { const s = Timer.st; clearInterval(Timer._iv); s.running = false; if (s.mode === 'work') Timer.reset('break', Timer.brkLen(), true); else Timer.reset('work', Timer.workLen(), true); renderFocus($('#main')); break; }
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
-      case 'mottos-toggle': { const blk = t.closest('.mottos-block'); const open = !blk.classList.toggle('collapsed'); const bar = blk.querySelector('.mottos-bar'); bar.setAttribute('aria-expanded', open); bar.title = (open ? 'Hide' : 'Show') + ' mottos'; try { localStorage.setItem('pf-mottos', open ? 'open' : 'closed'); } catch (e) {} break; }
+      case 'mottos-toggle': { const blk = t.closest('.mottos-block'); const open = !blk.classList.toggle('collapsed'); const bar = blk.querySelector('.mottos-bar'); bar.setAttribute('aria-expanded', open); bar.title = open ? 'Hide' : 'Show'; try { localStorage.setItem(blk.dataset.key || 'pf-mottos', open ? 'open' : 'closed'); } catch (e) {} break; }
+      case 'pledge-edit': { S.pledgeEdit = !S.pledgeEdit; try { localStorage.setItem('pf-pledge', 'open'); } catch (e) {} render(); if (S.pledgeEdit) { const ta = $('[data-action=pledge-text]'); if (ta) ta.focus(); } break; }
       case 'goals-done-toggle': { const sec = t.closest('.goals-section'); const open = sec.classList.toggle('collapsed') ? 'closed' : 'open'; try { localStorage.setItem('pf-goals-done', open); } catch (e) {} break; }
       case 'anchor-tab': S.anchorTab = t.dataset.tab; S.visionEdit = false; render(); break;
       case 'vision-edit': S.visionEdit = true; render(); break;
@@ -1208,6 +1229,7 @@
     const t = e.target; if (!t || !t.dataset) return;
     if (t.dataset.action === 'bn-text') { S.settings.bottleneck = t.value; saveSettings(); }
     else if (t.dataset.action === 'day-goal') { S.day.goal = t.value; saveDay(); }
+    else if (t.dataset.action === 'pledge-text') { S.settings.pledge = t.value; saveSettings(); }
   });
 
   document.addEventListener('change', e => {

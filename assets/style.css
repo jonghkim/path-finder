@@ -276,6 +276,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .mottos-block.collapsed { padding-top: 3px; padding-bottom: 3px; margin-bottom: 14px; }
 .mottos-block.collapsed .mottos-list { display: none; }
 .mottos-block.collapsed .mottos-hint { display: block; }
+.mottos-block.pledge { margin-bottom: 10px; }
+.mottos-block.pledge .mottos-list { flex: 1; gap: 3px; }
+.mottos-block.pledge .mottos-list div::before { content: none; }
+.mottos-block.pledge .pledge-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 2px; }
+.mottos-block.pledge .li { padding-left: 14px; text-indent: -14px; }
+.mottos-block.pledge .li::before { content: "– "; color: var(--ink-3); }
+.mottos-block.pledge .li.sub { margin-left: 18px; }
+.mottos-block.pledge .free-text { border-color: var(--line); }
 .focus-inner .mottos-block { text-align: left; justify-self: center; margin-top: 4px; }
 .countdowns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .cd {
