@@ -407,6 +407,11 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .tl .dl { fill: var(--cat); }
 .tl .dl-lbl { fill: var(--ink-2); font-size: 11px; font-family: var(--mono); }
 .tl .row-hit:hover .bar-bg { opacity: .3; }
+/* Long-term goals carry the bigger timelines, so their rows read heavier. */
+.tl .row-hit.long .row-lbl { font-weight: 700; }
+.tl .row-hit.long .bar-bg { opacity: .45; }
+.tl .row-hit.long:hover .bar-bg { opacity: .55; }
+.tl .row-hit.long .bar-fg { stroke: var(--cat); stroke-width: 1.5; }
 .tl .weekend { fill: var(--ink); opacity: .025; }
 .tl-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12.5px; padding: 8px 10px; border-radius: 8px; box-shadow: var(--shadow); max-width: 280px; z-index: 5; }
 .tl-tip b { display: block; margin-bottom: 2px; }

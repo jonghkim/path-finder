@@ -551,7 +551,7 @@
       const end = g.deadline || to;
       const x1 = clamp(xOf(start), LBL, W - PAD_R), x2 = clamp(xOf(end), LBL, W - PAD_R);
       const n = g.deadline ? daysUntil(g.deadline) : null;
-      svg += `<g class="row-hit" style="--cat:${cat}" data-action="open-goal" data-id="${g.id}">`;
+      svg += `<g class="row-hit ${g.horizon === 'long' ? 'long' : ''}" style="--cat:${cat}" data-action="open-goal" data-id="${g.id}">`;
       svg += `<text class="row-lbl" x="0" y="${y + 17}">${esc(truncW(g.title, 30))}</text>`;
       svg += `<text class="row-sub" x="0" y="${y + 31}">${n != null ? dLabel(n) + ' · ' + fmtLong(g.deadline) : 'no deadline'}${g.status === 'done' ? ' · done' : g.status !== 'on-track' ? ' · ' + STATUS[g.status].toLowerCase() : ''}</text>`;
       if (x2 > x1) {
