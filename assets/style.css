@@ -388,7 +388,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .goal-row .t .status { font-size: 0; }
 
 /* ---------- Timeline ---------- */
-.tl-wrap { overflow-x: auto; }
+.tl-wrap { overflow-x: auto; display: flex; align-items: flex-start; }
+.tl-wrap > svg { flex: none; }
+.tl-labels { position: sticky; left: 0; z-index: 1; background: var(--surface); border-right: 1px solid var(--line); }
 .tl { display: block; font-family: var(--font); }
 .tl .grid-line { stroke: var(--line); stroke-width: 1; }
 .tl .week-line { stroke: var(--line); stroke-width: 1; }

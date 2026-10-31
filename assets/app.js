@@ -495,6 +495,7 @@
 
   // ---------------------------------------------------------------- TIMELINE
   function renderTimeline(main) {
+    if (!S.tlRange) { let r = 240; try { r = +localStorage.getItem('pf-tl-range') || 240; } catch (e) {} S.tlRange = r; }
     // Done goals live in the Goals page's Done section; the timeline only shows what is still in play.
     const goals = activeGoals().filter(g => g.deadline || (g.milestones || []).some(m => m.date)).sort((a, b) => ((b.horizon === 'long') - (a.horizon === 'long')) || (a.deadline || '9').localeCompare(b.deadline || '9')); // milestones first, then events
     const today = todayKey();
@@ -512,7 +513,7 @@
     const wk = daysUntil; // helper
     main.innerHTML = `
       <div class="view-head"><div><h1>Timeline</h1><div class="sub">Where each goal sits against the calendar. Bars fill as time passes; the red line is today.</div></div>
-        <div class="row"><span class="seg"><button data-action="tl-range" data-r="60" class="${S.tlRange === 60 || !S.tlRange ? 'active' : ''}">10 weeks</button><button data-action="tl-range" data-r="120" class="${S.tlRange === 120 ? 'active' : ''}">4 months</button><button data-action="tl-range" data-r="240" class="${S.tlRange === 240 ? 'active' : ''}">8 months</button></span></div>
+        <div class="row"><span class="seg"><button data-action="tl-range" data-r="60" class="${S.tlRange === 60 ? 'active' : ''}">10 weeks</button><button data-action="tl-range" data-r="120" class="${S.tlRange === 120 ? 'active' : ''}">4 months</button><button data-action="tl-range" data-r="240" class="${S.tlRange === 240 ? 'active' : ''}">8 months</button></span></div>
       </div>
       <section class="card" style="position:relative">
         <div class="tl-wrap" id="tlWrap">${goals.length ? '' : '<div class="empty">Add goals with deadlines to draw the timeline.</div>'}</div>
@@ -524,24 +525,29 @@
         ${col('Next 30 days', it => wk(it.date) > 7 && wk(it.date) <= 30)}
         ${col('Later', it => wk(it.date) > 30)}
       </div>${items.some(it => wk(it.date) < 0 && !it.done && it.type === 'milestone') ? `<div class="muted small" style="margin-top:12px">Overdue checkpoints: ${items.filter(it => wk(it.date) < 0 && !it.done && it.type === 'milestone').map(it => esc(it.title)).join(', ')}</div>` : ''}</section>`;
-    if (goals.length) drawGantt($('#tlWrap'), goals, S.tlRange || 60);
+    if (goals.length) drawGantt($('#tlWrap'), goals, S.tlRange);
   }
 
   function truncW(str, units) { let w = 0, out = ''; for (const ch of str) { w += /[\u1100-\u11ff\u3000-\u9fff\uac00-\ud7af]/.test(ch) ? 1.8 : 1; if (w > units) return out + '…'; out += ch; } return out; }
   function drawGantt(wrap, goals, rangeDays) {
     const today = todayKey();
     const from = addDays(today, -7), to = addDays(today, rangeDays);
-    const W = Math.max(wrap.clientWidth || 800, 640), LBL = 210, PAD_R = 24, ROW = 44, TOP = 46;
+    const LBL = 210, PAD_R = 24, ROW = 44, TOP = 46, MIN_DAY_W = 7;
     const H = TOP + goals.length * ROW + 12;
-    const dayW = (W - LBL - PAD_R) / (daysUntil(to) - daysUntil(from));
-    const xOf = s => LBL + (daysUntil(s) - daysUntil(from)) * dayW;
+    // Labels sit in a sticky column; the chart is its own svg that scrolls sideways once a day would get narrower than MIN_DAY_W.
+    const days = daysUntil(to) - daysUntil(from);
+    const avail = Math.max((wrap.clientWidth || 800) - LBL, 400) - PAD_R;
+    const dayW = Math.max(avail / days, MIN_DAY_W);
+    const W = Math.round(days * dayW) + PAD_R;
+    const xOf = s => (daysUntil(s) - daysUntil(from)) * dayW;
+    let lbl = `<svg class="tl tl-labels" width="${LBL}" height="${H}" viewBox="0 0 ${LBL} ${H}">`;
     let svg = `<svg class="tl" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
     // weekends + week ticks + month labels
     let cur = from; let lastMonth = -1;
     while (cur <= to) {
       const d = parseDay(cur); const x = xOf(cur);
       if (d.getDay() === 6) svg += `<rect class="weekend" x="${x}" y="${TOP - 6}" width="${dayW * 2}" height="${H - TOP}"/>`;
-      if (d.getDay() === 1) { svg += `<line class="week-line" x1="${x}" x2="${x}" y1="${TOP - 6}" y2="${H}"/>`; if (rangeDays <= 120 || d.getDate() <= 7) svg += `<text class="tick" x="${x + 3}" y="${TOP - 10}">${d.getMonth() + 1}/${d.getDate()}</text>`; }
+      if (d.getDay() === 1) { svg += `<line class="week-line" x1="${x}" x2="${x}" y1="${TOP - 6}" y2="${H}"/>`; if (rangeDays <= 120 || dayW >= 6 || d.getDate() <= 7) svg += `<text class="tick" x="${x + 3}" y="${TOP - 10}">${d.getMonth() + 1}/${d.getDate()}</text>`; }
       if (d.getMonth() !== lastMonth) { lastMonth = d.getMonth(); if (d.getDate() === 1 || cur === from) { svg += `<line class="month-line" x1="${x}" x2="${x}" y1="8" y2="${H}"/><text class="month" x="${x + 4}" y="18">${d.toLocaleDateString('en-US', { month: 'short' })}</text>`; } }
       cur = addDays(cur, 1);
     }
@@ -549,25 +555,27 @@
       const y = TOP + i * ROW; const cat = gColor(g);
       const start = g.start || addDays(g.deadline || today, -30);
       const end = g.deadline || to;
-      const x1 = clamp(xOf(start), LBL, W - PAD_R), x2 = clamp(xOf(end), LBL, W - PAD_R);
+      const x1 = clamp(xOf(start), 0, W - PAD_R), x2 = clamp(xOf(end), 0, W - PAD_R);
       const n = g.deadline ? daysUntil(g.deadline) : null;
-      svg += `<g class="row-hit ${g.horizon === 'long' ? 'long' : ''}" style="--cat:${cat}" data-action="open-goal" data-id="${g.id}">`;
-      svg += `<text class="row-lbl" x="0" y="${y + 17}">${esc(truncW(g.title, 30))}</text>`;
-      svg += `<text class="row-sub" x="0" y="${y + 31}">${n != null ? dLabel(n) + ' · ' + fmtLong(g.deadline) : 'no deadline'}${g.status === 'done' ? ' · done' : g.status !== 'on-track' ? ' · ' + STATUS[g.status].toLowerCase() : ''}</text>`;
+      const rowCls = `row-hit ${g.horizon === 'long' ? 'long' : ''}`;
+      lbl += `<g class="${rowCls}" style="--cat:${cat}" data-action="open-goal" data-id="${g.id}"><rect class="bar-hit" x="0" y="${y}" width="${LBL}" height="${ROW}"/>`;
+      lbl += `<text class="row-lbl" x="0" y="${y + 17}">${esc(truncW(g.title, 30))}</text>`;
+      lbl += `<text class="row-sub" x="0" y="${y + 31}">${n != null ? dLabel(n) + ' · ' + fmtLong(g.deadline) : 'no deadline'}${g.status === 'done' ? ' · done' : g.status !== 'on-track' ? ' · ' + STATUS[g.status].toLowerCase() : ''}</text></g>`;
+      svg += `<g class="${rowCls}" style="--cat:${cat}" data-action="open-goal" data-id="${g.id}">`;
       if (x2 > x1) {
         svg += `<rect class="bar-bg" x="${x1}" y="${y + 10}" width="${x2 - x1}" height="14" rx="4"/>`;
         svg += `<rect class="bar-fg" x="${x1}" y="${y + 10}" width="${Math.max(0, (x2 - x1) * (g.status === 'done' ? 1 : elapsedFrac(g)))}" height="14" rx="4"/>`;
       }
-      (g.milestones || []).forEach(m => { if (!m.date) return; const mx = xOf(m.date); if (mx < LBL || mx > W - PAD_R) return;
+      (g.milestones || []).forEach(m => { if (!m.date) return; const mx = xOf(m.date); if (mx < 0 || mx > W - PAD_R) return;
         svg += `<circle class="ms ${m.done ? 'done' : ''}" cx="${mx}" cy="${y + 17}" r="4.5" data-tip="${esc(m.title)}|${fmtLong(m.date)} · ${dLabel(daysUntil(m.date))}${m.done ? ' · done' : ''}"/>`; });
-      if (g.deadline) { const dx = xOf(g.deadline); if (dx >= LBL && dx <= W - PAD_R) { svg += `<path class="dl" d="M${dx} ${y + 10} l6 7 l-6 7 l-6 -7 z"/>`; if (dx + 40 < W) svg += `<text class="dl-lbl" x="${dx + 10}" y="${y + 21}">${fmtShort(g.deadline)}</text>`; } }
-      svg += `<rect class="bar-hit" x="${LBL}" y="${y}" width="${W - LBL}" height="${ROW}" data-tip="${esc(g.title)}|${g.start ? fmtLong(g.start) + ' → ' : ''}${g.deadline ? fmtLong(g.deadline) + ' (' + dLabel(n) + ')' : 'no deadline'}${g.bottleneck ? ' · ' + esc(g.bottleneck) : ''}"/>`;
+      if (g.deadline) { const dx = xOf(g.deadline); if (dx >= 0 && dx <= W - PAD_R) { svg += `<path class="dl" d="M${dx} ${y + 10} l6 7 l-6 7 l-6 -7 z"/>`; if (dx + 40 < W) svg += `<text class="dl-lbl" x="${dx + 10}" y="${y + 21}">${fmtShort(g.deadline)}</text>`; } }
+      svg += `<rect class="bar-hit" x="0" y="${y}" width="${W}" height="${ROW}" data-tip="${esc(g.title)}|${g.start ? fmtLong(g.start) + ' → ' : ''}${g.deadline ? fmtLong(g.deadline) + ' (' + dLabel(n) + ')' : 'no deadline'}${g.bottleneck ? ' · ' + esc(g.bottleneck) : ''}"/>`;
       svg += `</g>`;
     });
     const tx = xOf(today);
     svg += `<line class="today-line" x1="${tx}" x2="${tx}" y1="${TOP - 6}" y2="${H}"/><text class="today-lbl" x="${tx + 4}" y="${H - 2}">today</text>`;
     svg += `</svg>`;
-    wrap.innerHTML = svg;
+    wrap.innerHTML = lbl + '</svg>' + svg;
     // tooltip
     const card = wrap.parentElement; let tip = $('.tl-tip', card); if (!tip) { tip = document.createElement('div'); tip.className = 'tl-tip'; tip.hidden = true; card.appendChild(tip); }
     wrap.onmousemove = e => { const t = e.target.closest('[data-tip]'); if (!t) { tip.hidden = true; return; } const [b, rest] = t.dataset.tip.split('|'); tip.innerHTML = `<b>${esc(b)}</b>${esc(rest || '')}`; tip.hidden = false; const r = card.getBoundingClientRect(); tip.style.left = Math.min(e.clientX - r.left + 12, r.width - 290) + 'px'; tip.style.top = (e.clientY - r.top + 12) + 'px'; };
@@ -1162,7 +1170,7 @@
       case 'must-del': S.day.musts = S.day.musts.filter(m => m.id !== id); saveDay(); render(); break;
       case 'must-focus': { const m = S.day.musts.find(x => x.id === id); if (m) { Timer.st.taskId = m.id; Timer.st.label = m.text; Timer.save(); route('focus'); } break; }
       case 'must-unpin': { const m = S.day.musts.find(x => x.id === id); if (m) { delete m.start; saveDay(); render(); } break; }
-      case 'tl-range': S.tlRange = +t.dataset.r; render(); break;
+      case 'tl-range': S.tlRange = +t.dataset.r; try { localStorage.setItem('pf-tl-range', S.tlRange); } catch (e) {} render(); break;
       case 'preset': Timer.pick(t.dataset.mode, +t.dataset.m); renderFocus($('#main')); break;
       case 'cal-new-cancel': { const f = t.closest('.cal-new'); if (f) f.remove(); break; }
       case 'fx-toggle': Timer.toggle(); break;
