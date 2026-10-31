@@ -538,7 +538,7 @@
     const LBL = 210, PAD_R = 24, ROW = 44, TOP = 46;
     const H = TOP + goals.length * ROW + 12;
     const avail = Math.max((wrap.clientWidth || 800) - LBL, 400) - PAD_R;
-    const dayW = avail / rangeDays;
+    const dayW = avail / (rangeDays + 7); // +7: the week before today that the chart also shows
     const days = daysUntil(to) - daysUntil(from);
     const W = Math.round(days * dayW) + PAD_R;
     const xOf = s => (daysUntil(s) - daysUntil(from)) * dayW;
