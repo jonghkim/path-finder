@@ -96,6 +96,7 @@
   const S = {
     view: 'today',
     goals: [],
+    reading: [],
     settings: { ...DEFAULT_SETTINGS },
     dayKey: todayKey(),
     day: null,          // { musts:[{id,text,done,goalId,minutes,start?}], sessions:[] }
@@ -109,6 +110,7 @@
   const dayDoc = key => `pf-day-${key}`;
 
   function saveGoals() { Store.setJSON('pf-goals', { goals: S.goals, updated: Date.now() }); }
+  function saveReading() { Store.setJSON('pf-reading', { items: S.reading, updated: Date.now() }); }
   function saveDay() { Store.setJSON(dayDoc(S.dayKey), S.day); }
   function saveSettings() { Store.setJSON('pf-settings', S.settings); applyTheme(); }
   function applyTheme() {
@@ -147,6 +149,7 @@
     $('#navUser').textContent = Store.user;
     // Cache-first paint
     const cg = Store.cachedJSON('pf-goals'); if (cg && cg.goals) S.goals = cg.goals;
+    const cr = Store.cachedJSON('pf-reading'); if (cr && cr.items) S.reading = cr.items;
     const cs = Store.cachedJSON('pf-settings'); if (cs) S.settings = { ...DEFAULT_SETTINGS, ...cs };
     S.day = Store.cachedJSON(dayDoc(S.dayKey)) || emptyDay();
     applyTheme();
@@ -155,8 +158,9 @@
     route(location.hash.replace('#', '') || 'today');
     if (Timer.st.running) Timer.loop();
     // Network refresh
-    const [g, s, d] = await Promise.all([Store.getJSON('pf-goals'), Store.getJSON('pf-settings'), Store.getJSON(dayDoc(S.dayKey))]);
+    const [g, s, d, r] = await Promise.all([Store.getJSON('pf-goals'), Store.getJSON('pf-settings'), Store.getJSON(dayDoc(S.dayKey)), Store.getJSON('pf-reading')]);
     if (g && g.goals) S.goals = g.goals;
+    if (r && r.items) S.reading = r.items;
     if (s) S.settings = { ...DEFAULT_SETTINGS, ...s };
     if (d) S.day = { ...emptyDay(), ...d };
     S.loaded = true;
@@ -167,7 +171,7 @@
   });
 
   // ---------------------------------------------------------------- routing
-  const VIEWS = { today: renderToday, timeline: renderTimeline, goals: renderGoals, focus: renderFocus, notes: renderNotes, anchor: renderAnchor, settings: renderSettings };
+  const VIEWS = { today: renderToday, timeline: renderTimeline, goals: renderGoals, focus: renderFocus, notes: renderNotes, reading: renderReading, anchor: renderAnchor, settings: renderSettings };
   function route(v) {
     if (!VIEWS[v]) v = 'today';
     S.view = v;
@@ -194,7 +198,7 @@
   }
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select, button, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
-    const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes', '6': 'anchor' };
+    const map = { '1': 'today', '2': 'timeline', '3': 'goals', '4': 'focus', '5': 'notes', '6': 'reading', '7': 'anchor' };
     if (map[e.key]) route(map[e.key]);
     if (e.key === ' ' && S.view === 'focus') { e.preventDefault(); Timer.toggle(); }
     if (e.key === 'Escape') { closeModal(); const f = $('.cal-new'); if (f) f.remove(); }
@@ -1179,6 +1183,55 @@
       </div>`;
   }
 
+  // ---------------------------------------------------------------- to read
+  // A plain reading list: tick a box when something is read and it drops into the collapsible Done
+  // section at the bottom (collapsed by default; the choice is remembered per browser).
+  const READ_LINK = /^(https?:\/\/\S+)$/i;
+  function readItemHTML(it, done) {
+    const link = it.url || (READ_LINK.test(it.text) ? it.text : '');
+    const label = link && !it.url ? link.replace(/^https?:\/\/(www\.)?/, '') : it.text;
+    return `<div class="item read ${done ? 'done' : ''}" data-id="${it.id}">
+      <input type="checkbox" data-action="read-toggle" data-id="${it.id}" ${done ? 'checked' : ''} title="${done ? 'Move back to the list' : 'Mark as read'}">
+      <span class="txt">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(label)}</a>` : esc(it.text)}${it.note ? `<span class="muted small read-note">${esc(it.note)}</span>` : ''}</span>
+      <span class="when mono muted small">${done && it.doneAt ? new Date(it.doneAt).toISOString().slice(5, 10).replace('-', '/') : ''}</span>
+      <span class="actions"><button class="btn-icon" data-action="read-edit" data-id="${it.id}" title="Edit">✎</button><button class="btn-icon" data-action="read-del" data-id="${it.id}" title="Remove">✕</button></span>
+    </div>`;
+  }
+  function renderReading(main) {
+    const open = (S.reading || []).filter(it => !it.done);
+    const done = (S.reading || []).filter(it => it.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+    const doneOpen = (() => { try { return localStorage.getItem('pf-reading-done') === 'open'; } catch (e) { return false; } })();
+    main.innerHTML = `<div class="view-head"><div><h1>To Read</h1><div class="sub">Papers, books, and links to get to. Tick one off when it is read.</div></div></div>
+      <section class="card read-card">
+        <form class="inline-add read-add" data-form="read-add" autocomplete="off">
+          <input type="text" name="text" placeholder="Title or paste a link…" required maxlength="200">
+          <input type="url" name="url" placeholder="Link (optional)" maxlength="500">
+          <button class="btn btn-sm" type="submit">Add</button>
+        </form>
+        <div class="list read-list">
+          ${open.map(it => readItemHTML(it, false)).join('')}
+          ${open.length ? '' : `<div class="empty">${done.length ? 'Nothing left to read. Add the next one.' : 'Nothing here yet — add a paper, a book, or a link.'}</div>`}
+        </div>
+        ${done.length ? `
+        <div class="read-done ${doneOpen ? '' : 'collapsed'}">
+          <h3 class="toggle" data-action="read-done-toggle" title="Show or hide what has been read"><span class="chev">›</span>Done <span class="cnt">${done.length}</span></h3>
+          <div class="list done-list">${done.map(it => readItemHTML(it, true)).join('')}</div>
+        </div>` : ''}
+      </section>`;
+  }
+  function readById(id) { return (S.reading || []).find(x => x.id === id); }
+  function readEdit(it) {
+    const row = $(`.item.read[data-id="${it.id}"]`); if (!row) return;
+    row.classList.add('editing');
+    row.innerHTML = `<form class="read-edit-form" data-form="read-save" data-id="${it.id}" autocomplete="off">
+      <input type="text" name="text" value="${esc(it.text)}" required maxlength="200">
+      <input type="url" name="url" value="${esc(it.url || '')}" placeholder="Link (optional)" maxlength="500">
+      <input type="text" name="note" value="${esc(it.note || '')}" placeholder="Note (optional)" maxlength="200">
+      <span class="row"><button class="btn btn-sm btn-primary" type="submit">Save</button><button class="btn btn-sm btn-ghost" type="button" data-action="read-edit-cancel">Cancel</button></span>
+    </form>`;
+    row.querySelector('input').focus();
+  }
+
   // ---------------------------------------------------------------- events (delegated)
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-action]'); if (!t) return;
@@ -1207,6 +1260,10 @@
       case 'notes-tab': S.notesTab = t.dataset.tab; render(); break;
       case 'mottos-toggle': { const blk = t.closest('.mottos-block'); const open = !blk.classList.toggle('collapsed'); const bar = blk.querySelector('.mottos-bar'); bar.setAttribute('aria-expanded', open); bar.title = open ? 'Hide' : 'Show'; try { localStorage.setItem(blk.dataset.key || 'pf-mottos', open ? 'open' : 'closed'); } catch (e) {} break; }
       case 'pledge-edit': { S.pledgeEdit = !S.pledgeEdit; try { localStorage.setItem('pf-pledge', 'open'); } catch (e) {} render(); if (S.pledgeEdit) { const ta = $('[data-action=pledge-text]'); if (ta) ta.focus(); } break; }
+      case 'read-del': S.reading = S.reading.filter(x => x.id !== id); saveReading(); render(); break;
+      case 'read-edit': { const it = readById(id); if (it) readEdit(it); break; }
+      case 'read-edit-cancel': render(); break;
+      case 'read-done-toggle': { const sec = t.closest('.read-done'); const open = sec.classList.toggle('collapsed') ? 'closed' : 'open'; try { localStorage.setItem('pf-reading-done', open); } catch (e) {} break; }
       case 'goals-done-toggle': { const sec = t.closest('.goals-section'); const open = sec.classList.toggle('collapsed') ? 'closed' : 'open'; try { localStorage.setItem('pf-goals-done', open); } catch (e) {} break; }
       case 'anchor-tab': S.anchorTab = t.dataset.tab; S.visionEdit = false; render(); break;
       case 'vision-edit': S.visionEdit = true; render(); break;
@@ -1236,6 +1293,7 @@
     const t = e.target.closest('[data-action]'); if (!t) return;
     const a = t.dataset.action, id = t.dataset.id;
     switch (a) {
+      case 'read-toggle': { const it = readById(id); if (it) { it.done = t.checked; if (t.checked) it.doneAt = Date.now(); else delete it.doneAt; saveReading(); render(); } break; }
       case 'must-toggle': { const m = S.day.musts.find(x => x.id === id); if (m) { if (t.checked) markDone(m); else { m.done = false; delete m.doneAt; } saveDay(); render(); } break; }
       case 'goal-status': { const g = goalById(id); if (g) { g.status = t.value; saveGoals(); render(); } break; }
       case 'goal-field': { const g = goalById(id); if (g) { g[t.dataset.k] = t.value.trim(); saveGoals(); } break; }
@@ -1255,6 +1313,8 @@
     e.preventDefault(); const fd = new FormData(f);
     switch (f.dataset.form) {
       case 'cal-new': { const text = (fd.get('text') || '').trim(); if (!text) return; S.day.musts = S.day.musts || []; S.day.musts.push({ id: uid(), text, done: false, goalId: fd.get('goalId') || '', minutes: +fd.get('minutes') || 60, start: fd.get('start') }); saveDay(); render(); break; }
+      case 'read-add': { let text = (fd.get('text') || '').trim(); let url = (fd.get('url') || '').trim(); if (!text) return; if (!url && READ_LINK.test(text)) { url = text; } S.reading = S.reading || []; S.reading.push({ id: uid(), text, url, note: '', done: false, addedAt: Date.now() }); saveReading(); render(); $('.read-add input[name=text]').focus(); break; }
+      case 'read-save': { const it = readById(f.dataset.id); if (!it) return; const text = (fd.get('text') || '').trim(); if (!text) return; it.text = text; it.url = (fd.get('url') || '').trim(); it.note = (fd.get('note') || '').trim(); saveReading(); render(); toast('Saved'); break; }
       case 'must-add': { const text = (fd.get('text') || '').trim(); if (!text) return; S.day.musts = S.day.musts || []; S.day.musts.push({ id: uid(), text, done: false, goalId: fd.get('goalId') || '', minutes: +fd.get('minutes') || 30 }); saveDay(); render(); break; }
     }
   });
