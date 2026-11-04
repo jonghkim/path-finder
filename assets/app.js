@@ -1189,7 +1189,7 @@
   const READ_LINK = /^(https?:\/\/\S+)$/i;
   function readItemHTML(it, done) {
     const link = it.url || (READ_LINK.test(it.text) ? it.text : '');
-    const label = link && !it.url ? link.replace(/^https?:\/\/(www\.)?/, '') : it.text;
+    const label = READ_LINK.test(it.text) ? it.text.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') : it.text;
     return `<div class="item read ${done ? 'done' : ''}" data-id="${it.id}">
       <input type="checkbox" data-action="read-toggle" data-id="${it.id}" ${done ? 'checked' : ''} title="${done ? 'Move back to the list' : 'Mark as read'}">
       <span class="txt">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(label)}</a>` : esc(it.text)}${it.note ? `<span class="muted small read-note">${esc(it.note)}</span>` : ''}</span>
