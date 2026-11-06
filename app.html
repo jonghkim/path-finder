@@ -10,7 +10,12 @@
   <link rel="stylesheet" href="assets/style.css?v=20261104a">
   <script>
     // Apply saved theme before paint to avoid a flash.
-    try { var t = localStorage.getItem('pf-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; if (localStorage.getItem('pf-nav') === 'collapsed') document.documentElement.classList.add('nav-collapsed'); } catch (e) {}
+    try {
+      var t = localStorage.getItem('pf-theme');
+      if (t === 'schedule') { var n = (localStorage.getItem('pf-night') || '18-7').split('-'), a = +n[0], b = +n[1], h = new Date().getHours(); t = (a === b ? false : a < b ? (h >= a && h < b) : (h >= a || h < b)) ? 'dark' : 'light'; }
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      if (localStorage.getItem('pf-nav') === 'collapsed') document.documentElement.classList.add('nav-collapsed');
+    } catch (e) {}
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
@@ -71,6 +76,6 @@
   </div>
   <div class="toast" id="toast"></div>
   <div id="modalRoot"></div>
-  <script src="assets/app.js?v=20261104f"></script>
+  <script src="assets/app.js?v=20261106"></script>
 </body>
 </html>

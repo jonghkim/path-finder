@@ -90,7 +90,7 @@
 
   // ---------------------------------------------------------------- state
   const DEFAULT_SETTINGS = {
-    theme: 'auto', work: 25, brk: 5, longBrk: 15, autoCycle: true, sound: true, dayStart: 7, dayEnd: 24,
+    theme: 'schedule', nightStart: 18, nightEnd: 7, work: 25, brk: 5, longBrk: 15, autoCycle: true, sound: true, dayStart: 7, dayEnd: 24,
     mottos: ['내 미래는 오늘들의 누적이다. 과거의 불운은 돌릴수 없다. 미래의 운은 오늘 만들수 있다.', 'Accept the uncertainty: whatever happens will be OK.', 'If you are alive, every possibility is opened.', '두려워할수록 문제는 커진다. 두려워하지 않으면 쉬운 문제가 된다.', '더는 아래가 없다는 건… 반대로 위로 올라갈 일만 남았다는 뜻이지. — 루카', '새 길을 닦으려면 새 계획을 세워야 하지요. 나는 어제 일어난 일은 생각 안 합니다. 내일 일어날 일을 자문하지도 않아요. 내게 중요한 것은 오늘, 이 순간에 일어나는 일입니다. — 조르바']
   };
   const S = {
@@ -113,11 +113,20 @@
   function saveReading() { Store.setJSON('pf-reading', { items: S.reading, updated: Date.now() }); }
   function saveDay() { Store.setJSON(dayDoc(S.dayKey), S.day); }
   function saveSettings() { Store.setJSON('pf-settings', S.settings); applyTheme(); }
-  function applyTheme() {
-    const t = S.settings.theme;
-    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
-    try { localStorage.setItem('pf-theme', t); } catch (e) {}
+  // Theme 'schedule' is dark from nightStart to nightEnd (hours, wrapping past midnight) and light otherwise;
+  // a minute tick re-applies it so the switch happens on its own. The same rule is duplicated in app.html's
+  // pre-paint script, which reads pf-theme / pf-night from localStorage to avoid a flash on load.
+  function isNight(now) {
+    const h = (now || new Date()).getHours(), a = +S.settings.nightStart, b = +S.settings.nightEnd;
+    return a === b ? false : a < b ? (h >= a && h < b) : (h >= a || h < b);
   }
+  function effectiveTheme() { const t = S.settings.theme; return t === 'schedule' ? (isNight() ? 'dark' : 'light') : t; }
+  function applyTheme() {
+    const t = effectiveTheme();
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem('pf-theme', S.settings.theme); localStorage.setItem('pf-night', S.settings.nightStart + '-' + S.settings.nightEnd); } catch (e) {}
+  }
+  setInterval(applyTheme, 60000);
 
   // Template: Jongho's Fall 2026 plan. Only loaded on request (not hard-coded into the UI).
   function templateGoals() {
@@ -166,6 +175,8 @@
     S.loaded = true;
     // One-time (rev 27): reset the motto list to the current defaults; saved lists win in the merge, so do it here.
     if (!S.settings.mottoRev || S.settings.mottoRev < 27) { S.settings.mottos = DEFAULT_SETTINGS.mottos.slice(); S.settings.mottoRev = 27; saveSettings(); }
+    // One-time (2026-11-06): dark mode after 6PM by default; the Appearance setting can still override it.
+    if (!S.settings.themeRev) { S.settings.theme = 'schedule'; S.settings.themeRev = 1; saveSettings(); }
     applyTheme();
     render();
   });
@@ -1162,7 +1173,11 @@
     main.innerHTML = `<div class="view-head"><div><h1>Settings</h1><div class="sub">Signed in as <b>${esc(Store.user)}</b></div></div><button class="btn" data-action="signout">Sign out</button></div>
       <div class="settings">
         <section class="card"><div class="card-head"><h3>Appearance</h3></div>
-          <span class="seg">${['auto', 'light', 'dark'].map(t => `<button data-action="theme" data-t="${t}" class="${s.theme === t ? 'active' : ''}">${t}</button>`).join('')}</span></section>
+          <span class="seg">${[['schedule', 'by time'], ['auto', 'system'], ['light', 'light'], ['dark', 'dark']].map(([t, l]) => `<button data-action="theme" data-t="${t}" class="${s.theme === t ? 'active' : ''}" title="${t === 'schedule' ? 'Dark in the evening, light in the day' : t === 'auto' ? 'Follow the system setting' : ''}">${l}</button>`).join('')}</span>
+          ${s.theme === 'schedule' ? `<div class="form-row" style="margin-top:12px">
+            <label class="field"><span>Dark from (hour)</span><input type="number" min="0" max="23" value="${s.nightStart}" data-action="set-num" data-k="nightStart"></label>
+            <label class="field"><span>Light again at (hour)</span><input type="number" min="0" max="23" value="${s.nightEnd}" data-action="set-num" data-k="nightEnd"></label>
+          </div><p class="muted small" style="margin-top:8px">Right now: ${isNight() ? 'dark' : 'light'}. Switches on its own at ${s.nightStart}:00 and ${s.nightEnd}:00.</p>` : ''}</section>
         <section class="card"><div class="card-head"><h3>Mottos</h3><span class="muted small">shown on Today and Focus</span></div>
           <div class="mottos">${s.mottos.map((m, i) => `<div class="row"><input value="${esc(m)}" autocomplete="off" data-action="motto-edit" data-i="${i}" maxlength="120"><button class="btn-icon" data-action="motto-del" data-i="${i}">✕</button></div>`).join('')}</div>
           <div style="margin-top:8px"><button class="btn btn-xs" data-action="motto-add">+ Add</button></div></section>
@@ -1304,7 +1319,7 @@
       case 'fx-zen': S.zen = t.checked; $('.focus-view').classList.toggle('zen', S.zen); break;
       case 'notes-date': S.notesDate = t.value || todayKey(); render(); break;
       case 'motto-edit': S.settings.mottos[+t.dataset.i] = t.value; saveSettings(); break;
-      case 'set-num': { const n = +t.value; if (n > 0 || t.dataset.k === 'dayStart') { S.settings[t.dataset.k] = n; saveSettings(); } break; }
+      case 'set-num': { const n = +t.value; if (n > 0 || ['dayStart', 'nightStart', 'nightEnd'].includes(t.dataset.k)) { S.settings[t.dataset.k] = n; saveSettings(); if (t.dataset.k.startsWith('night')) render(); } break; }
     }
   });
 
