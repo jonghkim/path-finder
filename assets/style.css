@@ -561,7 +561,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .note-editor .ql-toolbar.ql-snow { border: 0; border-bottom: 1px solid var(--line); background: var(--surface-2); }
 .note-editor .ql-container.ql-snow { border: 0; font-family: var(--font); font-size: 15px; }
 .note-editor .ql-editor { min-height: 60vh; padding: 20px 24px; color: var(--ink); }
-.note-editor .ql-editor.ql-blank::before { color: var(--ink-3); font-style: normal; }
+/* Quill positions the placeholder at its own 15px/12px; keep it under the caret with the padding above. */
+.note-editor .ql-editor.ql-blank::before { color: var(--ink-3); font-style: normal; left: 24px; right: 24px; top: 20px; }
 .ql-snow .ql-stroke { stroke: var(--ink-2); }
 .ql-snow .ql-fill { fill: var(--ink-2); }
 .ql-snow .ql-picker { color: var(--ink-2); }
