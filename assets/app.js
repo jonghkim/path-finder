@@ -927,7 +927,7 @@
     { id: 'yearly', label: 'Yearly goals', doc: () => `year-${S.notesDate.slice(0, 4)}-milestones`, ph: 'What this year is for.' },
     { id: 'achievement', label: 'Achievements', doc: () => `year-${S.notesDate.slice(0, 4)}-achievement`, ph: 'Wins and reflections.' },
     { id: 'vision', label: 'Vision', doc: () => 'visionInput', ph: 'The long view.' },
-    { id: 'question', label: 'Question', doc: () => `question-${S.qIdx == null ? 'none' : S.qIdx}`, ph: 'Your answer…' }
+    { id: 'question', label: 'Question', doc: () => S.qIdx == null ? 'question-none' : qDoc(S.qIdx, S.qDate || todayKey()), ph: 'Your answer…' }
   ];
   function destroyQuill() { commitNote(); quill = null; }
   function renderNotes(main) {
@@ -939,9 +939,9 @@
         ${tab.id === 'question' ? `<button class="btn btn-sm" data-action="q-new">New question</button>` : ''}
         <span class="muted small" id="noteStatus"></span>
       </div>
-      ${tab.id === 'question' ? `<div class="q-box"><div class="q" id="qText">${S.qIdx == null ? '<span class="muted">Press "New question" for a reflection prompt.</span>' : (window.questions || [])[S.qIdx]}</div></div>` : ''}
+      ${tab.id === 'question' ? `<div class="q-box"><div class="q" id="qText">${S.qIdx == null ? '<span class="muted">Press "New question" for a reflection prompt.</span>' : (window.questions || [])[S.qIdx]}</div><div class="q-meta muted small" id="qMeta">${qMetaHTML()}</div></div>` : ''}
       <div class="note-editor"><div id="noteEditor"></div></div>
-      ${tab.id === 'question' ? `<div class="q-answered" id="qAnswered"></div>` : ''}`;
+      ${tab.id === 'question' ? `<div class="q-history" id="qHistory"></div><div class="q-answered" id="qAnswered"></div>` : ''}`;
     mountQuill(tab);
     if (tab.id === 'question') loadAnswered();
   }
@@ -966,14 +966,48 @@
       mine.on('text-change', () => { clearTimeout(t); noteCommit = commit; t = setTimeout(commit, 400); });
     });
   }
+  // Each answer is its own dated document (question-<i>-<YYYY-MM-DD>), so a question that comes up again gets
+  // a fresh entry and the earlier ones stay readable below it. Pre-2026-11 answers live in question-<i> ('legacy').
+  const qDoc = (i, d) => d === 'legacy' ? `question-${i}` : `question-${i}-${d}`;
+  const qTitle = i => { const q = (window.questions || [])[i] || ''; const m = q.match(/<b>(.*?)<\/b>/); return m ? m[1] : q; };
+  const qDateLabel = d => d === 'legacy' ? 'undated' : d;
+  function qMetaHTML() {
+    if (S.qIdx == null) return '';
+    const d = S.qDate || todayKey(), today = d === todayKey();
+    const entries = (S.qAnswered || {})[S.qIdx] || [];
+    const exists = entries.includes(d);
+    return `<span>${today ? `Today · ${d}` : `Answer from ${qDateLabel(d)}`}</span>` +
+      (today ? '' : ` <button class="btn btn-xs" data-action="q-today">Answer again today</button>`) +
+      (exists ? ` <button class="btn btn-xs btn-ghost" data-action="q-del" data-i="${S.qIdx}" data-d="${d}">Delete this entry</button>` : '');
+  }
   async function loadAnswered() {
-    const box = $('#qAnswered'); if (!box) return;
+    if (!$('#qAnswered')) return;
     try {
-      const snap = await Store.col().get(); const idx = [];
-      snap.forEach(d => { if (d.id.startsWith('question-')) { const i = parseInt(d.id.split('-')[1]); if (!isNaN(i) && (window.questions || [])[i]) idx.push(i); } });
-      if (!$('#qAnswered')) return;
-      box.innerHTML = idx.length ? `<h3 style="margin:6px 0">Answered</h3>` + idx.map(i => { const q = window.questions[i]; const m = q.match(/<b>(.*?)<\/b>/); return `<div class="item"><span class="txt">${m ? m[1] : q}</span><span class="actions"><button class="btn-xs btn" data-action="q-open" data-i="${i}">Open</button><button class="btn-xs btn btn-danger" data-action="q-del" data-i="${i}">Delete</button></span></div>`; }).join('') : '';
+      const snap = await Store.col().get(); const map = {};
+      snap.forEach(d => {
+        const m = d.id.match(/^question-(\d+)(?:-(\d{4}-\d{2}-\d{2}))?$/); if (!m) return;
+        const i = +m[1]; if (!(window.questions || [])[i]) return;
+        const v = decrypt((d.data() || {}).value || ''); if (!v || !v.replace(/<[^>]+>/g, '').trim()) return; // emptied entries do not count
+        (map[i] = map[i] || []).push(m[2] || 'legacy');
+      });
+      Object.values(map).forEach(l => l.sort((a, b) => (b === 'legacy' ? '' : b).localeCompare(a === 'legacy' ? '' : a)));
+      S.qAnswered = map;
+      const box = $('#qAnswered'), meta = $('#qMeta'); if (!box) return;
+      if (meta) meta.innerHTML = qMetaHTML();
+      const rows = Object.keys(map).map(i => +i).sort((a, b) => (map[b][0] === 'legacy' ? '' : map[b][0]).localeCompare(map[a][0] === 'legacy' ? '' : map[a][0]));
+      box.innerHTML = rows.length ? `<h3 style="margin:6px 0">Answered <span class="cnt muted mono">${rows.length}</span></h3>` + rows.map(i => `<div class="item ${S.qIdx === i ? 'current' : ''}"><span class="txt">${qTitle(i)}</span><span class="q-dates">${map[i].map(d => `<button class="chip ${S.qIdx === i && (S.qDate || todayKey()) === d ? 'active' : ''}" data-action="q-open" data-i="${i}" data-d="${d}" title="Open this answer">${qDateLabel(d)}</button>`).join('')}</span></div>`).join('') : '';
+      loadHistory();
     } catch (e) { console.warn(e); }
+  }
+  // Earlier answers to the question on screen, newest first, shown read-only under the editor.
+  async function loadHistory() {
+    const box = $('#qHistory'); if (!box || S.qIdx == null) return;
+    const cur = S.qDate || todayKey(), i = S.qIdx;
+    const dates = ((S.qAnswered || {})[i] || []).filter(d => d !== cur);
+    if (!dates.length) { box.innerHTML = ''; return; }
+    const bodies = await Promise.all(dates.map(d => Store.getRaw(qDoc(i, d))));
+    if (!$('#qHistory') || S.qIdx !== i) return;
+    box.innerHTML = `<h3 style="margin:6px 0">Earlier answers</h3>` + dates.map((d, k) => `<div class="q-hist"><div class="q-hist-date mono muted small">${qDateLabel(d)}</div><div class="ql-editor q-hist-body">${stripCipherParas(bodies[k]) || '<span class="muted">(empty)</span>'}</div></div>`).join('');
   }
 
 
@@ -1311,9 +1345,19 @@
       case 'vision-done': S.visionEdit = false; render(); break;
       case 'vision-reset': if (quill && confirm('Replace the vision text with the built-in version? Your edits will be lost.')) { quill.setText(''); quill.clipboard.dangerouslyPasteHTML(VISION_DEFAULT); } break;
       case 'notes-today': S.notesDate = todayKey(); render(); break;
-      case 'q-new': S.qIdx = Math.floor(Math.random() * (window.questions || []).length); render(); break;
-      case 'q-open': S.qIdx = +t.dataset.i; render(); break;
-      case 'q-del': Store.col().doc(`question-${t.dataset.i}`).delete().then(() => { try { localStorage.removeItem(Store.cacheKey(`question-${t.dataset.i}`)); } catch (x) {} if (S.qIdx === +t.dataset.i) S.qIdx = null; render(); }); break;
+      case 'q-new': {
+        // Prefer a question not answered in the last 60 days; fall back to any.
+        const n = (window.questions || []).length; if (!n) break;
+        const cutoff = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+        const fresh = []; for (let i = 0; i < n; i++) { const ds = (S.qAnswered || {})[i] || []; if (!ds.some(d => d !== 'legacy' && d >= cutoff)) fresh.push(i); }
+        const pool = fresh.length ? fresh : [...Array(n).keys()];
+        let pick = pool[Math.floor(Math.random() * pool.length)]; if (pool.length > 1 && pick === S.qIdx) pick = pool[(pool.indexOf(pick) + 1) % pool.length];
+        S.qIdx = pick; S.qDate = todayKey(); render(); break; }
+      case 'q-open': S.qIdx = +t.dataset.i; S.qDate = t.dataset.d || 'legacy'; render(); break;
+      case 'q-today': S.qDate = todayKey(); render(); break;
+      case 'q-del': { const i = +t.dataset.i, d = t.dataset.d || 'legacy', name = qDoc(i, d);
+        if (!t.dataset.confirm) { t.dataset.confirm = '1'; t.textContent = 'Really delete?'; break; }
+        Store.col().doc(name).delete().then(() => { try { localStorage.removeItem(Store.cacheKey(name)); } catch (x) {} if (S.qIdx === i && (S.qDate || todayKey()) === d) { S.qIdx = null; S.qDate = null; } toast('Deleted'); render(); }); break; }
       case 'theme': S.settings.theme = t.dataset.t; saveSettings(); render(); break;
       case 'motto-add': S.settings.mottos.push(''); saveSettings(); render(); $$('[data-action=motto-edit]').pop().focus(); break;
       case 'motto-del': S.settings.mottos.splice(+t.dataset.i, 1); saveSettings(); render(); break;

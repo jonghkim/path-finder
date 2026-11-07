@@ -574,8 +574,17 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .ql-snow .ql-tooltip input[type=text] { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
 .q-box { margin-bottom: 14px; }
 .q-box .q { font-size: 16px; font-weight: 500; margin: 10px 0 12px; }
+.q-box .q-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -4px 0 10px; }
 .q-answered { margin-top: 18px; display: grid; gap: 4px; }
 .q-answered .item { padding: 6px 10px; font-size: 14px; }
+.q-answered .item.current { background: var(--surface-2); }
+.q-answered .q-dates { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.q-answered .chip { cursor: pointer; font-family: var(--mono); font-size: 11px; padding: 2px 8px; }
+.q-answered .chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.q-history { margin-top: 18px; display: grid; gap: 10px; }
+.q-hist { border-left: 3px solid var(--line-strong); padding: 2px 0 2px 14px; }
+.q-hist-date { margin-bottom: 4px; }
+.q-hist-body.ql-editor { padding: 0; min-height: 0; height: auto; overflow: visible; font-family: var(--font); font-size: 14px; color: var(--ink-2); }
 
 /* ---------- Settings ---------- */
 .settings { max-width: 640px; display: grid; gap: 18px; }
