@@ -6,7 +6,16 @@
   <title>Pathfinder</title>
   <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="assets/style.css?v=20261031">
+  <link rel="stylesheet" href="assets/style.css?v=20261107d">
+  <script>
+    // Same theme rule as app.html: 'schedule' (the default) is dark from 18:00 to 07:00, light otherwise; the
+    // saved choice and hours are read from localStorage so the login page matches the app with no flash.
+    try {
+      var t = localStorage.getItem('pf-theme') || 'schedule';
+      if (t === 'schedule') { var n = (localStorage.getItem('pf-night') || '18-7').split('-'), a = +n[0], b = +n[1], h = new Date().getHours(); t = (a === b ? false : a < b ? (h >= a && h < b) : (h >= a || h < b)) ? 'dark' : 'light'; }
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
