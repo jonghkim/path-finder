@@ -579,7 +579,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .q-answered .item { padding: 6px 10px; font-size: 14px; }
 .q-answered .item.current { background: var(--surface-2); }
 .q-answered .q-dates { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
-.q-answered .chip { cursor: pointer; font-family: var(--mono); font-size: 11px; padding: 2px 8px; }
+.q-answered .chip { cursor: pointer; font-family: var(--mono); font-size: 11px; padding: 2px 8px; border: 1px solid var(--line); }
+.q-answered .chip:hover { border-color: var(--line-strong); color: var(--ink); }
 .q-answered .chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .q-history { margin-top: 18px; display: grid; gap: 10px; }
 .q-hist { border-left: 3px solid var(--line-strong); padding: 2px 0 2px 14px; }
