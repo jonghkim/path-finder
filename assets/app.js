@@ -967,35 +967,37 @@
     });
   }
   // Each answer is its own dated document (question-<i>-<YYYY-MM-DD>), so a question that comes up again gets
-  // a fresh entry and the earlier ones stay readable below it. Pre-2026-11 answers live in question-<i> ('legacy').
-  const qDoc = (i, d) => d === 'legacy' ? `question-${i}` : `question-${i}-${d}`;
+  // a fresh entry and the earlier ones stay readable below it. Undated pre-2026-11 answers (question-<i>) are
+  // deleted on sight; the user chose to drop them rather than keep records with no date.
+  const qDoc = (i, d) => `question-${i}-${d}`;
   const qTitle = i => { const q = (window.questions || [])[i] || ''; const m = q.match(/<b>(.*?)<\/b>/); return m ? m[1] : q; };
-  const qDateLabel = d => d === 'legacy' ? 'undated' : d;
   function qMetaHTML() {
     if (S.qIdx == null) return '';
     const d = S.qDate || todayKey(), today = d === todayKey();
     const entries = (S.qAnswered || {})[S.qIdx] || [];
     const exists = entries.includes(d);
-    return `<span>${today ? `Today · ${d}` : `Answer from ${qDateLabel(d)}`}</span>` +
+    return `<span>${today ? `Today · ${d}` : `Answer from ${d}`}</span>` +
       (today ? '' : ` <button class="btn btn-xs" data-action="q-today">Answer again today</button>`) +
       (exists ? ` <button class="btn btn-xs btn-ghost" data-action="q-del" data-i="${S.qIdx}" data-d="${d}">Delete this entry</button>` : '');
   }
   async function loadAnswered() {
     if (!$('#qAnswered')) return;
     try {
-      const snap = await Store.col().get(); const map = {};
+      const snap = await Store.col().get(); const map = {}; const stale = [];
       snap.forEach(d => {
-        const m = d.id.match(/^question-(\d+)(?:-(\d{4}-\d{2}-\d{2}))?$/); if (!m) return;
+        if (/^question-(\d+|none)$/.test(d.id)) { stale.push(d.id); return; }
+        const m = d.id.match(/^question-(\d+)-(\d{4}-\d{2}-\d{2})$/); if (!m) return;
         const i = +m[1]; if (!(window.questions || [])[i]) return;
         const v = decrypt((d.data() || {}).value || ''); if (!v || !v.replace(/<[^>]+>/g, '').trim()) return; // emptied entries do not count
-        (map[i] = map[i] || []).push(m[2] || 'legacy');
+        (map[i] = map[i] || []).push(m[2]);
       });
-      Object.values(map).forEach(l => l.sort((a, b) => (b === 'legacy' ? '' : b).localeCompare(a === 'legacy' ? '' : a)));
+      stale.forEach(id => Store.col().doc(id).delete().then(() => { try { localStorage.removeItem(Store.cacheKey(id)); } catch (x) {} }).catch(e => console.warn('cleanup failed', id, e)));
+      Object.values(map).forEach(l => l.sort((a, b) => b.localeCompare(a)));
       S.qAnswered = map;
       const box = $('#qAnswered'), meta = $('#qMeta'); if (!box) return;
       if (meta) meta.innerHTML = qMetaHTML();
-      const rows = Object.keys(map).map(i => +i).sort((a, b) => (map[b][0] === 'legacy' ? '' : map[b][0]).localeCompare(map[a][0] === 'legacy' ? '' : map[a][0]));
-      box.innerHTML = rows.length ? `<h3 style="margin:6px 0">Answered <span class="cnt muted mono">${rows.length}</span></h3>` + rows.map(i => `<div class="item ${S.qIdx === i ? 'current' : ''}"><span class="txt">${qTitle(i)}</span><span class="q-dates">${map[i].map(d => `<button class="chip ${S.qIdx === i && (S.qDate || todayKey()) === d ? 'active' : ''}" data-action="q-open" data-i="${i}" data-d="${d}" title="Open this answer">${qDateLabel(d)}</button>`).join('')}</span></div>`).join('') : '';
+      const rows = Object.keys(map).map(i => +i).sort((a, b) => map[b][0].localeCompare(map[a][0]));
+      box.innerHTML = rows.length ? `<h3 style="margin:6px 0">Answered <span class="cnt muted mono">${rows.length}</span></h3>` + rows.map(i => `<div class="item ${S.qIdx === i ? 'current' : ''}"><span class="txt">${qTitle(i)}</span><span class="q-dates">${map[i].map(d => `<button class="chip ${S.qIdx === i && (S.qDate || todayKey()) === d ? 'active' : ''}" data-action="q-open" data-i="${i}" data-d="${d}" title="Open this answer">${d}</button>`).join('')}</span></div>`).join('') : '';
       loadHistory();
     } catch (e) { console.warn(e); }
   }
@@ -1007,7 +1009,7 @@
     if (!dates.length) { box.innerHTML = ''; return; }
     const bodies = await Promise.all(dates.map(d => Store.getRaw(qDoc(i, d))));
     if (!$('#qHistory') || S.qIdx !== i) return;
-    box.innerHTML = `<h3 style="margin:6px 0">Earlier answers</h3>` + dates.map((d, k) => `<div class="q-hist"><div class="q-hist-date mono muted small">${qDateLabel(d)}</div><div class="ql-editor q-hist-body">${stripCipherParas(bodies[k]) || '<span class="muted">(empty)</span>'}</div></div>`).join('');
+    box.innerHTML = `<h3 style="margin:6px 0">Earlier answers</h3>` + dates.map((d, k) => `<div class="q-hist"><div class="q-hist-date mono muted small">${d}</div><div class="ql-editor q-hist-body">${stripCipherParas(bodies[k]) || '<span class="muted">(empty)</span>'}</div></div>`).join('');
   }
 
 
@@ -1349,13 +1351,13 @@
         // Prefer a question not answered in the last 60 days; fall back to any.
         const n = (window.questions || []).length; if (!n) break;
         const cutoff = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
-        const fresh = []; for (let i = 0; i < n; i++) { const ds = (S.qAnswered || {})[i] || []; if (!ds.some(d => d !== 'legacy' && d >= cutoff)) fresh.push(i); }
+        const fresh = []; for (let i = 0; i < n; i++) { const ds = (S.qAnswered || {})[i] || []; if (!ds.some(d => d >= cutoff)) fresh.push(i); }
         const pool = fresh.length ? fresh : [...Array(n).keys()];
         let pick = pool[Math.floor(Math.random() * pool.length)]; if (pool.length > 1 && pick === S.qIdx) pick = pool[(pool.indexOf(pick) + 1) % pool.length];
         S.qIdx = pick; S.qDate = todayKey(); render(); break; }
-      case 'q-open': S.qIdx = +t.dataset.i; S.qDate = t.dataset.d || 'legacy'; render(); break;
+      case 'q-open': S.qIdx = +t.dataset.i; S.qDate = t.dataset.d || todayKey(); render(); break;
       case 'q-today': S.qDate = todayKey(); render(); break;
-      case 'q-del': { const i = +t.dataset.i, d = t.dataset.d || 'legacy', name = qDoc(i, d);
+      case 'q-del': { const i = +t.dataset.i, d = t.dataset.d || todayKey(), name = qDoc(i, d);
         if (!t.dataset.confirm) { t.dataset.confirm = '1'; t.textContent = 'Really delete?'; break; }
         Store.col().doc(name).delete().then(() => { try { localStorage.removeItem(Store.cacheKey(name)); } catch (x) {} if (S.qIdx === i && (S.qDate || todayKey()) === d) { S.qIdx = null; S.qDate = null; } toast('Deleted'); render(); }); break; }
       case 'theme': S.settings.theme = t.dataset.t; saveSettings(); render(); break;
