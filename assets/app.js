@@ -1168,6 +1168,22 @@
     Store.getRaw(VISION_DOC).then(h => { if (S.view === 'anchor' && S.anchorTab === 'vision' && !S.visionEdit) show(h); });
   }
   // ---------------------------------------------------------------- SETTINGS
+  // Mottos reorder by dragging the grip; the row only becomes draggable while the grip is held so that
+  // selecting text inside the input still works.
+  function wireMottoDrag(root) {
+    const list = $('.mottos', root); if (!list) return; let dragging = null;
+    list.addEventListener('mousedown', e => { const g = e.target.closest('.grip'); const row = g && g.closest('.motto-row'); if (row) row.draggable = true; });
+    list.addEventListener('mouseup', () => $$('.motto-row', list).forEach(r => { r.draggable = false; }));
+    list.addEventListener('dragstart', e => { const row = e.target.closest('.motto-row[draggable="true"]'); if (!row) { e.preventDefault(); return; } dragging = row; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', row.dataset.i); } catch (x) {} });
+    list.addEventListener('dragover', e => { if (!dragging) return; e.preventDefault(); const over = e.target.closest('.motto-row'); if (!over || over === dragging) return; const r = over.getBoundingClientRect(); list.insertBefore(dragging, e.clientY > r.top + r.height / 2 ? over.nextSibling : over); });
+    list.addEventListener('drop', e => { if (dragging) e.preventDefault(); });
+    list.addEventListener('dragend', () => {
+      if (!dragging) return; dragging.classList.remove('dragging'); dragging.draggable = false; dragging = null;
+      const order = $$('.motto-row', list).map(r => +r.dataset.i); const cur = S.settings.mottos;
+      if (order.length === cur.length && order.every(i => i >= 0 && i < cur.length)) { S.settings.mottos = order.map(i => cur[i]); saveSettings(); }
+      render();
+    });
+  }
   function renderSettings(main) {
     const s = S.settings;
     main.innerHTML = `<div class="view-head"><div><h1>Settings</h1><div class="sub">Signed in as <b>${esc(Store.user)}</b></div></div><button class="btn" data-action="signout">Sign out</button></div>
@@ -1179,7 +1195,7 @@
             <label class="field"><span>Light again at (hour)</span><input type="number" min="0" max="23" value="${s.nightEnd}" data-action="set-num" data-k="nightEnd"></label>
           </div><p class="muted small" style="margin-top:8px">Right now: ${isNight() ? 'dark' : 'light'}. Switches on its own at ${s.nightStart}:00 and ${s.nightEnd}:00.</p>` : ''}</section>
         <section class="card"><div class="card-head"><h3>Mottos</h3><span class="muted small">shown on Today and Focus</span></div>
-          <div class="mottos">${s.mottos.map((m, i) => `<div class="row"><input value="${esc(m)}" autocomplete="off" data-action="motto-edit" data-i="${i}" maxlength="120"><button class="btn-icon" data-action="motto-del" data-i="${i}">✕</button></div>`).join('')}</div>
+          <div class="mottos">${s.mottos.map((m, i) => `<div class="row motto-row" data-i="${i}"><span class="grip" title="Drag to reorder">⋮⋮</span><input value="${esc(m)}" autocomplete="off" data-action="motto-edit" data-i="${i}" maxlength="400"><button class="btn-icon" data-action="motto-del" data-i="${i}">✕</button></div>`).join('')}</div>
           <div style="margin-top:8px"><button class="btn btn-xs" data-action="motto-add">+ Add</button></div></section>
         <section class="card"><div class="card-head"><h3>Focus timer</h3></div>
           <div class="form-row">
@@ -1196,6 +1212,7 @@
           <div class="row"><button class="btn btn-sm" data-action="export">Export goals + today (JSON)</button><button class="btn btn-sm" data-action="load-template">Append template goals</button></div>
           <p class="muted small" style="margin-top:8px">Everything is stored under your account in Firestore, encrypted client-side. Notes from the previous version are read from the same documents.</p></section>
       </div>`;
+    wireMottoDrag(main);
   }
 
   // ---------------------------------------------------------------- to read

@@ -581,6 +581,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
 .settings .form-row { align-items: end; }
 .mottos { display: grid; gap: 6px; }
 .mottos .row input { flex: 1; }
+.mottos .row { flex-wrap: nowrap; }
+.mottos .grip { color: var(--line-strong); font-size: 12px; letter-spacing: -3px; flex: none; user-select: none; cursor: grab; padding: 6px 2px; }
+.mottos .grip:hover { color: var(--ink-3); }
+.mottos .row.dragging { opacity: .4; outline: 2px dashed var(--accent); border-radius: var(--radius-sm); }
 .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: var(--surface); padding: 6px 12px; color: var(--ink-2); font-size: 13px; }
 .seg button.active { background: var(--ink); color: var(--bg); }
