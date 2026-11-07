@@ -46,7 +46,16 @@
   // ---------------------------------------------------------------- crypto + store
   const SECRET = window.PF_SECRET;
   const encrypt = s => CryptoJS.AES.encrypt(s, SECRET).toString();
-  const decrypt = s => { try { const t = CryptoJS.AES.decrypt(s, SECRET).toString(CryptoJS.enc.Utf8); return t || s; } catch (e) { return s; } };
+  // CryptoJS ciphertext is Base64 of "Salted__" + salt + blocks, so it always starts with U2FsdGVkX1. Anything else
+  // is legacy plaintext. An encrypted empty note decrypts to '' and must stay '', not fall back to the ciphertext.
+  const CIPHER_RE = /^U2FsdGVkX1[A-Za-z0-9+/=]+$/;
+  const isCipher = s => typeof s === 'string' && CIPHER_RE.test(s.trim());
+  const decrypt = s => {
+    if (!isCipher(s)) return s;
+    try { const t = CryptoJS.AES.decrypt(s.trim(), SECRET).toString(CryptoJS.enc.Utf8); return isCipher(t) ? decrypt(t) : t; } catch (e) { return ''; }
+  };
+  // Notes that were opened while the bug above showed the ciphertext may have had it saved as a paragraph; drop those.
+  const stripCipherParas = html => typeof html === 'string' ? html.replace(/<p>(?:<br>)?U2FsdGVkX1[A-Za-z0-9+/=]+<\/p>/g, '') : html;
 
   firebase.initializeApp(window.PF_FIREBASE_CONFIG);
   const auth = firebase.auth();
@@ -947,10 +956,10 @@
     if (tab.id === 'question' && S.qIdx == null) { quill.disable(); return; }
     const status = $('#noteStatus'); status.textContent = 'loading…';
     const mine = quill;
-    const cached = Store.cached(docName); if (cached) mine.clipboard.dangerouslyPasteHTML(cached);
+    const cached = stripCipherParas(Store.cached(docName)); if (cached) mine.clipboard.dangerouslyPasteHTML(cached);
     Store.getRaw(docName).then(html => {
       if (quill !== mine) return;
-      mine.off('text-change'); mine.disable(); mine.clipboard.dangerouslyPasteHTML(html || ''); mine.enable(); mine.history.clear();
+      mine.off('text-change'); mine.disable(); mine.clipboard.dangerouslyPasteHTML(stripCipherParas(html) || ''); mine.enable(); mine.history.clear();
       status.textContent = '';
       let t;
       const commit = () => { clearTimeout(t); if (noteCommit === commit) noteCommit = null; const v = mine.getText().trim() === '' ? '' : mine.root.innerHTML; Store.setRaw(docName, v); status.textContent = 'saved'; setTimeout(() => { if (status.textContent === 'saved') status.textContent = ''; }, 1200); };
@@ -1164,8 +1173,8 @@
     const show = html => { const el = $('#visionRead'); if (el) el.innerHTML = withBongshin(html) || VISION_DEFAULT; };
     main.innerHTML = `<div class="view-head"><div><h1>Anchor</h1><div class="sub">The essence. Read slowly.</div></div><button class="btn btn-sm btn-ghost" data-action="vision-edit">Edit</button></div>${tabs}
       <article class="vision-read" id="visionRead"></article>`;
-    show(Store.cached(VISION_DOC));
-    Store.getRaw(VISION_DOC).then(h => { if (S.view === 'anchor' && S.anchorTab === 'vision' && !S.visionEdit) show(h); });
+    show(stripCipherParas(Store.cached(VISION_DOC)));
+    Store.getRaw(VISION_DOC).then(h => { if (S.view === 'anchor' && S.anchorTab === 'vision' && !S.visionEdit) show(stripCipherParas(h)); });
   }
   // ---------------------------------------------------------------- SETTINGS
   // Mottos reorder by dragging the grip; the row only becomes draggable while the grip is held so that
